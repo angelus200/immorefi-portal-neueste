@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, name, email, role FROM users;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 45EyxYVJKxfKNgq.248e1b40765c --database dBAw8JzVUezaTt379i5EoR --execute SELECT id, name, email, role FROM users;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Thomas Gross",
+      "email": "grossdigitalpartner@gmail.com",
+      "role": "superadmin"
+    },
+    {
+      "id": "150018",
+      "name": "thomasbork",
+      "email": "thomasbork@kleinunternehmergeist.de",
+      "role": "client"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\n1\tThomas Gross\tgrossdigitalpartner@gmail.com\tsuperadmin\n150018\tthomasbork\tthomasbork@kleinunternehmergeist.de\tclient\n",
+  "stderr": "",
+  "execution_time_ms": 1519
+}

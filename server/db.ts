@@ -1,0 +1,866 @@
+import { eq, desc, and, gte, lte, asc } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/mysql2";
+import { 
+  InsertUser, users, 
+  tenants, InsertTenant, Tenant,
+  memberships, InsertMembership, Membership,
+  leads, InsertLead, Lead,
+  contacts, InsertContact, Contact,
+  deals, InsertDeal, Deal,
+  pipelineStages, InsertPipelineStage, PipelineStage,
+  tasks, InsertTask, Task,
+  files, InsertFile, File,
+  auditLogs, InsertAuditLog, AuditLog,
+  notes, InsertNote, Note,
+  questionnaires, InsertQuestionnaire,
+  questionnaireResponses, InsertQuestionnaireResponse,
+  onboardingData, InsertOnboardingData, OnboardingData,
+  onboardingDocuments, InsertOnboardingDocument, OnboardingDocument,
+  downloadStats, InsertDownloadStat, DownloadStat,
+  invoices, InsertInvoice, Invoice,
+  invoiceItems, InsertInvoiceItem, InvoiceItem,
+  invoiceCounters, InsertInvoiceCounter, InvoiceCounter
+} from "../drizzle/schema";
+import { ENV } from './_core/env';
+
+let _db: ReturnType<typeof drizzle> | null = null;
+
+export async function getDb() {
+  if (!_db && process.env.DATABASE_URL) {
+    try {
+      _db = drizzle(process.env.DATABASE_URL);
+    } catch (error) {
+      console.warn("[Database] Failed to connect:", error);
+      _db = null;
+    }
+  }
+  return _db;
+}
+
+// ============================================
+// USER FUNCTIONS
+// ============================================
+
+export async function upsertUser(user: InsertUser): Promise<void> {
+  if (!user.openId) {
+    throw new Error("User openId is required for upsert");
+  }
+
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot upsert user: database not available");
+    return;
+  }
+
+  try {
+    const values: InsertUser = {
+      openId: user.openId,
+    };
+    const updateSet: Record<string, unknown> = {};
+
+    const textFields = ["name", "email", "phone", "loginMethod"] as const;
+    type TextField = (typeof textFields)[number];
+
+    const assignNullable = (field: TextField) => {
+      const value = user[field];
+      if (value === undefined) return;
+      const normalized = value ?? null;
+      values[field] = normalized;
+      updateSet[field] = normalized;
+    };
+
+    textFields.forEach(assignNullable);
+
+    if (user.lastSignedIn !== undefined) {
+      values.lastSignedIn = user.lastSignedIn;
+      updateSet.lastSignedIn = user.lastSignedIn;
+    }
+    if (user.role !== undefined) {
+      values.role = user.role;
+      updateSet.role = user.role;
+    } else if (user.openId === ENV.ownerOpenId) {
+      // Owner bekommt immer Superadmin-Rolle
+      values.role = 'superadmin';
+      updateSet.role = 'superadmin';
+    } else {
+      // Neue Benutzer bekommen standardmäßig Client-Rolle
+      values.role = 'client';
+      // Nicht im updateSet, damit bestehende Rollen nicht überschrieben werden
+    }
+
+    if (!values.lastSignedIn) {
+      values.lastSignedIn = new Date();
+    }
+
+    if (Object.keys(updateSet).length === 0) {
+      updateSet.lastSignedIn = new Date();
+    }
+
+    await db.insert(users).values(values).onDuplicateKeyUpdate({
+      set: updateSet,
+    });
+  } catch (error) {
+    console.error("[Database] Failed to upsert user:", error);
+    throw error;
+  }
+}
+
+export async function getUserByOpenId(openId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getAllUsers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(users).orderBy(desc(users.createdAt));
+}
+
+export async function updateUserOnboardingStatus(userId: number, completed: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ onboardingCompleted: completed }).where(eq(users.id, userId));
+}
+
+// ============================================
+// TENANT FUNCTIONS
+// ============================================
+
+export async function createTenant(tenant: InsertTenant) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(tenants).values(tenant);
+  return result[0].insertId;
+}
+
+export async function getTenantById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(tenants).where(eq(tenants.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getTenantBySlug(slug: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(tenants).where(eq(tenants.slug, slug)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getAllTenants() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(tenants).orderBy(desc(tenants.createdAt));
+}
+
+export async function updateTenant(id: number, data: Partial<InsertTenant>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(tenants).set(data).where(eq(tenants.id, id));
+}
+
+// ============================================
+// MEMBERSHIP FUNCTIONS
+// ============================================
+
+export async function createMembership(membership: InsertMembership) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(memberships).values(membership);
+  return result[0].insertId;
+}
+
+export async function getMembershipsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(memberships).where(eq(memberships.userId, userId));
+}
+
+export async function getMembershipsByTenantId(tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(memberships).where(eq(memberships.tenantId, tenantId));
+}
+
+export async function getUserMembership(userId: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(memberships)
+    .where(and(eq(memberships.userId, userId), eq(memberships.tenantId, tenantId)))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateMembership(id: number, data: Partial<InsertMembership>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(memberships).set(data).where(eq(memberships.id, id));
+}
+
+// ============================================
+// LEAD FUNCTIONS
+// ============================================
+
+export async function createLead(lead: InsertLead) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(leads).values(lead);
+  return result[0].insertId;
+}
+
+export async function getLeadsByTenantId(tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(leads).where(eq(leads.tenantId, tenantId)).orderBy(desc(leads.createdAt));
+}
+
+export async function getLeadById(id: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(leads)
+    .where(and(eq(leads.id, id), eq(leads.tenantId, tenantId)))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateLead(id: number, tenantId: number, data: Partial<InsertLead>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(leads).set(data).where(and(eq(leads.id, id), eq(leads.tenantId, tenantId)));
+}
+
+// ============================================
+// CONTACT FUNCTIONS
+// ============================================
+
+export async function createContact(contact: InsertContact) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(contacts).values(contact);
+  return result[0].insertId;
+}
+
+export async function getContactsByTenantId(tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(contacts).where(eq(contacts.tenantId, tenantId)).orderBy(desc(contacts.createdAt));
+}
+
+export async function getContactById(id: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(contacts)
+    .where(and(eq(contacts.id, id), eq(contacts.tenantId, tenantId)))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateContact(id: number, tenantId: number, data: Partial<InsertContact>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(contacts).set(data).where(and(eq(contacts.id, id), eq(contacts.tenantId, tenantId)));
+}
+
+// ============================================
+// PIPELINE STAGE FUNCTIONS
+// ============================================
+
+export async function createPipelineStage(stage: InsertPipelineStage) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(pipelineStages).values(stage);
+  return result[0].insertId;
+}
+
+export async function getPipelineStagesByTenantId(tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(pipelineStages)
+    .where(eq(pipelineStages.tenantId, tenantId))
+    .orderBy(asc(pipelineStages.order));
+}
+
+export async function updatePipelineStage(id: number, tenantId: number, data: Partial<InsertPipelineStage>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(pipelineStages).set(data)
+    .where(and(eq(pipelineStages.id, id), eq(pipelineStages.tenantId, tenantId)));
+}
+
+export async function deletePipelineStage(id: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(pipelineStages).where(and(eq(pipelineStages.id, id), eq(pipelineStages.tenantId, tenantId)));
+}
+
+// ============================================
+// DEAL FUNCTIONS
+// ============================================
+
+export async function createDeal(deal: InsertDeal) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(deals).values(deal);
+  return result[0].insertId;
+}
+
+export async function getDealsByTenantId(tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(deals).where(eq(deals.tenantId, tenantId)).orderBy(desc(deals.createdAt));
+}
+
+export async function getDealById(id: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(deals)
+    .where(and(eq(deals.id, id), eq(deals.tenantId, tenantId)))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateDeal(id: number, tenantId: number, data: Partial<InsertDeal>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(deals).set(data).where(and(eq(deals.id, id), eq(deals.tenantId, tenantId)));
+}
+
+export async function getDealsByStageId(stageId: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(deals)
+    .where(and(eq(deals.stageId, stageId), eq(deals.tenantId, tenantId)))
+    .orderBy(desc(deals.createdAt));
+}
+
+// ============================================
+// TASK FUNCTIONS
+// ============================================
+
+export async function createTask(task: InsertTask) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(tasks).values(task);
+  return result[0].insertId;
+}
+
+export async function getTasksByTenantId(tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(tasks).where(eq(tasks.tenantId, tenantId)).orderBy(desc(tasks.createdAt));
+}
+
+export async function getTasksByDealId(dealId: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(tasks)
+    .where(and(eq(tasks.dealId, dealId), eq(tasks.tenantId, tenantId)))
+    .orderBy(desc(tasks.createdAt));
+}
+
+export async function updateTask(id: number, tenantId: number, data: Partial<InsertTask>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(tasks).set(data).where(and(eq(tasks.id, id), eq(tasks.tenantId, tenantId)));
+}
+
+// ============================================
+// FILE FUNCTIONS
+// ============================================
+
+export async function createFile(file: InsertFile) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(files).values(file);
+  return result[0].insertId;
+}
+
+export async function getFilesByTenantId(tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(files).where(eq(files.tenantId, tenantId)).orderBy(desc(files.createdAt));
+}
+
+export async function getFilesByDealId(dealId: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(files)
+    .where(and(eq(files.dealId, dealId), eq(files.tenantId, tenantId)))
+    .orderBy(desc(files.createdAt));
+}
+
+export async function getFileById(id: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(files)
+    .where(and(eq(files.id, id), eq(files.tenantId, tenantId)))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// ============================================
+// AUDIT LOG FUNCTIONS
+// ============================================
+
+export async function createAuditLog(log: InsertAuditLog) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(auditLogs).values(log);
+  return result[0].insertId;
+}
+
+export async function getAuditLogsByTenantId(tenantId: number, limit = 100) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(auditLogs)
+    .where(eq(auditLogs.tenantId, tenantId))
+    .orderBy(desc(auditLogs.createdAt))
+    .limit(limit);
+}
+
+export async function getAllAuditLogs(limit = 100) {
+  const db = await getDb();
+  if (!db) return [];
+  const logs = await db.select({
+    id: auditLogs.id,
+    tenantId: auditLogs.tenantId,
+    userId: auditLogs.userId,
+    action: auditLogs.action,
+    entityType: auditLogs.entityType,
+    entityId: auditLogs.entityId,
+    ipAddress: auditLogs.ipAddress,
+    createdAt: auditLogs.createdAt,
+    userName: users.name,
+    userEmail: users.email,
+  })
+    .from(auditLogs)
+    .leftJoin(users, eq(auditLogs.userId, users.id))
+    .orderBy(desc(auditLogs.createdAt))
+    .limit(limit);
+  return logs;
+}
+
+export async function updateUserRole(userId: number, role: "superadmin" | "tenant_admin" | "staff" | "client") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ role }).where(eq(users.id, userId));
+}
+
+// ============================================
+// NOTE FUNCTIONS
+// ============================================
+
+export async function createNote(note: InsertNote) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(notes).values(note);
+  return result[0].insertId;
+}
+
+export async function getNotesByDealId(dealId: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(notes)
+    .where(and(eq(notes.dealId, dealId), eq(notes.tenantId, tenantId)))
+    .orderBy(desc(notes.createdAt));
+}
+
+// ============================================
+// QUESTIONNAIRE FUNCTIONS
+// ============================================
+
+export async function createQuestionnaire(questionnaire: InsertQuestionnaire) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(questionnaires).values(questionnaire);
+  return result[0].insertId;
+}
+
+export async function getQuestionnairesByTenantId(tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(questionnaires).where(eq(questionnaires.tenantId, tenantId));
+}
+
+export async function createQuestionnaireResponse(response: InsertQuestionnaireResponse) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(questionnaireResponses).values(response);
+  return result[0].insertId;
+}
+
+
+// ============================================
+// CONTRACT FUNCTIONS
+// ============================================
+
+import { 
+  contracts, InsertContract, Contract,
+  contractAssignments, InsertContractAssignment, ContractAssignment,
+  contractAcceptances, InsertContractAcceptance, ContractAcceptance
+} from "../drizzle/schema";
+
+export async function createContract(contract: InsertContract) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(contracts).values(contract);
+  return result[0].insertId;
+}
+
+export async function getContractsByTenantId(tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(contracts)
+    .where(eq(contracts.tenantId, tenantId))
+    .orderBy(desc(contracts.createdAt));
+}
+
+export async function getActiveContractsByTenantId(tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(contracts)
+    .where(and(eq(contracts.tenantId, tenantId), eq(contracts.status, "active")))
+    .orderBy(desc(contracts.createdAt));
+}
+
+export async function getContractById(id: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(contracts)
+    .where(and(eq(contracts.id, id), eq(contracts.tenantId, tenantId)))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateContract(id: number, tenantId: number, data: Partial<InsertContract>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(contracts).set(data)
+    .where(and(eq(contracts.id, id), eq(contracts.tenantId, tenantId)));
+}
+
+export async function deleteContract(id: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(contracts).where(and(eq(contracts.id, id), eq(contracts.tenantId, tenantId)));
+}
+
+// Contract Assignments
+export async function createContractAssignment(assignment: InsertContractAssignment) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(contractAssignments).values(assignment);
+  return result[0].insertId;
+}
+
+export async function getContractAssignmentsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(contractAssignments)
+    .where(eq(contractAssignments.userId, userId))
+    .orderBy(desc(contractAssignments.createdAt));
+}
+
+export async function getContractAssignmentsByContractId(contractId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(contractAssignments)
+    .where(eq(contractAssignments.contractId, contractId))
+    .orderBy(desc(contractAssignments.createdAt));
+}
+
+export async function getContractAssignmentById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(contractAssignments)
+    .where(eq(contractAssignments.id, id))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function deleteContractAssignment(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(contractAssignments).where(eq(contractAssignments.id, id));
+}
+
+// Contract Acceptances
+export async function createContractAcceptance(acceptance: InsertContractAcceptance) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(contractAcceptances).values(acceptance);
+  return result[0].insertId;
+}
+
+export async function getContractAcceptancesByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(contractAcceptances)
+    .where(eq(contractAcceptances.userId, userId))
+    .orderBy(desc(contractAcceptances.acceptedAt));
+}
+
+export async function getContractAcceptancesByContractId(contractId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(contractAcceptances)
+    .where(eq(contractAcceptances.contractId, contractId))
+    .orderBy(desc(contractAcceptances.acceptedAt));
+}
+
+export async function getContractAcceptanceByAssignmentId(assignmentId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(contractAcceptances)
+    .where(eq(contractAcceptances.assignmentId, assignmentId))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getAllContractAcceptancesByTenantId(tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(contractAcceptances)
+    .where(eq(contractAcceptances.tenantId, tenantId))
+    .orderBy(desc(contractAcceptances.acceptedAt));
+}
+
+
+// ============================================
+// ORDER FUNCTIONS (Stripe)
+// ============================================
+
+import { orders, InsertOrder, Order } from "../drizzle/schema";
+
+export async function createOrder(order: InsertOrder) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(orders).values(order);
+  return result[0].insertId;
+}
+
+export async function getOrderById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(orders).where(eq(orders.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getOrderByStripeSessionId(sessionId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(orders)
+    .where(eq(orders.stripeSessionId, sessionId))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getOrdersByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(orders)
+    .where(eq(orders.userId, userId))
+    .orderBy(desc(orders.createdAt));
+}
+
+export async function updateOrder(id: number, data: Partial<InsertOrder>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(orders).set(data).where(eq(orders.id, id));
+}
+
+export async function updateOrderByStripeSessionId(sessionId: string, data: Partial<InsertOrder>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(orders).set(data).where(eq(orders.stripeSessionId, sessionId));
+}
+
+export async function getAllOrders() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(orders).orderBy(desc(orders.createdAt));
+}
+
+export async function hasUserPurchasedProduct(userId: number, productId: string) {
+  const db = await getDb();
+  if (!db) return false;
+  const result = await db.select().from(orders)
+    .where(and(
+      eq(orders.userId, userId),
+      eq(orders.productId, productId),
+      eq(orders.status, 'completed')
+    ))
+    .limit(1);
+  return result.length > 0;
+}
+
+
+// ============================================
+// ONBOARDING DATA FUNCTIONS
+// ============================================
+
+export async function createOnboardingData(data: InsertOnboardingData) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(onboardingData).values(data);
+  return result[0].insertId;
+}
+
+export async function getOnboardingDataByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(onboardingData)
+    .where(eq(onboardingData.userId, userId))
+    .orderBy(desc(onboardingData.createdAt))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getOnboardingDataById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(onboardingData)
+    .where(eq(onboardingData.id, id))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateOnboardingData(id: number, data: Partial<InsertOnboardingData>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(onboardingData).set(data).where(eq(onboardingData.id, id));
+}
+
+export async function updateOnboardingDataByUserId(userId: number, data: Partial<InsertOnboardingData>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(onboardingData).set(data).where(eq(onboardingData.userId, userId));
+}
+
+export async function getAllOnboardingData() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(onboardingData).orderBy(desc(onboardingData.createdAt));
+}
+
+export async function getCompletedOnboardingData() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(onboardingData)
+    .where(eq(onboardingData.status, 'completed'))
+    .orderBy(desc(onboardingData.completedAt));
+}
+
+export async function markOnboardingAsReviewed(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(onboardingData)
+    .set({ status: 'reviewed' })
+    .where(eq(onboardingData.id, id));
+}
+
+
+// ============================================
+// ONBOARDING DOCUMENTS FUNCTIONS
+// ============================================
+
+export async function createOnboardingDocument(data: InsertOnboardingDocument) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(onboardingDocuments).values(data);
+  return result[0].insertId;
+}
+
+export async function getOnboardingDocumentsByOnboardingId(onboardingId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(onboardingDocuments)
+    .where(eq(onboardingDocuments.onboardingId, onboardingId))
+    .orderBy(desc(onboardingDocuments.createdAt));
+}
+
+export async function getOnboardingDocumentsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(onboardingDocuments)
+    .where(eq(onboardingDocuments.userId, userId))
+    .orderBy(desc(onboardingDocuments.createdAt));
+}
+
+export async function deleteOnboardingDocument(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(onboardingDocuments).where(eq(onboardingDocuments.id, id));
+}
+
+export async function getOnboardingDocumentById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(onboardingDocuments)
+    .where(eq(onboardingDocuments.id, id))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// ============================================
+// DOWNLOAD STATISTICS
+// ============================================
+
+export async function createDownloadStat(data: InsertDownloadStat) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(downloadStats).values(data);
+  return result[0].insertId;
+}
+
+export async function getDownloadStats() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(downloadStats)
+    .orderBy(desc(downloadStats.createdAt));
+}
+
+export async function getDownloadStatsByProduct(productType: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(downloadStats)
+    .where(eq(downloadStats.productType, productType))
+    .orderBy(desc(downloadStats.createdAt));
+}
+
+export async function getDownloadStatsCount() {
+  const db = await getDb();
+  if (!db) return { total: 0, handbuch: 0, analyse: 0 };
+  
+  const allStats = await db.select().from(downloadStats);
+  const handbuchStats = allStats.filter(s => s.productType === 'handbuch');
+  const analyseStats = allStats.filter(s => s.productType === 'analyse');
+  
+  return {
+    total: allStats.length,
+    handbuch: handbuchStats.length,
+    analyse: analyseStats.length,
+  };
+}
+
+export async function getDownloadStatsByDateRange(startDate: Date, endDate: Date) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(downloadStats)
+    .where(
+      and(
+        gte(downloadStats.createdAt, startDate),
+        lte(downloadStats.createdAt, endDate)
+      )
+    )
+    .orderBy(desc(downloadStats.createdAt));
+}

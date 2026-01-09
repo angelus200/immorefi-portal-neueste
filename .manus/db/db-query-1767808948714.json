@@ -1,0 +1,24 @@
+{
+  "query": "SELECT id, openId, name, email, role FROM users;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 45EyxYVJKxfKNgq.248e1b40765c --database dBAw8JzVUezaTt379i5EoR --execute SELECT id, openId, name, email, role FROM users;",
+  "rows": [
+    {
+      "id": "1",
+      "openId": "EscdG6YNsVZ7cVZ32YxprV",
+      "name": "Thomas Gross",
+      "email": "grossdigitalpartner@gmail.com",
+      "role": "client"
+    },
+    {
+      "id": "150018",
+      "openId": "5uTjJ8wraQee7C9oXoCFZH",
+      "name": "thomasbork",
+      "email": "thomasbork@kleinunternehmergeist.de",
+      "role": "client"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\trole\n1\tEscdG6YNsVZ7cVZ32YxprV\tThomas Gross\tgrossdigitalpartner@gmail.com\tclient\n150018\t5uTjJ8wraQee7C9oXoCFZH\tthomasbork\tthomasbork@kleinunternehmergeist.de\tclient\n",
+  "stderr": "",
+  "execution_time_ms": 1523
+}

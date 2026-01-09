@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE users SET role = 'client' WHERE role != 'client';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 45EyxYVJKxfKNgq.248e1b40765c --database dBAw8JzVUezaTt379i5EoR --execute UPDATE users SET role = 'client' WHERE role != 'client';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1559
+}
