@@ -35,8 +35,14 @@ export async function createContext(
       (opts.req.headers.cookie ? parseCookieHeader(opts.req.headers.cookie) : {});
 
     console.log("[Auth] Parsed cookies:", Object.keys(cookies).join(", ") || "none");
-    console.log("[Auth] Raw cookie header:", opts.req.headers.cookie || "missing");
+    console.log("[Auth] Cookie count:", Object.keys(cookies).length);
+    console.log("[Auth] Raw cookie header:", opts.req.headers.cookie ? "present" : "missing");
     console.log("[Auth] __session cookie present:", '__session' in cookies);
+
+    // Debug: Show cookie values (truncated for security)
+    if (cookies['__session']) {
+      console.log("[Auth] __session value (first 30 chars):", cookies['__session'].substring(0, 30) + "...");
+    }
 
     const sessionToken =
       cookies['__session'] ||

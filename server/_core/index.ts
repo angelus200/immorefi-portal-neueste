@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
@@ -31,7 +32,21 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
-  
+
+  // CORS configuration - MUST be before other middleware
+  // Enable CORS with credentials support for cookies
+  app.use(cors({
+    origin: process.env.NODE_ENV === 'production'
+      ? (process.env.FRONTEND_URL || true) // In production, specify your frontend URL
+      : true, // In development, allow all origins
+    credentials: true, // CRITICAL: Allow cookies to be sent
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+    exposedHeaders: ['Set-Cookie'],
+  }));
+
+  console.log('[CORS] Configured with credentials: true');
+
   // Stripe webhook needs raw body - MUST be before express.json()
   app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'] as string;
