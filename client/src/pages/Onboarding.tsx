@@ -11,7 +11,6 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft, ArrowRight, Check, User, Building2, FileText, Target, Upload } from "lucide-react";
 import OnboardingDocumentUpload from "@/components/OnboardingDocumentUpload";
-import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 
 const steps = [
@@ -66,9 +65,9 @@ export default function Onboarding() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button 
-              className="w-full" 
-              onClick={() => window.location.href = getLoginUrl()}
+            <Button
+              className="w-full"
+              onClick={() => window.location.href = "/sign-in"}
             >
               Anmelden
             </Button>

@@ -25,7 +25,6 @@ import {
   BookOpen,
   Download
 } from "lucide-react";
-import { getLoginUrl } from "@/const";
 import { Link } from "wouter";
 import { FinanceCalculator } from "@/components/FinanceCalculator";
 import { Calculator } from "lucide-react";
@@ -124,9 +123,9 @@ export default function Home() {
               </Link>
             ) : (
               <>
-                <a href={getLoginUrl()}>
+                <Link href="/sign-in">
                   <Button variant="outline">Login</Button>
-                </a>
+                </Link>
                 <a href="#kontakt">
                   <Button>
                     Beratung anfragen
@@ -414,10 +413,10 @@ export default function Home() {
                       </Button>
                     ) : (
                       <>
-                        <Button 
-                          className="w-full bg-amber-600 hover:bg-amber-700" 
+                        <Button
+                          className="w-full bg-amber-600 hover:bg-amber-700"
                           size="lg"
-                          onClick={() => window.location.href = getLoginUrl() + `&returnAfterLogin=${encodeURIComponent('/shop')}`}
+                          onClick={() => window.location.href = `/sign-in?redirect_url=${encodeURIComponent('/shop')}`}
                         >
                           Kostenlos anmelden & herunterladen
                           <ArrowRight className="ml-2 h-4 w-4" />

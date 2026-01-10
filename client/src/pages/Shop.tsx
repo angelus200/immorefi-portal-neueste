@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Link } from "wouter";
-import { getLoginUrl } from "@/const";
 import { 
   CheckCircle2, 
   FileText, 
@@ -49,7 +48,7 @@ export default function Shop() {
   const handlePurchaseAnalysis = () => {
     if (!user) {
       // Redirect to login with return URL
-      window.location.href = getLoginUrl() + `&returnAfterLogin=${encodeURIComponent('/shop')}`;
+      window.location.href = `/sign-in?redirect_url=${encodeURIComponent('/shop')}`;
       return;
     }
     createCheckout.mutate({ productId: 'ANALYSIS' });
@@ -268,12 +267,12 @@ export default function Shop() {
                       <span className="bg-card px-2 text-muted-foreground">oder</span>
                     </div>
                   </div>
-                  <Button 
+                  <Button
                     variant="outline"
-                    className="w-full border-green-600 text-green-600 hover:bg-green-50" 
+                    className="w-full border-green-600 text-green-600 hover:bg-green-50"
                     size="lg"
                     onClick={() => {
-                      window.location.href = getLoginUrl() + `&returnAfterLogin=${encodeURIComponent('/shop')}`;
+                      window.location.href = `/sign-in?redirect_url=${encodeURIComponent('/shop')}`;
                     }}
                   >
                     <Gift className="w-4 h-4 mr-2" />
