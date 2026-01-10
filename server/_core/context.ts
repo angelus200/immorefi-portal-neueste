@@ -30,11 +30,13 @@ export async function createContext(
     console.log("[Auth] ✓ CLERK_SECRET_KEY configured");
 
     // Get session token from Clerk's __session cookie or Authorization header
-    const cookies = opts.req.headers.cookie
-      ? parseCookieHeader(opts.req.headers.cookie)
-      : {};
+    // Use req.cookies if available (cookie-parser middleware), otherwise parse manually
+    const cookies = (opts.req as any).cookies ||
+      (opts.req.headers.cookie ? parseCookieHeader(opts.req.headers.cookie) : {});
 
     console.log("[Auth] Parsed cookies:", Object.keys(cookies).join(", ") || "none");
+    console.log("[Auth] Raw cookie header:", opts.req.headers.cookie || "missing");
+    console.log("[Auth] __session cookie present:", '__session' in cookies);
 
     const sessionToken =
       cookies['__session'] ||
