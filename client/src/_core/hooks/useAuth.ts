@@ -1,5 +1,5 @@
-import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
+import { useClerk } from "@clerk/clerk-react";
 import { TRPCClientError } from "@trpc/client";
 import { useCallback, useEffect, useMemo } from "react";
 
@@ -9,9 +9,10 @@ type UseAuthOptions = {
 };
 
 export function useAuth(options?: UseAuthOptions) {
-  const { redirectOnUnauthenticated = false, redirectPath = getLoginUrl() } =
+  const { redirectOnUnauthenticated = false, redirectPath = "/sign-in" } =
     options ?? {};
   const utils = trpc.useUtils();
+  const { signOut } = useClerk();
 
   const meQuery = trpc.auth.me.useQuery(undefined, {
     retry: false,
@@ -38,8 +39,10 @@ export function useAuth(options?: UseAuthOptions) {
     } finally {
       utils.auth.me.setData(undefined, null);
       await utils.auth.me.invalidate();
+      // Sign out from Clerk
+      await signOut();
     }
-  }, [logoutMutation, utils]);
+  }, [logoutMutation, utils, signOut]);
 
   const state = useMemo(() => {
     localStorage.setItem(
