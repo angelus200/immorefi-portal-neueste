@@ -22,6 +22,7 @@ import AdminContracts from "./pages/admin/Contracts";
 import AdminOrders from "./pages/admin/Orders";
 import AdminOnboardingData from "./pages/admin/OnboardingData";
 import AdminInvoices from "./pages/admin/Invoices";
+import AdminHandbuch from "./pages/AdminHandbuch";
 import Shop from "./pages/Shop";
 import ShopSuccess from "./pages/ShopSuccess";
 import Orders from "./pages/Orders";
@@ -88,6 +89,7 @@ function Router() {
       <Route path="/admin/orders" component={AdminOrders} />
       <Route path="/admin/onboarding" component={AdminOnboardingData} />
       <Route path="/admin/invoices" component={AdminInvoices} />
+      <Route path="/admin/handbuch" component={AdminHandbuch} />
       
       {/* Fallback */}
       <Route path="/404" component={NotFound} />
