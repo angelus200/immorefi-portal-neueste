@@ -197,8 +197,9 @@ export default function Home() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-sm text-muted-foreground">Portfolio Wert</div>
-                      <div className="text-3xl font-bold">€12.5M</div>
+                      <div className="text-sm text-muted-foreground">Marktkapitalisierung</div>
+                      <div className="text-3xl font-bold">€12.5Mrd+</div>
+                      <div className="text-xs text-muted-foreground">im Immo Private Debt Markt</div>
                     </div>
                     <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                       <TrendingUp className="h-6 w-6 text-primary" />
