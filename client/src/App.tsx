@@ -43,8 +43,8 @@ function Router() {
     <Switch>
       {/* Public Routes */}
       <Route path="/" component={Home} />
-      <Route path="/sign-in" component={SignIn} />
-      <Route path="/sign-up" component={SignUp} />
+      <Route path="/sign-in/:rest*" component={SignIn} />
+      <Route path="/sign-up/:rest*" component={SignUp} />
       <Route path="/shop" component={Shop} />
       <Route path="/shop/success" component={ShopSuccess} />
       <Route path="/impressum" component={Impressum} />
