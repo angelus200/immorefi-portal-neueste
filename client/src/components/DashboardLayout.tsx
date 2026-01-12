@@ -22,21 +22,22 @@ import {
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { useIsMobile } from "@/hooks/useMobile";
-import { 
-  LayoutDashboard, 
-  LogOut, 
-  PanelLeft, 
-  Users, 
-  ShoppingCart, 
-  FileCheck, 
-  FolderOpen, 
-  ClipboardList, 
+import {
+  LayoutDashboard,
+  LogOut,
+  PanelLeft,
+  Users,
+  ShoppingCart,
+  FileCheck,
+  FolderOpen,
+  ClipboardList,
   Settings,
   Shield,
   ClipboardCheck,
   FileText,
   BarChart3,
-  Calculator
+  Calculator,
+  BookOpen
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -64,6 +65,7 @@ const adminMenuItems = [
   { icon: Users, label: "Benutzer", path: "/admin/users" },
   { icon: BarChart3, label: "Audit-Log", path: "/admin/audit" },
   { icon: Settings, label: "Einstellungen", path: "/admin/settings" },
+  { icon: BookOpen, label: "Handbuch", path: "/admin/handbuch" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
