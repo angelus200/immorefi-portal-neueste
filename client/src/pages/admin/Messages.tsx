@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, X, Archive, CheckCheck } from 'lucide-react';
+import { MessageCircle, Send, X, Archive, CheckCheck, Plus, User } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,13 +10,36 @@ import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function AdminMessages() {
   const [selectedConversationId, setSelectedConversationId] = useState<number | null>(null);
   const [message, setMessage] = useState('');
+  const [isNewMessageDialogOpen, setIsNewMessageDialogOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [newMessage, setNewMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const utils = trpc.useUtils();
+
+  // Get all users (for new conversation dialog)
+  const { data: users = [] } = trpc.user.list.useQuery({});
 
   // Get all conversations
   const { data: conversations = [] } = trpc.chat.getConversations.useQuery(undefined, {
@@ -57,6 +80,18 @@ export default function AdminMessages() {
     },
   });
 
+  // Start conversation as admin mutation
+  const startConversationAsAdminMutation = trpc.chat.startConversationAsAdmin.useMutation({
+    onSuccess: (data) => {
+      utils.chat.getConversations.invalidate();
+      setIsNewMessageDialogOpen(false);
+      setSelectedUserId('');
+      setNewMessage('');
+      // Select the newly created conversation
+      setSelectedConversationId(data.conversation.id);
+    },
+  });
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (scrollRef.current) {
@@ -92,23 +127,41 @@ export default function AdminMessages() {
     closeConversationMutation.mutate({ conversationId: selectedConversationId });
   };
 
+  const handleStartNewConversation = () => {
+    if (!selectedUserId || !newMessage.trim()) return;
+
+    startConversationAsAdminMutation.mutate({
+      customerId: parseInt(selectedUserId),
+      message: newMessage.trim(),
+    });
+  };
+
   const selectedConversation = conversationData?.conversation;
+
+  // Filter users to only show customers (not admins)
+  const customerUsers = users.filter(u => u.role === 'client');
 
   return (
     <DashboardLayout>
       <div className="flex flex-col h-[calc(100vh-8rem)]">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 gap-4">
           <div>
             <h1 className="text-3xl font-bold">Nachrichten</h1>
             <p className="text-muted-foreground mt-1">
               Verwalten Sie Kundengespräche
             </p>
           </div>
-          {unreadCount && unreadCount > 0 && (
-            <Badge variant="destructive" className="text-lg px-3 py-1">
-              {unreadCount} ungelesen
-            </Badge>
-          )}
+          <div className="flex items-center gap-3">
+            {unreadCount && unreadCount > 0 && (
+              <Badge variant="destructive" className="text-lg px-3 py-1">
+                {unreadCount} ungelesen
+              </Badge>
+            )}
+            <Button onClick={() => setIsNewMessageDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Neue Nachricht
+            </Button>
+          </div>
         </div>
 
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 min-h-0">
@@ -295,6 +348,84 @@ export default function AdminMessages() {
           </Card>
         </div>
       </div>
+
+      {/* New Message Dialog */}
+      <Dialog open={isNewMessageDialogOpen} onOpenChange={setIsNewMessageDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Neue Konversation starten</DialogTitle>
+            <DialogDescription>
+              Wählen Sie einen Kunden aus und senden Sie die erste Nachricht.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="customer">Kunde</Label>
+              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                <SelectTrigger id="customer">
+                  <SelectValue placeholder="Kunde auswählen..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {customerUsers.length === 0 && (
+                    <div className="px-2 py-3 text-sm text-muted-foreground text-center">
+                      Keine Kunden gefunden
+                    </div>
+                  )}
+                  {customerUsers.map((user) => (
+                    <SelectItem key={user.id} value={user.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        <span>{user.name || user.email}</span>
+                        {user.email && user.name && (
+                          <span className="text-xs text-muted-foreground">
+                            ({user.email})
+                          </span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="message">Nachricht</Label>
+              <Textarea
+                id="message"
+                placeholder="Ihre Nachricht..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                rows={5}
+                className="resize-none"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsNewMessageDialogOpen(false);
+                setSelectedUserId('');
+                setNewMessage('');
+              }}
+            >
+              Abbrechen
+            </Button>
+            <Button
+              onClick={handleStartNewConversation}
+              disabled={!selectedUserId || !newMessage.trim() || startConversationAsAdminMutation.isPending}
+            >
+              {startConversationAsAdminMutation.isPending ? (
+                'Wird gesendet...'
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Nachricht senden
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

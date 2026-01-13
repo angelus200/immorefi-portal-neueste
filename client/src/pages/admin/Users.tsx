@@ -11,13 +11,24 @@ import {
 } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
-import { Search, UserPlus, Shield, Users as UsersIcon } from "lucide-react";
+import { Search, UserPlus, Shield, Users as UsersIcon, MessageCircle } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { useLocation } from "wouter";
 
 function UsersContent() {
   const [searchTerm, setSearchTerm] = useState("");
-  
+  const [, setLocation] = useLocation();
+
   const { data: users, isLoading } = trpc.user.list.useQuery();
+  const utils = trpc.useUtils();
+
+  // Start conversation as admin
+  const startConversationMutation = trpc.chat.startConversationAsAdmin.useMutation({
+    onSuccess: (data) => {
+      // Navigate to messages page with the conversation selected
+      setLocation(`/admin/messages?conversationId=${data.conversation.id}`);
+    },
+  });
 
   const filteredUsers = users?.filter(user => {
     const matchesSearch = !searchTerm || 
@@ -38,6 +49,14 @@ function UsersContent() {
     tenant_admin: "bg-blue-100 text-blue-800",
     staff: "bg-green-100 text-green-800",
     client: "bg-gray-100 text-gray-800",
+  };
+
+  const handleSendMessage = (userId: number, userName: string) => {
+    const defaultMessage = `Hallo ${userName}, wie kann ich Ihnen helfen?`;
+    startConversationMutation.mutate({
+      customerId: userId,
+      message: defaultMessage,
+    });
   };
 
   return (
@@ -136,6 +155,7 @@ function UsersContent() {
                   <TableHead>Rolle</TableHead>
                   <TableHead>Letzte Anmeldung</TableHead>
                   <TableHead>Erstellt</TableHead>
+                  <TableHead className="text-right">Aktionen</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -162,6 +182,19 @@ function UsersContent() {
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {new Date(user.createdAt).toLocaleDateString('de-DE')}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {user.role === 'client' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSendMessage(user.id, user.name || 'Kunde')}
+                          disabled={startConversationMutation.isPending}
+                        >
+                          <MessageCircle className="h-4 w-4 mr-2" />
+                          Nachricht
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

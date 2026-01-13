@@ -1666,6 +1666,68 @@ const chatRouter = router({
     return db.getTotalUnreadMessageCount(forRole);
   }),
 
+  // Admin: Start a conversation with a customer
+  startConversationAsAdmin: adminProcedure
+    .input(z.object({
+      customerId: z.number(),
+      message: z.string().min(1),
+      orderId: z.number().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      // Check if conversation already exists for this customer
+      const existingConversations = await db.getConversationsByCustomer(input.customerId);
+
+      let conversation;
+      if (input.orderId) {
+        // Find conversation for specific order
+        const orderConversation = existingConversations.find(c => c.orderId === input.orderId && c.conversationStatus === 'open');
+        conversation = orderConversation;
+      } else {
+        // Find any open general conversation
+        const generalConversation = existingConversations.find(c => !c.orderId && c.conversationStatus === 'open');
+        conversation = generalConversation;
+      }
+
+      // Create conversation if it doesn't exist
+      if (!conversation) {
+        conversation = await db.createConversation({
+          customerId: input.customerId,
+          orderId: input.orderId ?? null,
+          conversationStatus: 'open',
+        });
+
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          action: 'create',
+          entityType: 'conversation',
+          entityId: conversation.id,
+        });
+      }
+
+      // Send the first message
+      const message = await db.createMessage({
+        conversationId: conversation.id,
+        senderId: ctx.user.id,
+        messageSenderRole: 'admin',
+        content: input.message,
+      });
+
+      // Update conversation last message timestamp
+      await db.updateConversationLastMessage(conversation.id);
+
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'create',
+        entityType: 'message',
+        entityId: message.id,
+      });
+
+      return {
+        conversation,
+        message,
+      };
+    }),
+
   // Admin: Close a conversation
   closeConversation: adminProcedure
     .input(z.object({ conversationId: z.number() }))
