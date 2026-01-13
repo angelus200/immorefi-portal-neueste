@@ -22,7 +22,9 @@ import {
   invoiceCounters, InsertInvoiceCounter, InvoiceCounter,
   conversations, InsertConversation, Conversation,
   messages, InsertMessage, Message,
-  customerNotes, InsertCustomerNote, CustomerNote
+  customerNotes, InsertCustomerNote, CustomerNote,
+  staffCalendars, InsertStaffCalendar, StaffCalendar,
+  bookings, InsertBooking, Booking
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1134,4 +1136,160 @@ export async function getDealByGHLOpportunityId(ghlOpportunityId: string) {
     .where(eq(deals.ghlOpportunityId, ghlOpportunityId))
     .limit(1);
   return result.length > 0 ? result[0] : undefined;
+}
+
+// ============================================
+// STAFF CALENDAR FUNCTIONS
+// ============================================
+
+export async function createStaffCalendar(calendar: InsertStaffCalendar) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(staffCalendars).values(calendar);
+  return result[0].insertId;
+}
+
+export async function getStaffCalendarsByOderId(oderId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(staffCalendars)
+    .where(eq(staffCalendars.oderId, oderId))
+    .orderBy(desc(staffCalendars.createdAt));
+}
+
+export async function getStaffCalendarById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(staffCalendars)
+    .where(eq(staffCalendars.id, id))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getAllActiveStaffCalendars() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(staffCalendars)
+    .where(eq(staffCalendars.isActive, true))
+    .orderBy(desc(staffCalendars.createdAt));
+}
+
+export async function updateStaffCalendar(id: number, data: Partial<InsertStaffCalendar>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(staffCalendars).set(data).where(eq(staffCalendars.id, id));
+}
+
+export async function deleteStaffCalendar(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(staffCalendars).where(eq(staffCalendars.id, id));
+}
+
+// ============================================
+// BOOKING FUNCTIONS
+// ============================================
+
+export async function createBooking(booking: InsertBooking) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(bookings).values(booking);
+  return result[0].insertId;
+}
+
+export async function getBookingsByOderId(oderId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(bookings)
+    .where(eq(bookings.oderId, oderId))
+    .orderBy(desc(bookings.startTime));
+}
+
+export async function getBookingById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(bookings)
+    .where(eq(bookings.id, id))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getAllBookings() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(bookings)
+    .orderBy(desc(bookings.startTime));
+}
+
+export async function getUpcomingBookings(oderId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date();
+
+  if (oderId) {
+    return db.select().from(bookings)
+      .where(and(
+        eq(bookings.oderId, oderId),
+        gte(bookings.startTime, now)
+      ))
+      .orderBy(asc(bookings.startTime));
+  }
+
+  return db.select().from(bookings)
+    .where(gte(bookings.startTime, now))
+    .orderBy(asc(bookings.startTime));
+}
+
+export async function getBookingByCalendlyEventId(calendlyEventId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(bookings)
+    .where(eq(bookings.calendlyEventId, calendlyEventId))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateBooking(id: number, data: Partial<InsertBooking>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(bookings).set(data).where(eq(bookings.id, id));
+}
+
+export async function deleteBooking(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(bookings).where(eq(bookings.id, id));
+}
+
+// Get bookings that need reminders
+export async function getBookingsNeedingReminder24h() {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date();
+  const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const in25h = new Date(now.getTime() + 25 * 60 * 60 * 1000);
+
+  return db.select().from(bookings)
+    .where(and(
+      eq(bookings.reminder24hSent, false),
+      gte(bookings.startTime, in24h),
+      lte(bookings.startTime, in25h),
+      eq(bookings.status, 'confirmed')
+    ));
+}
+
+export async function getBookingsNeedingReminder1h() {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date();
+  const in1h = new Date(now.getTime() + 60 * 60 * 1000);
+  const in2h = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+
+  return db.select().from(bookings)
+    .where(and(
+      eq(bookings.reminder1hSent, false),
+      gte(bookings.startTime, in1h),
+      lte(bookings.startTime, in2h),
+      eq(bookings.status, 'confirmed')
+    ));
 }

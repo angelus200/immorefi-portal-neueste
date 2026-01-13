@@ -726,3 +726,59 @@ export const customerNotes = mysqlTable("customer_notes", {
 
 export type CustomerNote = typeof customerNotes.$inferSelect;
 export type InsertCustomerNote = typeof customerNotes.$inferInsert;
+
+// ============================================
+// BOOKINGS (Terminbuchungssystem)
+// ============================================
+
+export const bookingStatusEnum = mysqlEnum("bookingStatus", [
+  "pending",      // Ausstehend
+  "confirmed",    // Bestätigt
+  "cancelled",    // Abgesagt
+  "completed",    // Erledigt
+  "no_show"       // Nicht erschienen
+]);
+
+// Staff Calendars - Calendly-Integration für Mitarbeiter
+export const staffCalendars = mysqlTable("staff_calendars", {
+  id: int("id").autoincrement().primaryKey(),
+  oderId: int("oderId").notNull(), // User ID des Mitarbeiters
+  name: varchar("name", { length: 255 }).notNull(), // z.B. "Thomas Gross - Erstberatung"
+  description: text("description"), // z.B. "30 Min Erstgespräch"
+  calendlyUrl: varchar("calendlyUrl", { length: 500 }), // Calendly Buchungslink
+  avatarUrl: varchar("avatarUrl", { length: 500 }), // Optional: Profilbild URL
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StaffCalendar = typeof staffCalendars.$inferSelect;
+export type InsertStaffCalendar = typeof staffCalendars.$inferInsert;
+
+// Bookings - Terminbuchungen
+export const bookings = mysqlTable("bookings", {
+  id: int("id").autoincrement().primaryKey(),
+  oderId: int("oderId").notNull(), // User ID des Kunden
+  staffCalendarId: int("staffCalendarId").notNull(), // Verknüpfung zum Staff Calendar
+  // Calendly IDs
+  calendlyEventId: varchar("calendlyEventId", { length: 100 }),
+  calendlyInviteeId: varchar("calendlyInviteeId", { length: 100 }),
+  // Termin-Details
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  startTime: timestamp("startTime").notNull(),
+  endTime: timestamp("endTime").notNull(),
+  meetingUrl: varchar("meetingUrl", { length: 500 }), // Zoom/Meet Link
+  // Status
+  status: bookingStatusEnum.default("pending").notNull(),
+  customerNotes: text("customerNotes"), // Notizen des Kunden
+  // Erinnerungen
+  reminder24hSent: boolean("reminder24hSent").default(false).notNull(),
+  reminder1hSent: boolean("reminder1hSent").default(false).notNull(),
+  reminderSmsSent: boolean("reminderSmsSent").default(false).notNull(), // Für später
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Booking = typeof bookings.$inferSelect;
+export type InsertBooking = typeof bookings.$inferInsert;

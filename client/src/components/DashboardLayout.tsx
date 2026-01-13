@@ -41,7 +41,8 @@ import {
   MessageCircle,
   UserPlus,
   Contact,
-  Kanban
+  Kanban,
+  Calendar as CalendarIcon
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -51,6 +52,7 @@ import { Button } from "./ui/button";
 // Client menu items
 const clientMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+  { icon: CalendarIcon, label: "Termin buchen", path: "/booking" },
   { icon: Calculator, label: "Finanzrechner", path: "/tools/interest-calculator" },
   { icon: ShoppingCart, label: "Bestellungen", path: "/orders" },
   { icon: FileText, label: "Rechnungen", path: "/invoices" },
@@ -65,6 +67,8 @@ const adminMenuItems = [
   { icon: UserPlus, label: "Leads", path: "/crm/leads" },
   { icon: Kanban, label: "Pipeline", path: "/crm/deals" },
   { icon: Contact, label: "Kontakte", path: "/crm/contacts" },
+  { icon: CalendarIcon, label: "Mein Kalender", path: "/admin/my-calendar" },
+  { icon: ClipboardList, label: "Buchungen", path: "/admin/bookings" },
   { icon: ClipboardCheck, label: "Onboarding-Daten", path: "/admin/onboarding" },
   { icon: ShoppingCart, label: "Bestellungen", path: "/admin/orders" },
   { icon: FileText, label: "Rechnungen", path: "/admin/invoices" },

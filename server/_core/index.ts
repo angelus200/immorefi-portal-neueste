@@ -210,7 +210,127 @@ async function startServer() {
       res.status(500).json({ error: 'Webhook processing failed' });
     }
   });
-  
+
+  // Calendly webhook for booking creation
+  app.post('/api/webhooks/calendly', express.json(), async (req, res) => {
+    try {
+      console.log('[Calendly Webhook] Received event:', req.body.event);
+
+      const event = req.body;
+
+      // Handle invitee.created event (new booking)
+      if (event.event === 'invitee.created') {
+        const { payload } = event;
+        const invitee = payload.invitee;
+        const eventData = payload.event;
+
+        console.log('[Calendly Webhook] New booking:', {
+          inviteeUri: invitee.uri,
+          eventUri: eventData.uri,
+          email: invitee.email,
+          name: invitee.name,
+        });
+
+        // Import DB functions
+        const { createBooking, getUserByEmail, getAllActiveStaffCalendars } = await import('../db');
+        const { sendBookingConfirmationEmail } = await import('../emailService');
+
+        // Find customer by email
+        const customer = await getUserByEmail(invitee.email);
+        if (!customer) {
+          console.warn('[Calendly Webhook] Customer not found for email:', invitee.email);
+          return res.json({ received: true, warning: 'Customer not found' });
+        }
+
+        // Find staff calendar by Calendly URL (match against calendlyUrl in staff_calendars)
+        const staffCalendars = await getAllActiveStaffCalendars();
+        const matchingCalendar = staffCalendars.find(cal =>
+          cal.calendlyUrl && eventData.uri.includes(cal.calendlyUrl)
+        );
+
+        if (!matchingCalendar) {
+          console.warn('[Calendly Webhook] No matching staff calendar found for event:', eventData.uri);
+          return res.json({ received: true, warning: 'No matching staff calendar' });
+        }
+
+        // Create booking in database
+        await createBooking({
+          oderId: customer.id,
+          staffCalendarId: matchingCalendar.id,
+          calendlyEventId: eventData.uri,
+          calendlyInviteeId: invitee.uri,
+          title: eventData.name || 'Beratungsgespräch',
+          description: null,
+          startTime: new Date(eventData.start_time),
+          endTime: new Date(eventData.end_time),
+          meetingUrl: eventData.location?.join_url || null,
+          status: 'confirmed',
+          customerNotes: invitee.questions_and_answers?.map((qa: any) => `${qa.question}: ${qa.answer}`).join('\n') || null,
+        });
+
+        // Send confirmation email
+        try {
+          await sendBookingConfirmationEmail({
+            customerEmail: invitee.email,
+            customerName: invitee.name || customer.name || 'Kunde',
+            staffName: matchingCalendar.name,
+            bookingTitle: eventData.name || 'Beratungsgespräch',
+            startTime: new Date(eventData.start_time),
+            endTime: new Date(eventData.end_time),
+            meetingUrl: eventData.location?.join_url,
+            description: null,
+          });
+        } catch (emailError) {
+          console.error('[Calendly Webhook] Failed to send confirmation email:', emailError);
+          // Don't fail the webhook if email fails
+        }
+
+        console.log('[Calendly Webhook] Booking created successfully');
+      }
+
+      // Handle invitee.canceled event
+      if (event.event === 'invitee.canceled') {
+        const { payload } = event;
+        const invitee = payload.invitee;
+
+        console.log('[Calendly Webhook] Booking cancelled:', invitee.uri);
+
+        const { getBookingByCalendlyEventId, updateBooking } = await import('../db');
+        const { sendBookingCancelledEmail } = await import('../emailService');
+
+        // Find and cancel booking
+        const booking = await getBookingByCalendlyEventId(invitee.event);
+        if (booking) {
+          await updateBooking(booking.id, { status: 'cancelled' });
+
+          // Send cancellation email
+          try {
+            const { getUserById } = await import('../db');
+            const customer = await getUserById(booking.oderId);
+
+            if (customer && customer.email) {
+              await sendBookingCancelledEmail({
+                customerEmail: customer.email,
+                customerName: customer.name || 'Kunde',
+                bookingTitle: booking.title,
+                startTime: booking.startTime,
+              });
+            }
+          } catch (emailError) {
+            console.error('[Calendly Webhook] Failed to send cancellation email:', emailError);
+          }
+
+          console.log('[Calendly Webhook] Booking cancelled successfully');
+        }
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      console.error('[Calendly Webhook] Error processing webhook:', error);
+      res.status(500).json({ error: 'Webhook processing failed' });
+    }
+  });
+
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));

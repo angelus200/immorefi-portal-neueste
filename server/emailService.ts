@@ -829,4 +829,517 @@ Neuer Benutzer im Portal:
   }
 }
 
+// ============================================
+// BOOKING REMINDER E-MAILS
+// ============================================
+
+// Booking Confirmation
+export async function sendBookingConfirmationEmail(data: {
+  customerEmail: string;
+  customerName: string;
+  staffName: string;
+  bookingTitle: string;
+  startTime: Date;
+  endTime: Date;
+  meetingUrl?: string;
+  description?: string;
+}): Promise<boolean> {
+  const formatDateTime = (date: Date) => {
+    return new Intl.DateTimeFormat('de-CH', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  };
+
+  const emailHtml = `
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terminbestätigung - NON DOM Group</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f5; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <tr>
+            <td style="background: linear-gradient(135deg, #00B4D8 0%, #0096B4 100%); padding: 30px 40px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">
+                ✓ Termin bestätigt
+              </h1>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 40px;">
+              <h2 style="margin: 0 0 20px 0; color: #1f2937; font-size: 24px;">
+                Hallo ${data.customerName},
+              </h2>
+
+              <p style="margin: 0 0 30px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                Ihr Termin wurde erfolgreich gebucht. Wir freuen uns auf das Gespräch mit Ihnen!
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0f9ff; border-radius: 8px; margin-bottom: 30px; border: 1px solid #bae6fd;">
+                <tr>
+                  <td style="padding: 24px;">
+                    <h3 style="margin: 0 0 16px 0; color: #0c4a6e; font-size: 18px; font-weight: bold;">📅 Termindetails</h3>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding: 8px 0; color: #075985; font-size: 14px;">Termin:</td>
+                        <td style="padding: 8px 0; color: #0c4a6e; font-size: 14px; text-align: right; font-weight: 600;">${data.bookingTitle}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #075985; font-size: 14px;">Berater:</td>
+                        <td style="padding: 8px 0; color: #0c4a6e; font-size: 14px; text-align: right;">${data.staffName}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #075985; font-size: 14px;">Datum & Zeit:</td>
+                        <td style="padding: 8px 0; color: #0c4a6e; font-size: 14px; text-align: right;">${formatDateTime(data.startTime)}</td>
+                      </tr>
+                      ${data.description ? `
+                      <tr>
+                        <td colspan="2" style="padding-top: 16px; border-top: 1px solid #bae6fd;"></td>
+                      </tr>
+                      <tr>
+                        <td colspan="2" style="padding: 8px 0; color: #075985; font-size: 14px;">${data.description}</td>
+                      </tr>
+                      ` : ''}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              ${data.meetingUrl ? `
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${data.meetingUrl}" style="display: inline-block; background: linear-gradient(135deg, #00B4D8 0%, #0096B4 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 600;">
+                      Zum Online-Meeting
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              ` : ''}
+
+              <p style="margin: 20px 0 0 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
+                Mit freundlichen Grüßen,<br>
+                <strong>Ihr NON DOM Group Team</strong>
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background-color: #f9fafb; padding: 24px 40px; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 12px; text-align: center;">
+                Marketplace24-7 GmbH | Kantonsstrasse 1 | 8807 Freienbach SZ | Schweiz
+              </p>
+              <p style="margin: 0; color: #6b7280; font-size: 12px; text-align: center;">
+                UID: CHE-351.662.058 MWST | E-Mail: info@non-dom.group
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  if (resend && data.customerEmail) {
+    try {
+      const result = await resend.emails.send({
+        from: EMAIL_CONFIG.from,
+        to: data.customerEmail,
+        replyTo: EMAIL_CONFIG.replyTo,
+        subject: `Terminbestätigung: ${data.bookingTitle} - NON DOM Group`,
+        html: emailHtml,
+      });
+
+      console.log(`[Email] Booking confirmation sent to ${data.customerEmail}`, result);
+      return true;
+    } catch (error) {
+      console.error(`[Email] Failed to send booking confirmation:`, error);
+      return false;
+    }
+  }
+
+  return false;
+}
+
+// 24h Reminder
+export async function sendBookingReminder24h(data: {
+  customerEmail: string;
+  customerName: string;
+  staffName: string;
+  bookingTitle: string;
+  startTime: Date;
+  meetingUrl?: string;
+}): Promise<boolean> {
+  const formatDateTime = (date: Date) => {
+    return new Intl.DateTimeFormat('de-CH', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  };
+
+  const emailHtml = `
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terminerinnerung - NON DOM Group</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f5; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <tr>
+            <td style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); padding: 30px 40px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">
+                🔔 Erinnerung: Ihr Termin morgen
+              </h1>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 40px;">
+              <h2 style="margin: 0 0 20px 0; color: #1f2937; font-size: 24px;">
+                Hallo ${data.customerName},
+              </h2>
+
+              <p style="margin: 0 0 30px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                Dies ist eine freundliche Erinnerung an Ihren Termin morgen.
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fef3c7; border-radius: 8px; margin-bottom: 30px; border: 1px solid #fde68a;">
+                <tr>
+                  <td style="padding: 24px;">
+                    <h3 style="margin: 0 0 16px 0; color: #78350f; font-size: 18px; font-weight: bold;">📅 Termindetails</h3>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding: 8px 0; color: #92400e; font-size: 14px;">Termin:</td>
+                        <td style="padding: 8px 0; color: #78350f; font-size: 14px; text-align: right; font-weight: 600;">${data.bookingTitle}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #92400e; font-size: 14px;">Berater:</td>
+                        <td style="padding: 8px 0; color: #78350f; font-size: 14px; text-align: right;">${data.staffName}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #92400e; font-size: 14px;">Datum & Zeit:</td>
+                        <td style="padding: 8px 0; color: #78350f; font-size: 14px; text-align: right;">${formatDateTime(data.startTime)}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              ${data.meetingUrl ? `
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${data.meetingUrl}" style="display: inline-block; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 600;">
+                      Zum Online-Meeting
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              ` : ''}
+
+              <p style="margin: 20px 0 0 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
+                Wir freuen uns auf das Gespräch mit Ihnen!<br>
+                <strong>Ihr NON DOM Group Team</strong>
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background-color: #f9fafb; padding: 24px 40px; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 12px; text-align: center;">
+                Marketplace24-7 GmbH | Kantonsstrasse 1 | 8807 Freienbach SZ | Schweiz
+              </p>
+              <p style="margin: 0; color: #6b7280; font-size: 12px; text-align: center;">
+                UID: CHE-351.662.058 MWST | E-Mail: info@non-dom.group
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  if (resend && data.customerEmail) {
+    try {
+      const result = await resend.emails.send({
+        from: EMAIL_CONFIG.from,
+        to: data.customerEmail,
+        replyTo: EMAIL_CONFIG.replyTo,
+        subject: `🔔 Erinnerung: ${data.bookingTitle} morgen - NON DOM Group`,
+        html: emailHtml,
+      });
+
+      console.log(`[Email] 24h reminder sent to ${data.customerEmail}`, result);
+      return true;
+    } catch (error) {
+      console.error(`[Email] Failed to send 24h reminder:`, error);
+      return false;
+    }
+  }
+
+  return false;
+}
+
+// 1h Reminder
+export async function sendBookingReminder1h(data: {
+  customerEmail: string;
+  customerName: string;
+  staffName: string;
+  bookingTitle: string;
+  startTime: Date;
+  meetingUrl?: string;
+}): Promise<boolean> {
+  const formatTime = (date: Date) => {
+    return new Intl.DateTimeFormat('de-CH', {
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  };
+
+  const emailHtml = `
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Termin in 1 Stunde - NON DOM Group</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f5; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <tr>
+            <td style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); padding: 30px 40px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">
+                ⏰ Ihr Termin beginnt in 1 Stunde
+              </h1>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 40px;">
+              <h2 style="margin: 0 0 20px 0; color: #1f2937; font-size: 24px;">
+                Hallo ${data.customerName},
+              </h2>
+
+              <p style="margin: 0 0 30px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                Ihr Termin mit <strong>${data.staffName}</strong> beginnt gleich um <strong>${formatTime(data.startTime)} Uhr</strong>.
+              </p>
+
+              ${data.meetingUrl ? `
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${data.meetingUrl}" style="display: inline-block; background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 18px; font-weight: 600; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);">
+                      Jetzt zum Meeting
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              ` : ''}
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fee2e2; border-radius: 8px; margin: 30px 0; border: 1px solid #fecaca;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="margin: 0; color: #991b1b; font-size: 14px; line-height: 1.6;">
+                      <strong>💡 Tipp:</strong> Klicken Sie einige Minuten vor Beginn auf den Meeting-Link, um sicherzustellen, dass Ihre Kamera und Ihr Mikrofon funktionieren.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 20px 0 0 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
+                Wir freuen uns auf Sie!<br>
+                <strong>Ihr NON DOM Group Team</strong>
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background-color: #f9fafb; padding: 24px 40px; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 12px; text-align: center;">
+                Marketplace24-7 GmbH | Kantonsstrasse 1 | 8807 Freienbach SZ | Schweiz
+              </p>
+              <p style="margin: 0; color: #6b7280; font-size: 12px; text-align: center;">
+                UID: CHE-351.662.058 MWST | E-Mail: info@non-dom.group
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  if (resend && data.customerEmail) {
+    try {
+      const result = await resend.emails.send({
+        from: EMAIL_CONFIG.from,
+        to: data.customerEmail,
+        replyTo: EMAIL_CONFIG.replyTo,
+        subject: `⏰ In 1 Stunde: ${data.bookingTitle} - NON DOM Group`,
+        html: emailHtml,
+      });
+
+      console.log(`[Email] 1h reminder sent to ${data.customerEmail}`, result);
+      return true;
+    } catch (error) {
+      console.error(`[Email] Failed to send 1h reminder:`, error);
+      return false;
+    }
+  }
+
+  return false;
+}
+
+// Booking Cancelled
+export async function sendBookingCancelledEmail(data: {
+  customerEmail: string;
+  customerName: string;
+  bookingTitle: string;
+  startTime: Date;
+}): Promise<boolean> {
+  const formatDateTime = (date: Date) => {
+    return new Intl.DateTimeFormat('de-CH', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  };
+
+  const emailHtml = `
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Termin abgesagt - NON DOM Group</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f5; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <tr>
+            <td style="background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%); padding: 30px 40px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">
+                ✕ Termin abgesagt
+              </h1>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 40px;">
+              <h2 style="margin: 0 0 20px 0; color: #1f2937; font-size: 24px;">
+                Hallo ${data.customerName},
+              </h2>
+
+              <p style="margin: 0 0 30px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                Ihr Termin wurde abgesagt:
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; border-radius: 8px; margin-bottom: 30px;">
+                <tr>
+                  <td style="padding: 24px;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Termin:</td>
+                        <td style="padding: 8px 0; color: #1f2937; font-size: 14px; text-align: right; font-weight: 600; text-decoration: line-through;">${data.bookingTitle}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Datum & Zeit:</td>
+                        <td style="padding: 8px 0; color: #1f2937; font-size: 14px; text-align: right; text-decoration: line-through;">${formatDateTime(data.startTime)}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="https://immorefi.non-dom.group/booking" style="display: inline-block; background: linear-gradient(135deg, #00B4D8 0%, #0096B4 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 600;">
+                      Neuen Termin buchen
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 20px 0 0 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
+                Bei Fragen stehen wir Ihnen gerne zur Verfügung.<br>
+                <strong>Ihr NON DOM Group Team</strong>
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background-color: #f9fafb; padding: 24px 40px; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 12px; text-align: center;">
+                Marketplace24-7 GmbH | Kantonsstrasse 1 | 8807 Freienbach SZ | Schweiz
+              </p>
+              <p style="margin: 0; color: #6b7280; font-size: 12px; text-align: center;">
+                UID: CHE-351.662.058 MWST | E-Mail: info@non-dom.group
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  if (resend && data.customerEmail) {
+    try {
+      const result = await resend.emails.send({
+        from: EMAIL_CONFIG.from,
+        to: data.customerEmail,
+        replyTo: EMAIL_CONFIG.replyTo,
+        subject: `Termin abgesagt: ${data.bookingTitle} - NON DOM Group`,
+        html: emailHtml,
+      });
+
+      console.log(`[Email] Cancellation email sent to ${data.customerEmail}`, result);
+      return true;
+    } catch (error) {
+      console.error(`[Email] Failed to send cancellation email:`, error);
+      return false;
+    }
+  }
+
+  return false;
+}
+
 export { EMAIL_CONFIG };

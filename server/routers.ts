@@ -2269,6 +2269,220 @@ const chatRouter = router({
 });
 
 // ============================================
+// STAFF CALENDAR ROUTER
+// ============================================
+
+const staffCalendarRouter = router({
+  // List all active staff calendars (public - for booking page)
+  list: publicProcedure.query(async () => {
+    return db.getAllActiveStaffCalendars();
+  }),
+
+  // Get own calendar (staff only)
+  getMyCalendar: protectedProcedure.query(async ({ ctx }) => {
+    const calendars = await db.getStaffCalendarsByOderId(ctx.user.id);
+    return calendars.length > 0 ? calendars[0] : null;
+  }),
+
+  // Upsert own calendar (staff only)
+  upsert: protectedProcedure
+    .input(z.object({
+      name: z.string().min(1),
+      description: z.string().optional(),
+      calendlyUrl: z.string().url().optional(),
+      avatarUrl: z.string().url().optional(),
+      isActive: z.boolean().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const existing = await db.getStaffCalendarsByOderId(ctx.user.id);
+
+      if (existing.length > 0) {
+        await db.updateStaffCalendar(existing[0].id, input);
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          action: 'update',
+          entityType: 'staff_calendar',
+          entityId: existing[0].id,
+          newValues: input,
+        });
+        return { success: true, id: existing[0].id };
+      } else {
+        const id = await db.createStaffCalendar({
+          oderId: ctx.user.id,
+          ...input,
+        });
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          action: 'create',
+          entityType: 'staff_calendar',
+          entityId: id,
+          newValues: input,
+        });
+        return { success: true, id };
+      }
+    }),
+
+  // Toggle active status (staff only)
+  toggle: protectedProcedure
+    .input(z.object({ id: z.number(), isActive: z.boolean() }))
+    .mutation(async ({ input, ctx }) => {
+      await db.updateStaffCalendar(input.id, { isActive: input.isActive });
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'update',
+        entityType: 'staff_calendar',
+        entityId: input.id,
+        newValues: { isActive: input.isActive },
+      });
+      return { success: true };
+    }),
+});
+
+// ============================================
+// BOOKING ROUTER
+// ============================================
+
+const bookingRouter = router({
+  // List all bookings (admin)
+  list: adminProcedure.query(async () => {
+    return db.getAllBookings();
+  }),
+
+  // List user's bookings
+  myBookings: protectedProcedure.query(async ({ ctx }) => {
+    return db.getBookingsByOderId(ctx.user.id);
+  }),
+
+  // Get upcoming bookings
+  upcoming: protectedProcedure
+    .input(z.object({ limit: z.number().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      const bookings = await db.getUpcomingBookings(ctx.user.id);
+      return input?.limit ? bookings.slice(0, input.limit) : bookings;
+    }),
+
+  // Get booking by ID
+  get: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input, ctx }) => {
+      const booking = await db.getBookingById(input.id);
+      if (!booking) throw new Error('Booking not found');
+
+      // Check if user owns this booking or is admin
+      const isAdmin = ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin' || ctx.user.role === 'staff';
+      if (!isAdmin && booking.oderId !== ctx.user.id) {
+        throw new Error('Unauthorized');
+      }
+
+      return booking;
+    }),
+
+  // Create booking
+  create: protectedProcedure
+    .input(z.object({
+      staffCalendarId: z.number(),
+      calendlyEventId: z.string().optional(),
+      calendlyInviteeId: z.string().optional(),
+      title: z.string().min(1),
+      description: z.string().optional(),
+      startTime: z.date(),
+      endTime: z.date(),
+      meetingUrl: z.string().url().optional(),
+      customerNotes: z.string().optional(),
+      status: z.enum(['pending', 'confirmed', 'cancelled', 'completed', 'no_show']).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const id = await db.createBooking({
+        oderId: ctx.user.id,
+        ...input,
+        status: input.status || 'pending',
+      });
+
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'create',
+        entityType: 'booking',
+        entityId: id,
+        newValues: input,
+      });
+
+      return { success: true, id };
+    }),
+
+  // Cancel booking
+  cancel: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const booking = await db.getBookingById(input.id);
+      if (!booking) throw new Error('Booking not found');
+
+      // Check if user owns this booking or is admin
+      const isAdmin = ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin' || ctx.user.role === 'staff';
+      if (!isAdmin && booking.oderId !== ctx.user.id) {
+        throw new Error('Unauthorized');
+      }
+
+      await db.updateBooking(input.id, { status: 'cancelled' });
+
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'update',
+        entityType: 'booking',
+        entityId: input.id,
+        oldValues: { status: booking.status },
+        newValues: { status: 'cancelled' },
+      });
+
+      return { success: true };
+    }),
+
+  // Complete booking (admin only)
+  complete: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const booking = await db.getBookingById(input.id);
+      if (!booking) throw new Error('Booking not found');
+
+      await db.updateBooking(input.id, { status: 'completed' });
+
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'update',
+        entityType: 'booking',
+        entityId: input.id,
+        oldValues: { status: booking.status },
+        newValues: { status: 'completed' },
+      });
+
+      return { success: true };
+    }),
+
+  // Update booking status (admin only)
+  updateStatus: adminProcedure
+    .input(z.object({
+      id: z.number(),
+      status: z.enum(['pending', 'confirmed', 'cancelled', 'completed', 'no_show']),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const booking = await db.getBookingById(input.id);
+      if (!booking) throw new Error('Booking not found');
+
+      await db.updateBooking(input.id, { status: input.status });
+
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'update',
+        entityType: 'booking',
+        entityId: input.id,
+        oldValues: { status: booking.status },
+        newValues: { status: input.status },
+      });
+
+      return { success: true };
+    }),
+});
+
+// ============================================
 // MAIN ROUTER
 // ============================================
 
@@ -2306,6 +2520,8 @@ export const appRouter = router({
   download: downloadRouter,
   invoice: invoiceRouter,
   chat: chatRouter,
+  staffCalendar: staffCalendarRouter,
+  booking: bookingRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -9,6 +9,9 @@ import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/crm/Leads";
 import Pipeline from "./pages/crm/Pipeline";
 import Contacts from "./pages/crm/Contacts";
+import Booking from "./pages/Booking";
+import MyCalendar from "./pages/admin/MyCalendar";
+import AdminBookings from "./pages/admin/Bookings";
 import AdminUsers from "./pages/admin/Users";
 import AdminAudit from "./pages/admin/Audit";
 import AdminSettings from "./pages/admin/Settings";
@@ -78,12 +81,17 @@ function Router() {
       <Route path="/invoices" component={Invoices} />
       <Route path="/settings" component={Settings} />
       
+      {/* Booking Routes */}
+      <Route path="/booking" component={Booking} />
+
       {/* CRM Routes */}
       <Route path="/crm/leads" component={Leads} />
       <Route path="/crm/deals" component={Pipeline} />
       <Route path="/crm/contacts" component={Contacts} />
-      
+
       {/* Admin Routes */}
+      <Route path="/admin/my-calendar" component={MyCalendar} />
+      <Route path="/admin/bookings" component={AdminBookings} />
       <Route path="/admin/users" component={AdminUsers} />
       <Route path="/admin/audit" component={AdminAudit} />
       <Route path="/admin/settings" component={AdminSettings} />
