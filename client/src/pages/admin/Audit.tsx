@@ -10,15 +10,21 @@ import {
 } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
-import { Search, Activity, User, FileText, Settings } from "lucide-react";
+import { Search, Activity, User, FileText, Settings, ShoppingCart, FileCheck } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const TENANT_ID = 1;
 
 function AuditContent() {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  
-  const { data: auditLogs, isLoading } = trpc.audit.list.useQuery({ tenantId: TENANT_ID, limit: 100 });
+
+  // Superadmins sehen ALLE Audit-Logs (keine tenantId-Filterung)
+  // Andere Rollen sehen nur Logs ihres Tenants
+  const { data: auditLogs, isLoading } = trpc.audit.list.useQuery(
+    user?.role === "superadmin" ? { limit: 100 } : { tenantId: TENANT_ID, limit: 100 }
+  );
   const { data: users } = trpc.user.list.useQuery();
 
   const getUserName = (userId: number | null) => {
@@ -42,6 +48,10 @@ function AuditContent() {
     move: "Verschoben",
     upload: "Hochgeladen",
     download: "Heruntergeladen",
+    login: "Angemeldet",
+    logout: "Abgemeldet",
+    view: "Angesehen",
+    assign: "Zugewiesen",
   };
 
   const actionColors: Record<string, string> = {
@@ -51,6 +61,10 @@ function AuditContent() {
     move: "bg-yellow-100 text-yellow-800",
     upload: "bg-purple-100 text-purple-800",
     download: "bg-gray-100 text-gray-800",
+    login: "bg-cyan-100 text-cyan-800",
+    logout: "bg-slate-100 text-slate-800",
+    view: "bg-indigo-100 text-indigo-800",
+    assign: "bg-amber-100 text-amber-800",
   };
 
   const entityIcons: Record<string, typeof Activity> = {
@@ -63,6 +77,10 @@ function AuditContent() {
     pipeline_stage: Activity,
     task: Activity,
     note: FileText,
+    order: ShoppingCart,
+    contract: FileCheck,
+    invoice: FileText,
+    user: User,
   };
 
   return (
