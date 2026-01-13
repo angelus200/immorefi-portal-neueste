@@ -7,7 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/crm/Leads";
-import Deals from "./pages/crm/Deals";
+import Pipeline from "./pages/crm/Pipeline";
 import Contacts from "./pages/crm/Contacts";
 import AdminUsers from "./pages/admin/Users";
 import AdminAudit from "./pages/admin/Audit";
@@ -80,7 +80,7 @@ function Router() {
       
       {/* CRM Routes */}
       <Route path="/crm/leads" component={Leads} />
-      <Route path="/crm/deals" component={Deals} />
+      <Route path="/crm/deals" component={Pipeline} />
       <Route path="/crm/contacts" component={Contacts} />
       
       {/* Admin Routes */}

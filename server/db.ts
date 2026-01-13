@@ -225,70 +225,6 @@ export async function updateMembership(id: number, data: Partial<InsertMembershi
 }
 
 // ============================================
-// LEAD FUNCTIONS
-// ============================================
-
-export async function createLead(lead: InsertLead) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(leads).values(lead);
-  return result[0].insertId;
-}
-
-export async function getLeadsByTenantId(tenantId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(leads).where(eq(leads.tenantId, tenantId)).orderBy(desc(leads.createdAt));
-}
-
-export async function getLeadById(id: number, tenantId: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(leads)
-    .where(and(eq(leads.id, id), eq(leads.tenantId, tenantId)))
-    .limit(1);
-  return result.length > 0 ? result[0] : undefined;
-}
-
-export async function updateLead(id: number, tenantId: number, data: Partial<InsertLead>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(leads).set(data).where(and(eq(leads.id, id), eq(leads.tenantId, tenantId)));
-}
-
-// ============================================
-// CONTACT FUNCTIONS
-// ============================================
-
-export async function createContact(contact: InsertContact) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(contacts).values(contact);
-  return result[0].insertId;
-}
-
-export async function getContactsByTenantId(tenantId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(contacts).where(eq(contacts.tenantId, tenantId)).orderBy(desc(contacts.createdAt));
-}
-
-export async function getContactById(id: number, tenantId: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(contacts)
-    .where(and(eq(contacts.id, id), eq(contacts.tenantId, tenantId)))
-    .limit(1);
-  return result.length > 0 ? result[0] : undefined;
-}
-
-export async function updateContact(id: number, tenantId: number, data: Partial<InsertContact>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(contacts).set(data).where(and(eq(contacts.id, id), eq(contacts.tenantId, tenantId)));
-}
-
-// ============================================
 // PIPELINE STAGE FUNCTIONS
 // ============================================
 
@@ -318,46 +254,6 @@ export async function deletePipelineStage(id: number, tenantId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(pipelineStages).where(and(eq(pipelineStages.id, id), eq(pipelineStages.tenantId, tenantId)));
-}
-
-// ============================================
-// DEAL FUNCTIONS
-// ============================================
-
-export async function createDeal(deal: InsertDeal) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(deals).values(deal);
-  return result[0].insertId;
-}
-
-export async function getDealsByTenantId(tenantId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(deals).where(eq(deals.tenantId, tenantId)).orderBy(desc(deals.createdAt));
-}
-
-export async function getDealById(id: number, tenantId: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(deals)
-    .where(and(eq(deals.id, id), eq(deals.tenantId, tenantId)))
-    .limit(1);
-  return result.length > 0 ? result[0] : undefined;
-}
-
-export async function updateDeal(id: number, tenantId: number, data: Partial<InsertDeal>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(deals).set(data).where(and(eq(deals.id, id), eq(deals.tenantId, tenantId)));
-}
-
-export async function getDealsByStageId(stageId: number, tenantId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(deals)
-    .where(and(eq(deals.stageId, stageId), eq(deals.tenantId, tenantId)))
-    .orderBy(desc(deals.createdAt));
 }
 
 // ============================================
@@ -1081,4 +977,161 @@ export async function deleteUser(userId: number) {
 
   // Delete user
   await db.delete(users).where(eq(users.id, userId));
+}
+
+// ============================================
+// CRM LEADS FUNCTIONS
+// ============================================
+
+export async function createLead(lead: InsertLead) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(leads).values(lead);
+  return result[0].insertId;
+}
+
+export async function getLeadsByTenantId(tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(leads).where(eq(leads.tenantId, tenantId)).orderBy(desc(leads.createdAt));
+}
+
+export async function getLeadById(id: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(leads)
+    .where(and(eq(leads.id, id), eq(leads.tenantId, tenantId)))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateLead(id: number, tenantId: number, data: Partial<InsertLead>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(leads).set(data).where(and(eq(leads.id, id), eq(leads.tenantId, tenantId)));
+}
+
+export async function deleteLead(id: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(leads).where(and(eq(leads.id, id), eq(leads.tenantId, tenantId)));
+}
+
+export async function getLeadByGHLContactId(ghlContactId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(leads)
+    .where(eq(leads.ghlContactId, ghlContactId))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// ============================================
+// CRM CONTACTS FUNCTIONS (Extended)
+// ============================================
+
+export async function createContact(contact: InsertContact) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(contacts).values(contact);
+  return result[0].insertId;
+}
+
+export async function getContactsByTenantId(tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(contacts).where(eq(contacts.tenantId, tenantId)).orderBy(desc(contacts.createdAt));
+}
+
+export async function getContactById(id: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(contacts)
+    .where(and(eq(contacts.id, id), eq(contacts.tenantId, tenantId)))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateContact(id: number, tenantId: number, data: Partial<InsertContact>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(contacts).set(data).where(and(eq(contacts.id, id), eq(contacts.tenantId, tenantId)));
+}
+
+export async function deleteContact(id: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(contacts).where(and(eq(contacts.id, id), eq(contacts.tenantId, tenantId)));
+}
+
+export async function getContactByGHLContactId(ghlContactId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(contacts)
+    .where(eq(contacts.ghlContactId, ghlContactId))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// ============================================
+// CRM DEALS FUNCTIONS (Extended)
+// ============================================
+
+export async function createDeal(deal: InsertDeal) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(deals).values(deal);
+  return result[0].insertId;
+}
+
+export async function getDealsByTenantId(tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(deals).where(eq(deals.tenantId, tenantId)).orderBy(desc(deals.createdAt));
+}
+
+export async function getDealById(id: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(deals)
+    .where(and(eq(deals.id, id), eq(deals.tenantId, tenantId)))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateDeal(id: number, tenantId: number, data: Partial<InsertDeal>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(deals).set(data).where(and(eq(deals.id, id), eq(deals.tenantId, tenantId)));
+}
+
+export async function deleteDeal(id: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(deals).where(and(eq(deals.id, id), eq(deals.tenantId, tenantId)));
+}
+
+export async function getDealsByStageId(stageId: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(deals)
+    .where(and(eq(deals.stageId, stageId), eq(deals.tenantId, tenantId)))
+    .orderBy(desc(deals.createdAt));
+}
+
+export async function getDealsByContactId(contactId: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(deals)
+    .where(and(eq(deals.contactId, contactId), eq(deals.tenantId, tenantId)))
+    .orderBy(desc(deals.createdAt));
+}
+
+export async function getDealByGHLOpportunityId(ghlOpportunityId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(deals)
+    .where(eq(deals.ghlOpportunityId, ghlOpportunityId))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
 }

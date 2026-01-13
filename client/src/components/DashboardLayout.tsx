@@ -38,7 +38,10 @@ import {
   BarChart3,
   Calculator,
   BookOpen,
-  MessageCircle
+  MessageCircle,
+  UserPlus,
+  Contact,
+  Kanban
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -59,6 +62,9 @@ const clientMenuItems = [
 
 // Admin menu items
 const adminMenuItems = [
+  { icon: UserPlus, label: "Leads", path: "/crm/leads" },
+  { icon: Kanban, label: "Pipeline", path: "/crm/deals" },
+  { icon: Contact, label: "Kontakte", path: "/crm/contacts" },
   { icon: ClipboardCheck, label: "Onboarding-Daten", path: "/admin/onboarding" },
   { icon: ShoppingCart, label: "Bestellungen", path: "/admin/orders" },
   { icon: FileText, label: "Rechnungen", path: "/admin/invoices" },

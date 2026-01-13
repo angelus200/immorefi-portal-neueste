@@ -81,16 +81,28 @@ export type InsertMembership = typeof memberships.$inferInsert;
 // ============================================
 
 export const leadStatusEnum = mysqlEnum("leadStatus", ["new", "contacted", "qualified", "converted", "lost"]);
+export const leadSourceEnum = mysqlEnum("leadSource", ["website", "referral", "ghl", "manual"]);
 
 export const leads = mysqlTable("leads", {
   id: int("id").autoincrement().primaryKey(),
   tenantId: int("tenantId").notNull(),
   contactId: int("contactId"),
+  ghlContactId: varchar("ghlContactId", { length: 64 }), // GoHighLevel Sync
+  // Contact information
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 320 }),
+  phone: varchar("phone", { length: 32 }),
+  company: varchar("company", { length: 255 }),
+  // Lead details
   status: leadStatusEnum.default("new").notNull(),
-  source: varchar("source", { length: 100 }),
-  kapitalbedarf: varchar("kapitalbedarf", { length: 100 }),
-  zeithorizont: varchar("zeithorizont", { length: 100 }),
-  beschreibung: text("beschreibung"),
+  source: leadSourceEnum.default("manual").notNull(),
+  capitalNeed: varchar("capitalNeed", { length: 100 }), // Kapitalbedarf
+  timeHorizon: varchar("timeHorizon", { length: 100 }), // Zeithorizont
+  description: text("description"), // Beschreibung
+  notes: text("notes"), // Interne Notizen
+  assignedTo: int("assignedTo"), // User ID des zugewiesenen Mitarbeiters
+  // Sync
+  lastSyncedAt: timestamp("lastSyncedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -102,14 +114,28 @@ export type InsertLead = typeof leads.$inferInsert;
 // CRM: CONTACTS
 // ============================================
 
+export const contactTypeEnum = mysqlEnum("contactType", ["kunde", "partner", "lieferant"]);
+
 export const contacts = mysqlTable("contacts", {
   id: int("id").autoincrement().primaryKey(),
   tenantId: int("tenantId").notNull(),
+  ghlContactId: varchar("ghlContactId", { length: 64 }), // GoHighLevel Sync
+  // Contact information
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 320 }).notNull(),
   phone: varchar("phone", { length: 32 }),
   company: varchar("company", { length: 255 }),
+  type: contactTypeEnum.default("kunde").notNull(),
+  // Address
+  street: varchar("street", { length: 255 }),
+  zip: varchar("zip", { length: 20 }),
+  city: varchar("city", { length: 100 }),
   country: varchar("country", { length: 100 }),
+  website: varchar("website", { length: 255 }),
+  // Notes
+  notes: text("notes"),
+  // Sync
+  lastSyncedAt: timestamp("lastSyncedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -139,16 +165,29 @@ export type InsertPipelineStage = typeof pipelineStages.$inferInsert;
 // DEALS
 // ============================================
 
+export const dealStageEnum = mysqlEnum("dealStage", ["new", "qualified", "proposal", "negotiation", "won", "lost"]);
+
 export const deals = mysqlTable("deals", {
   id: int("id").autoincrement().primaryKey(),
   tenantId: int("tenantId").notNull(),
+  ghlOpportunityId: varchar("ghlOpportunityId", { length: 64 }), // GoHighLevel Sync
+  // Relations
   contactId: int("contactId").notNull(),
-  stageId: int("stageId").notNull(),
-  ownerId: int("ownerId"),
-  title: varchar("title", { length: 255 }).notNull(),
-  value: float("value"),
+  leadId: int("leadId"), // Optional: ursprünglicher Lead
+  stageId: int("stageId").notNull(), // Pipeline Stage ID
+  stage: dealStageEnum.default("new").notNull(), // Stage enum für einfache Queries
+  assignedTo: int("assignedTo"), // User ID des zugewiesenen Mitarbeiters (alias für ownerId)
+  // Deal details
+  name: varchar("name", { length: 255 }).notNull(),
+  value: float("value"), // Deal-Wert in EUR
   currency: varchar("currency", { length: 3 }).default("EUR"),
+  probability: int("probability").default(0), // Wahrscheinlichkeit 0-100%
+  expectedCloseDate: timestamp("expectedCloseDate"), // Erwartetes Abschlussdatum
+  notes: text("notes"), // Interne Notizen
+  // Status
   closedAt: timestamp("closedAt"),
+  // Sync
+  lastSyncedAt: timestamp("lastSyncedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

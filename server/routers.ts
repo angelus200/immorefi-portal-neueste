@@ -140,78 +140,205 @@ const leadRouter = router({
     .query(async ({ input }) => {
       return db.getLeadsByTenantId(input.tenantId);
     }),
-  
-  getById: protectedProcedure
+
+  get: protectedProcedure
     .input(z.object({ id: z.number(), tenantId: z.number() }))
     .query(async ({ input }) => {
       return db.getLeadById(input.id, input.tenantId);
     }),
-  
-  create: publicProcedure
+
+  create: protectedProcedure
     .input(z.object({
       tenantId: z.number(),
       name: z.string().min(1),
-      email: z.string().email(),
+      email: z.string().email().optional(),
       phone: z.string().optional(),
       company: z.string().optional(),
-      country: z.string().optional(),
-      kapitalbedarf: z.string().optional(),
-      zeithorizont: z.string().optional(),
-      beschreibung: z.string().optional(),
-      source: z.string().optional(),
-    }))
-    .mutation(async ({ input }) => {
-      // First create or find contact
-      const contactId = await db.createContact({
-        tenantId: input.tenantId,
-        name: input.name,
-        email: input.email,
-        phone: input.phone,
-        company: input.company,
-        country: input.country,
-      });
-      
-      // Then create lead
-      const leadId = await db.createLead({
-        tenantId: input.tenantId,
-        contactId,
-        kapitalbedarf: input.kapitalbedarf,
-        zeithorizont: input.zeithorizont,
-        beschreibung: input.beschreibung,
-        source: input.source || "landing_page",
-        status: "new",
-      });
-      
-      await db.createAuditLog({
-        tenantId: input.tenantId,
-        action: "create",
-        entityType: "lead",
-        entityId: leadId,
-        newValues: input,
-      });
-      
-      return { id: leadId, contactId };
-    }),
-  
-  updateStatus: protectedProcedure
-    .input(z.object({
-      id: z.number(),
-      tenantId: z.number(),
-      status: z.enum(["new", "contacted", "qualified", "converted", "lost"]),
+      capitalNeed: z.string().optional(),
+      timeHorizon: z.string().optional(),
+      description: z.string().optional(),
+      source: z.enum(['website', 'referral', 'ghl', 'manual']).optional(),
+      assignedTo: z.number().optional(),
+      notes: z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const oldLead = await db.getLeadById(input.id, input.tenantId);
-      await db.updateLead(input.id, input.tenantId, { status: input.status });
+      const leadId = await db.createLead({
+        ...input,
+        source: input.source || 'manual',
+        status: 'new',
+      });
+
       await db.createAuditLog({
         tenantId: input.tenantId,
         userId: ctx.user.id,
-        action: "update",
-        entityType: "lead",
-        entityId: input.id,
-        oldValues: { status: oldLead?.status },
-        newValues: { status: input.status },
+        action: 'create',
+        entityType: 'lead',
+        entityId: leadId,
+        newValues: input,
+      });
+
+      return { id: leadId };
+    }),
+
+  update: protectedProcedure
+    .input(z.object({
+      id: z.number(),
+      tenantId: z.number(),
+      name: z.string().optional(),
+      email: z.string().email().optional(),
+      phone: z.string().optional(),
+      company: z.string().optional(),
+      capitalNeed: z.string().optional(),
+      timeHorizon: z.string().optional(),
+      description: z.string().optional(),
+      status: z.enum(['new', 'contacted', 'qualified', 'converted', 'lost']).optional(),
+      assignedTo: z.number().optional(),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { id, tenantId, ...data } = input;
+      const oldLead = await db.getLeadById(id, tenantId);
+      await db.updateLead(id, tenantId, data);
+      await db.createAuditLog({
+        tenantId,
+        userId: ctx.user.id,
+        action: 'update',
+        entityType: 'lead',
+        entityId: id,
+        oldValues: oldLead,
+        newValues: data,
       });
       return { success: true };
+    }),
+
+  delete: protectedProcedure
+    .input(z.object({ id: z.number(), tenantId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const oldLead = await db.getLeadById(input.id, input.tenantId);
+      await db.deleteLead(input.id, input.tenantId);
+      await db.createAuditLog({
+        tenantId: input.tenantId,
+        userId: ctx.user.id,
+        action: 'delete',
+        entityType: 'lead',
+        entityId: input.id,
+        oldValues: oldLead,
+      });
+      return { success: true };
+    }),
+
+  convertToContact: protectedProcedure
+    .input(z.object({ id: z.number(), tenantId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const lead = await db.getLeadById(input.id, input.tenantId);
+      if (!lead) throw new Error('Lead not found');
+
+      // Create contact from lead
+      const contactId = await db.createContact({
+        tenantId: input.tenantId,
+        name: lead.name,
+        email: lead.email || '',
+        phone: lead.phone,
+        company: lead.company,
+        ghlContactId: lead.ghlContactId,
+        type: 'kunde',
+        notes: lead.notes,
+      });
+
+      // Update lead status and link to contact
+      await db.updateLead(input.id, input.tenantId, {
+        status: 'converted',
+        contactId,
+      });
+
+      await db.createAuditLog({
+        tenantId: input.tenantId,
+        userId: ctx.user.id,
+        action: 'update',
+        entityType: 'lead',
+        entityId: input.id,
+        newValues: { status: 'converted', contactId },
+      });
+
+      return { success: true, contactId };
+    }),
+
+  syncToGHL: protectedProcedure
+    .input(z.object({ id: z.number(), tenantId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const lead = await db.getLeadById(input.id, input.tenantId);
+      if (!lead) throw new Error('Lead not found');
+
+      const { getGHLService } = await import('./gohighlevelService');
+      const ghl = getGHLService();
+
+      if (lead.ghlContactId) {
+        // Update existing GHL contact
+        await ghl.updateContact(lead.ghlContactId, {
+          name: lead.name,
+          email: lead.email,
+          phone: lead.phone,
+          companyName: lead.company,
+        });
+        await ghl.addTag(lead.ghlContactId, 'lead');
+      } else {
+        // Create new GHL contact
+        const ghlContact = await ghl.createContact({
+          name: lead.name,
+          email: lead.email!,
+          phone: lead.phone,
+          companyName: lead.company,
+          tags: ['lead'],
+        });
+
+        if (ghlContact) {
+          await db.updateLead(input.id, input.tenantId, {
+            ghlContactId: ghlContact.id,
+            lastSyncedAt: new Date(),
+          });
+        }
+      }
+
+      return { success: true };
+    }),
+
+  syncFromGHL: protectedProcedure
+    .input(z.object({ ghlContactId: z.string(), tenantId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const { getGHLService } = await import('./gohighlevelService');
+      const ghl = getGHLService();
+
+      const ghlContact = await ghl.getContactById(input.ghlContactId);
+      if (!ghlContact) throw new Error('GHL contact not found');
+
+      // Check if lead already exists
+      const existingLead = await db.getLeadByGHLContactId(input.ghlContactId);
+
+      if (existingLead) {
+        // Update existing lead
+        await db.updateLead(existingLead.id, input.tenantId, {
+          name: ghlContact.name || '',
+          email: ghlContact.email,
+          phone: ghlContact.phone,
+          company: ghlContact.companyName,
+          lastSyncedAt: new Date(),
+        });
+        return { success: true, leadId: existingLead.id };
+      } else {
+        // Create new lead
+        const leadId = await db.createLead({
+          tenantId: input.tenantId,
+          ghlContactId: input.ghlContactId,
+          name: ghlContact.name || '',
+          email: ghlContact.email,
+          phone: ghlContact.phone,
+          company: ghlContact.companyName,
+          source: 'ghl',
+          status: 'new',
+          lastSyncedAt: new Date(),
+        });
+        return { success: true, leadId };
+      }
     }),
 });
 
@@ -225,13 +352,13 @@ const contactRouter = router({
     .query(async ({ input }) => {
       return db.getContactsByTenantId(input.tenantId);
     }),
-  
-  getById: protectedProcedure
+
+  get: protectedProcedure
     .input(z.object({ id: z.number(), tenantId: z.number() }))
     .query(async ({ input }) => {
       return db.getContactById(input.id, input.tenantId);
     }),
-  
+
   create: protectedProcedure
     .input(z.object({
       tenantId: z.number(),
@@ -239,21 +366,30 @@ const contactRouter = router({
       email: z.string().email(),
       phone: z.string().optional(),
       company: z.string().optional(),
+      type: z.enum(['kunde', 'partner', 'lieferant']).optional(),
+      street: z.string().optional(),
+      zip: z.string().optional(),
+      city: z.string().optional(),
       country: z.string().optional(),
+      website: z.string().optional(),
+      notes: z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const id = await db.createContact(input);
+      const id = await db.createContact({
+        ...input,
+        type: input.type || 'kunde',
+      });
       await db.createAuditLog({
         tenantId: input.tenantId,
         userId: ctx.user.id,
-        action: "create",
-        entityType: "contact",
+        action: 'create',
+        entityType: 'contact',
         entityId: id,
         newValues: input,
       });
       return { id };
     }),
-  
+
   update: protectedProcedure
     .input(z.object({
       id: z.number(),
@@ -262,7 +398,13 @@ const contactRouter = router({
       email: z.string().email().optional(),
       phone: z.string().optional(),
       company: z.string().optional(),
+      type: z.enum(['kunde', 'partner', 'lieferant']).optional(),
+      street: z.string().optional(),
+      zip: z.string().optional(),
+      city: z.string().optional(),
       country: z.string().optional(),
+      website: z.string().optional(),
+      notes: z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const { id, tenantId, ...data } = input;
@@ -271,13 +413,126 @@ const contactRouter = router({
       await db.createAuditLog({
         tenantId,
         userId: ctx.user.id,
-        action: "update",
-        entityType: "contact",
+        action: 'update',
+        entityType: 'contact',
         entityId: id,
         oldValues: oldContact,
         newValues: data,
       });
       return { success: true };
+    }),
+
+  delete: protectedProcedure
+    .input(z.object({ id: z.number(), tenantId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const oldContact = await db.getContactById(input.id, input.tenantId);
+      await db.deleteContact(input.id, input.tenantId);
+      await db.createAuditLog({
+        tenantId: input.tenantId,
+        userId: ctx.user.id,
+        action: 'delete',
+        entityType: 'contact',
+        entityId: input.id,
+        oldValues: oldContact,
+      });
+      return { success: true };
+    }),
+
+  syncToGHL: protectedProcedure
+    .input(z.object({ id: z.number(), tenantId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const contact = await db.getContactById(input.id, input.tenantId);
+      if (!contact) throw new Error('Contact not found');
+
+      const { getGHLService } = await import('./gohighlevelService');
+      const ghl = getGHLService();
+
+      if (contact.ghlContactId) {
+        // Update existing GHL contact
+        await ghl.updateContact(contact.ghlContactId, {
+          name: contact.name,
+          email: contact.email,
+          phone: contact.phone,
+          companyName: contact.company,
+          address1: contact.street,
+          city: contact.city,
+          postalCode: contact.zip,
+          country: contact.country,
+          website: contact.website,
+        });
+        await ghl.addTag(contact.ghlContactId, 'kunde');
+      } else {
+        // Create new GHL contact
+        const ghlContact = await ghl.createContact({
+          name: contact.name,
+          email: contact.email,
+          phone: contact.phone,
+          companyName: contact.company,
+          address1: contact.street,
+          city: contact.city,
+          postalCode: contact.zip,
+          country: contact.country,
+          website: contact.website,
+          tags: ['kunde'],
+        });
+
+        if (ghlContact) {
+          await db.updateContact(input.id, input.tenantId, {
+            ghlContactId: ghlContact.id,
+            lastSyncedAt: new Date(),
+          });
+        }
+      }
+
+      return { success: true };
+    }),
+
+  syncFromGHL: protectedProcedure
+    .input(z.object({ ghlContactId: z.string(), tenantId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const { getGHLService } = await import('./gohighlevelService');
+      const ghl = getGHLService();
+
+      const ghlContact = await ghl.getContactById(input.ghlContactId);
+      if (!ghlContact) throw new Error('GHL contact not found');
+
+      // Check if contact already exists
+      const existingContact = await db.getContactByGHLContactId(input.ghlContactId);
+
+      if (existingContact) {
+        // Update existing contact
+        await db.updateContact(existingContact.id, input.tenantId, {
+          name: ghlContact.name || '',
+          email: ghlContact.email,
+          phone: ghlContact.phone,
+          company: ghlContact.companyName,
+          street: ghlContact.address1,
+          city: ghlContact.city,
+          zip: ghlContact.postalCode,
+          country: ghlContact.country,
+          website: ghlContact.website,
+          lastSyncedAt: new Date(),
+        });
+        return { success: true, contactId: existingContact.id };
+      } else {
+        // Create new contact
+        const contactId = await db.createContact({
+          tenantId: input.tenantId,
+          ghlContactId: input.ghlContactId,
+          name: ghlContact.name || '',
+          email: ghlContact.email,
+          phone: ghlContact.phone,
+          company: ghlContact.companyName,
+          street: ghlContact.address1,
+          city: ghlContact.city,
+          zip: ghlContact.postalCode,
+          country: ghlContact.country,
+          website: ghlContact.website,
+          type: 'kunde',
+          lastSyncedAt: new Date(),
+        });
+        return { success: true, contactId };
+      }
     }),
 });
 
@@ -390,53 +645,69 @@ const dealRouter = router({
     .query(async ({ input }) => {
       return db.getDealsByTenantId(input.tenantId);
     }),
-  
-  getById: protectedProcedure
+
+  get: protectedProcedure
     .input(z.object({ id: z.number(), tenantId: z.number() }))
     .query(async ({ input }) => {
       return db.getDealById(input.id, input.tenantId);
     }),
-  
+
   byStage: protectedProcedure
     .input(z.object({ stageId: z.number(), tenantId: z.number() }))
     .query(async ({ input }) => {
       return db.getDealsByStageId(input.stageId, input.tenantId);
     }),
-  
+
+  byContact: protectedProcedure
+    .input(z.object({ contactId: z.number(), tenantId: z.number() }))
+    .query(async ({ input }) => {
+      return db.getDealsByContactId(input.contactId, input.tenantId);
+    }),
+
   create: protectedProcedure
     .input(z.object({
       tenantId: z.number(),
       contactId: z.number(),
+      leadId: z.number().optional(),
       stageId: z.number(),
-      title: z.string().min(1),
+      name: z.string().min(1),
       value: z.number().optional(),
       currency: z.string().optional(),
-      ownerId: z.number().optional(),
+      stage: z.enum(['new', 'qualified', 'proposal', 'negotiation', 'won', 'lost']).optional(),
+      probability: z.number().min(0).max(100).optional(),
+      expectedCloseDate: z.date().optional(),
+      assignedTo: z.number().optional(),
+      notes: z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const id = await db.createDeal({
         ...input,
-        ownerId: input.ownerId || ctx.user.id,
+        stage: input.stage || 'new',
+        assignedTo: input.assignedTo || ctx.user.id,
       });
       await db.createAuditLog({
         tenantId: input.tenantId,
         userId: ctx.user.id,
-        action: "create",
-        entityType: "deal",
+        action: 'create',
+        entityType: 'deal',
         entityId: id,
         newValues: input,
       });
       return { id };
     }),
-  
+
   update: protectedProcedure
     .input(z.object({
       id: z.number(),
       tenantId: z.number(),
-      title: z.string().optional(),
+      name: z.string().optional(),
       value: z.number().optional(),
       stageId: z.number().optional(),
-      ownerId: z.number().optional(),
+      stage: z.enum(['new', 'qualified', 'proposal', 'negotiation', 'won', 'lost']).optional(),
+      probability: z.number().min(0).max(100).optional(),
+      expectedCloseDate: z.date().optional(),
+      assignedTo: z.number().optional(),
+      notes: z.string().optional(),
       closedAt: z.date().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
@@ -446,33 +717,109 @@ const dealRouter = router({
       await db.createAuditLog({
         tenantId,
         userId: ctx.user.id,
-        action: "update",
-        entityType: "deal",
+        action: 'update',
+        entityType: 'deal',
         entityId: id,
         oldValues: oldDeal,
         newValues: data,
       });
       return { success: true };
     }),
-  
-  move: protectedProcedure
+
+  delete: protectedProcedure
+    .input(z.object({ id: z.number(), tenantId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const oldDeal = await db.getDealById(input.id, input.tenantId);
+      await db.deleteDeal(input.id, input.tenantId);
+      await db.createAuditLog({
+        tenantId: input.tenantId,
+        userId: ctx.user.id,
+        action: 'delete',
+        entityType: 'deal',
+        entityId: input.id,
+        oldValues: oldDeal,
+      });
+      return { success: true };
+    }),
+
+  updateStage: protectedProcedure
     .input(z.object({
       id: z.number(),
       tenantId: z.number(),
       stageId: z.number(),
+      stage: z.enum(['new', 'qualified', 'proposal', 'negotiation', 'won', 'lost']).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const oldDeal = await db.getDealById(input.id, input.tenantId);
-      await db.updateDeal(input.id, input.tenantId, { stageId: input.stageId });
+      await db.updateDeal(input.id, input.tenantId, {
+        stageId: input.stageId,
+        stage: input.stage,
+      });
       await db.createAuditLog({
         tenantId: input.tenantId,
         userId: ctx.user.id,
-        action: "move",
-        entityType: "deal",
+        action: 'move',
+        entityType: 'deal',
         entityId: input.id,
-        oldValues: { stageId: oldDeal?.stageId },
-        newValues: { stageId: input.stageId },
+        oldValues: { stageId: oldDeal?.stageId, stage: oldDeal?.stage },
+        newValues: { stageId: input.stageId, stage: input.stage },
       });
+      return { success: true };
+    }),
+
+  syncToGHL: protectedProcedure
+    .input(z.object({ id: z.number(), tenantId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const deal = await db.getDealById(input.id, input.tenantId);
+      if (!deal) throw new Error('Deal not found');
+
+      const contact = await db.getContactById(deal.contactId, input.tenantId);
+      if (!contact?.ghlContactId) {
+        throw new Error('Contact must be synced to GHL first');
+      }
+
+      const { getGHLService } = await import('./gohighlevelService');
+      const ghl = getGHLService();
+
+      if (deal.ghlOpportunityId) {
+        // Update existing GHL opportunity
+        await ghl.updateOpportunity(deal.ghlOpportunityId, {
+          name: deal.name,
+          monetaryValue: deal.value,
+          // Note: stage mapping would need pipeline configuration
+        });
+      } else {
+        // Create new GHL opportunity
+        // Note: This requires pipeline configuration in GHL
+        const pipelines = await ghl.getPipelines();
+        if (pipelines.length === 0) {
+          throw new Error('No pipelines configured in GHL');
+        }
+
+        const defaultPipeline = pipelines[0];
+        const firstStage = defaultPipeline.stages?.[0];
+
+        if (!firstStage) {
+          throw new Error('No stages in GHL pipeline');
+        }
+
+        const ghlOpportunity = await ghl.createOpportunity({
+          name: deal.name,
+          contactId: contact.ghlContactId,
+          pipelineId: defaultPipeline.id,
+          pipelineStageId: firstStage.id,
+          monetaryValue: deal.value,
+          assignedTo: deal.assignedTo?.toString(),
+        });
+
+        if (ghlOpportunity) {
+          await db.updateDeal(input.id, input.tenantId, {
+            ghlOpportunityId: ghlOpportunity.id,
+            lastSyncedAt: new Date(),
+          });
+        }
+      }
+
       return { success: true };
     }),
 });
