@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { trpc } from "../../lib/trpc";
-import { 
-  FileText, Plus, Download, Mail, CheckCircle, Clock, AlertCircle, 
+import DashboardLayout from "@/components/DashboardLayout";
+import {
+  FileText, Plus, Download, Mail, CheckCircle, Clock, AlertCircle,
   XCircle, Eye, Edit, ChevronDown, ChevronUp, Search, Filter
 } from "lucide-react";
 
@@ -100,23 +101,26 @@ export default function AdminInvoices() {
   
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00B4D8]"></div>
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00B4D8]"></div>
+        </div>
+      </DashboardLayout>
     );
   }
-  
+
   return (
-    <div className="space-y-6">
+    <DashboardLayout>
+      <div className="space-y-6 max-w-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 flex-wrap">
+        <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-bold text-gray-900">Rechnungsverwaltung</h1>
           <p className="text-gray-600 mt-1">Verwalten Sie alle Rechnungen und Abschläge</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-[#00B4D8] text-white rounded-lg hover:bg-[#0096B4] transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-[#00B4D8] text-white rounded-lg hover:bg-[#0096B4] transition-colors whitespace-nowrap shrink-0"
         >
           <Plus className="w-5 h-5" />
           Neue Abschlagrechnung
@@ -124,8 +128,8 @@ export default function AdminInvoices() {
       </div>
       
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 min-w-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gray-100 rounded-lg">
               <FileText className="w-5 h-5 text-gray-600" />
@@ -136,7 +140,7 @@ export default function AdminInvoices() {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 min-w-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-100 rounded-lg">
               <CheckCircle className="w-5 h-5 text-green-600" />
@@ -147,7 +151,7 @@ export default function AdminInvoices() {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 min-w-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
               <Clock className="w-5 h-5 text-blue-600" />
@@ -158,7 +162,7 @@ export default function AdminInvoices() {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 min-w-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-red-100 rounded-lg">
               <AlertCircle className="w-5 h-5 text-red-600" />
@@ -342,15 +346,16 @@ export default function AdminInvoices() {
       
       {/* Create Modal */}
       {showCreateModal && (
-        <CreateInvoiceModal 
-          onClose={() => setShowCreateModal(false)} 
+        <CreateInvoiceModal
+          onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
             setShowCreateModal(false);
             refetch();
           }}
         />
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
 

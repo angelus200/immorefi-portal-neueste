@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import DashboardLayout from "@/components/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -607,7 +608,8 @@ export default function AdminHandbuch() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <DashboardLayout>
+      <div className="flex flex-col h-[calc(100vh-8rem)]">
       {/* Header */}
       <div className="border-b p-4">
         <h1 className="text-2xl font-bold mb-4">📘 ImmoRefi Portal Handbuch</h1>
@@ -701,6 +703,7 @@ export default function AdminHandbuch() {
           </div>
         </ScrollArea>
       </div>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

@@ -1,4 +1,5 @@
 import { trpc } from "@/lib/trpc";
+import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -217,27 +218,23 @@ export default function AdminOnboardingData() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-4">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-64 w-full" />
-      </div>
+      <DashboardLayout>
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/admin">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold">Onboarding-Daten</h1>
-          <p className="text-muted-foreground">
-            Übersicht aller eingereichten Analyse-Fragebögen
-          </p>
-        </div>
+    <DashboardLayout>
+      <div className="space-y-6 max-w-full">
+      <div>
+        <h1 className="text-2xl font-bold">Onboarding-Daten</h1>
+        <p className="text-muted-foreground">
+          Übersicht aller eingereichten Analyse-Fragebögen
+        </p>
       </div>
 
       <Card>
@@ -412,6 +409,7 @@ export default function AdminOnboardingData() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
