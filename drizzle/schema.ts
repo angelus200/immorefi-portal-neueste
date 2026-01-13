@@ -810,3 +810,19 @@ export const contractTemplates = mysqlTable("contract_templates", {
 
 export type ContractTemplate = typeof contractTemplates.$inferSelect;
 export type InsertContractTemplate = typeof contractTemplates.$inferInsert;
+
+// Partner Logos - Logo management system
+export const partnerLogos = mysqlTable("partner_logos", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  category: mysqlEnum("category", ["presse", "mitgliedschaft", "auszeichnung", "partner"]).notNull(),
+  imageUrl: varchar("imageUrl", { length: 500 }).notNull(),
+  linkUrl: varchar("linkUrl", { length: 500 }),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PartnerLogo = typeof partnerLogos.$inferSelect;
+export type InsertPartnerLogo = typeof partnerLogos.$inferInsert;

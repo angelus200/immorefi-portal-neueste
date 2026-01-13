@@ -84,6 +84,11 @@ export default function Home() {
     });
   };
 
+  // Logo queries
+  const { data: pressLogos = [] } = trpc.partnerLogo.list.useQuery({ category: "presse" });
+  const { data: membershipLogos = [] } = trpc.partnerLogo.list.useQuery({ category: "mitgliedschaft" });
+  const { data: awardLogos = [] } = trpc.partnerLogo.list.useQuery({ category: "auszeichnung" });
+
   // Guest checkout for Handbuch direct purchase
   const guestCheckout = trpc.order.guestCheckout.useMutation({
     onSuccess: (data) => {
@@ -285,92 +290,132 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Trust Badges */}
+      {/* Trust Badges - Dynamic from DB */}
       <section className="py-12 border-y bg-muted/30">
         <div className="container">
           <p className="text-center text-sm text-muted-foreground mb-8">Bekannt aus</p>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
+            {/* Static placeholders */}
             <div className="text-xl font-bold text-muted-foreground opacity-60">KFW</div>
-            <a
-              href="https://unternehmen.focus.de/amazon-markenaufbau.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:opacity-80 transition-opacity"
-            >
-              <svg viewBox="0 0 140 40" className="h-8" role="img" aria-label="FOCUS">
-                <rect fill="#E4002B" width="140" height="40" rx="2"/>
-                <text x="70" y="26" fill="white" fontSize="18" fontWeight="bold" textAnchor="middle" fontFamily="sans-serif">FOCUS</text>
-              </svg>
-            </a>
-            <a
-              href="https://www.forbes.at/artikel/internationale-firmengruendung-optimiert"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:opacity-80 transition-opacity"
-            >
-              <svg viewBox="0 0 140 40" className="h-8" role="img" aria-label="Forbes">
-                <rect fill="#000000" width="140" height="40" rx="2"/>
-                <text x="70" y="28" fill="white" fontSize="20" fontWeight="normal" textAnchor="middle" fontFamily="serif">Forbes</text>
-              </svg>
-            </a>
+
+            {/* Dynamic press logos from database */}
+            {pressLogos.map((logo) => (
+              <a
+                key={logo.id}
+                href={logo.linkUrl || undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:opacity-80 transition-opacity"
+              >
+                <img
+                  src={logo.imageUrl}
+                  alt={logo.name}
+                  className="h-8 object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </a>
+            ))}
+
+            {/* Fallback SVG logos if DB empty */}
+            {pressLogos.length === 0 && (
+              <>
+                <a href="https://unternehmen.focus.de/amazon-markenaufbau.html" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+                  <svg viewBox="0 0 140 40" className="h-8" role="img" aria-label="FOCUS">
+                    <rect fill="#E4002B" width="140" height="40" rx="2"/>
+                    <text x="70" y="26" fill="white" fontSize="18" fontWeight="bold" textAnchor="middle" fontFamily="sans-serif">FOCUS</text>
+                  </svg>
+                </a>
+                <a href="https://www.forbes.at/artikel/internationale-firmengruendung-optimiert" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+                  <svg viewBox="0 0 140 40" className="h-8" role="img" aria-label="Forbes">
+                    <rect fill="#000000" width="140" height="40" rx="2"/>
+                    <text x="70" y="28" fill="white" fontSize="20" fontWeight="normal" textAnchor="middle" fontFamily="serif">Forbes</text>
+                  </svg>
+                </a>
+              </>
+            )}
+
             <div className="text-xl font-bold text-muted-foreground opacity-60">Handelsblatt</div>
             <div className="text-xl font-bold text-muted-foreground opacity-60">Manager Magazin</div>
           </div>
         </div>
       </section>
 
-      {/* Auszeichnungen & Mitgliedschaften */}
+      {/* Auszeichnungen & Mitgliedschaften - Dynamic from DB */}
       <section className="py-16 bg-gray-50 dark:bg-slate-950">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold text-center mb-8">Auszeichnungen & Mitgliedschaften</h2>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
 
-            {/* diind Siegel */}
-            <a
-              href="https://kg.angelus.group/wp-content/uploads/2025/06/URKUNDE_Unternehmen_der_Zukunft_Angelus_Managment_Beratung_und_Service.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:scale-105 transition-transform"
-            >
-              <div className="bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-full w-24 h-24 flex flex-col items-center justify-center shadow-lg border-4 border-yellow-500">
-                <div className="text-[8px] font-bold text-yellow-900 uppercase tracking-tight">Unternehmen</div>
-                <div className="text-[10px] font-bold text-yellow-900 uppercase">der Zukunft</div>
-                <div className="text-[6px] text-yellow-800 mt-1 text-center px-2">diind</div>
-              </div>
-            </a>
+            {/* Dynamic awards logos from database */}
+            {awardLogos.map((logo) => (
+              <a
+                key={logo.id}
+                href={logo.linkUrl || undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:scale-105 transition-transform"
+              >
+                <img
+                  src={logo.imageUrl}
+                  alt={logo.name}
+                  className="h-24 object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </a>
+            ))}
 
-            {/* Swiss Startup Association */}
-            <a
-              href="https://swissstartupassociation.ch"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:scale-105 transition-transform"
-            >
-              <div className="text-center font-bold leading-tight">
-                <div className="text-sm text-foreground">swiss startup</div>
-                <div className="text-sm text-foreground">associati<span className="text-red-600">o</span>n</div>
-              </div>
-            </a>
+            {/* Dynamic membership logos from database */}
+            {membershipLogos.map((logo) => (
+              <a
+                key={logo.id}
+                href={logo.linkUrl || undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:scale-105 transition-transform"
+              >
+                <img
+                  src={logo.imageUrl}
+                  alt={logo.name}
+                  className="h-16 object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </a>
+            ))}
 
-            {/* BAND Business Angels */}
-            <a
-              href="https://www.business-angels.de"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:scale-105 transition-transform"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex shadow-md">
-                  <span className="bg-red-600 text-white px-2 py-1.5 font-bold text-lg">B</span>
-                  <span className="bg-white text-red-600 px-2 py-1.5 font-bold text-lg border-2 border-red-600 border-l-0">A</span>
-                  <span className="bg-red-600 text-white px-2 py-1.5 font-bold text-lg">N</span>
-                  <span className="bg-red-600 text-white px-2 py-1.5 font-bold text-lg">D</span>
+            {/* Fallback CSS logos if DB empty */}
+            {awardLogos.length === 0 && membershipLogos.length === 0 && (
+              <>
+                {/* Fallback diind Siegel */}
+                <div className="bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-full w-24 h-24 flex flex-col items-center justify-center shadow-lg border-4 border-yellow-500">
+                  <div className="text-[8px] font-bold text-yellow-900 uppercase tracking-tight">Unternehmen</div>
+                  <div className="text-[10px] font-bold text-yellow-900 uppercase">der Zukunft</div>
+                  <div className="text-[6px] text-yellow-800 mt-1 text-center px-2">diind</div>
                 </div>
-                <div className="text-[9px] text-muted-foreground leading-tight font-semibold uppercase">
-                  Business<br/>Angels<br/>Deutschland
+                {/* Fallback Swiss Startup */}
+                <div className="text-center font-bold leading-tight">
+                  <div className="text-sm text-foreground">swiss startup</div>
+                  <div className="text-sm text-foreground">associati<span className="text-red-600">o</span>n</div>
                 </div>
-              </div>
-            </a>
+                {/* Fallback BAND */}
+                <div className="flex items-center gap-3">
+                  <div className="flex shadow-md">
+                    <span className="bg-red-600 text-white px-2 py-1.5 font-bold text-lg">B</span>
+                    <span className="bg-white text-red-600 px-2 py-1.5 font-bold text-lg border-2 border-red-600 border-l-0">A</span>
+                    <span className="bg-red-600 text-white px-2 py-1.5 font-bold text-lg">N</span>
+                    <span className="bg-red-600 text-white px-2 py-1.5 font-bold text-lg">D</span>
+                  </div>
+                  <div className="text-[9px] text-muted-foreground leading-tight font-semibold uppercase">
+                    Business<br/>Angels<br/>Deutschland
+                  </div>
+                </div>
+              </>
+            )}
 
           </div>
           <p className="text-center text-muted-foreground text-sm mt-6">

@@ -25,7 +25,8 @@ import {
   customerNotes, InsertCustomerNote, CustomerNote,
   staffCalendars, InsertStaffCalendar, StaffCalendar,
   bookings, InsertBooking, Booking,
-  contractTemplates, InsertContractTemplate, ContractTemplate
+  contractTemplates, InsertContractTemplate, ContractTemplate,
+  partnerLogos, InsertPartnerLogo, PartnerLogo
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1363,4 +1364,74 @@ export async function deleteContractTemplate(id: number) {
   if (!db) throw new Error("Database not available");
   // Soft delete by setting isActive to false
   await db.update(contractTemplates).set({ isActive: false }).where(eq(contractTemplates.id, id));
+}
+
+// ============================================
+// Partner Logo Functions
+// ============================================
+
+export async function getPartnerLogos(category?: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  if (category) {
+    return db.select().from(partnerLogos)
+      .where(and(
+        eq(partnerLogos.isActive, true),
+        eq(partnerLogos.category, category as any)
+      ))
+      .orderBy(asc(partnerLogos.sortOrder), asc(partnerLogos.name));
+  }
+
+  return db.select().from(partnerLogos)
+    .where(eq(partnerLogos.isActive, true))
+    .orderBy(asc(partnerLogos.category), asc(partnerLogos.sortOrder), asc(partnerLogos.name));
+}
+
+export async function getAllPartnerLogos() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(partnerLogos)
+    .orderBy(asc(partnerLogos.category), asc(partnerLogos.sortOrder), asc(partnerLogos.name));
+}
+
+export async function getPartnerLogoById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(partnerLogos)
+    .where(eq(partnerLogos.id, id))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function createPartnerLogo(logo: InsertPartnerLogo) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(partnerLogos).values(logo);
+  return result[0].insertId;
+}
+
+export async function updatePartnerLogo(id: number, data: Partial<InsertPartnerLogo>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(partnerLogos).set(data).where(eq(partnerLogos.id, id));
+}
+
+export async function deletePartnerLogo(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Soft delete by setting isActive to false
+  await db.update(partnerLogos).set({ isActive: false }).where(eq(partnerLogos.id, id));
+}
+
+export async function reorderPartnerLogos(updates: { id: number; sortOrder: number }[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Update each logo's sortOrder
+  for (const update of updates) {
+    await db.update(partnerLogos)
+      .set({ sortOrder: update.sortOrder })
+      .where(eq(partnerLogos.id, update.id));
+  }
 }

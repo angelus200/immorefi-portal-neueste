@@ -2623,6 +2623,122 @@ const contractTemplateRouter = router({
 });
 
 // ============================================
+// PARTNER LOGO ROUTER
+// ============================================
+
+const partnerLogoRouter = router({
+  // List all active logos (optionally filtered by category)
+  list: publicProcedure
+    .input(z.object({ category: z.string().optional() }).optional())
+    .query(async ({ input }) => {
+      return db.getPartnerLogos(input?.category);
+    }),
+
+  // List all logos (admin only - includes inactive)
+  listAll: adminProcedure.query(async () => {
+    return db.getAllPartnerLogos();
+  }),
+
+  // Get single logo by ID
+  get: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input }) => {
+      return db.getPartnerLogoById(input.id);
+    }),
+
+  // Create new logo (admin only)
+  create: adminProcedure
+    .input(z.object({
+      name: z.string().min(1),
+      category: z.enum(["presse", "mitgliedschaft", "auszeichnung", "partner"]),
+      imageUrl: z.string().url(),
+      linkUrl: z.string().url().optional(),
+      sortOrder: z.number().optional(),
+      isActive: z.boolean().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const logoId = await db.createPartnerLogo({
+        ...input,
+        sortOrder: input.sortOrder ?? 0,
+        isActive: input.isActive ?? true,
+      });
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'create',
+        entityType: 'partner_logo',
+        entityId: logoId,
+        newValues: { name: input.name, category: input.category },
+      });
+      return { id: logoId, success: true };
+    }),
+
+  // Update logo (admin only)
+  update: adminProcedure
+    .input(z.object({
+      id: z.number(),
+      name: z.string().min(1).optional(),
+      category: z.enum(["presse", "mitgliedschaft", "auszeichnung", "partner"]).optional(),
+      imageUrl: z.string().url().optional(),
+      linkUrl: z.string().url().optional().nullable(),
+      sortOrder: z.number().optional(),
+      isActive: z.boolean().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { id, ...data } = input;
+      const logo = await db.getPartnerLogoById(id);
+      if (!logo) throw new Error('Logo not found');
+      await db.updatePartnerLogo(id, data);
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'update',
+        entityType: 'partner_logo',
+        entityId: id,
+        oldValues: { name: logo.name, category: logo.category },
+        newValues: data,
+      });
+      return { success: true };
+    }),
+
+  // Delete logo (soft delete - admin only)
+  delete: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const logo = await db.getPartnerLogoById(input.id);
+      if (!logo) throw new Error('Logo not found');
+      await db.deletePartnerLogo(input.id);
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'delete',
+        entityType: 'partner_logo',
+        entityId: input.id,
+        oldValues: { name: logo.name, isActive: true },
+        newValues: { isActive: false },
+      });
+      return { success: true };
+    }),
+
+  // Reorder logos (admin only)
+  reorder: adminProcedure
+    .input(z.object({
+      updates: z.array(z.object({
+        id: z.number(),
+        sortOrder: z.number(),
+      })),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      await db.reorderPartnerLogos(input.updates);
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'update',
+        entityType: 'partner_logo',
+        entityId: 0,
+        newValues: { reordered: input.updates.length },
+      });
+      return { success: true };
+    }),
+});
+
+// ============================================
 // MAIN ROUTER
 // ============================================
 
@@ -2663,6 +2779,7 @@ export const appRouter = router({
   staffCalendar: staffCalendarRouter,
   booking: bookingRouter,
   contractTemplate: contractTemplateRouter,
+  partnerLogo: partnerLogoRouter,
 });
 
 export type AppRouter = typeof appRouter;
