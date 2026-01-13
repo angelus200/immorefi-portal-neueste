@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Send, X, Archive, CheckCheck } from 'lucide-react';
-import { trpc } from '@/_core/trpc';
+import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';

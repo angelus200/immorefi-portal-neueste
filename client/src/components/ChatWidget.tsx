@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
-import { trpc } from '@/_core/trpc';
+import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
