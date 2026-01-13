@@ -49,35 +49,64 @@ import { Link, useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
-// Client menu items
+// Client menu items - Simple and clean
 const clientMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: CalendarIcon, label: "Termin buchen", path: "/booking" },
-  { icon: Calculator, label: "Finanzrechner", path: "/tools/interest-calculator" },
   { icon: ShoppingCart, label: "Bestellungen", path: "/orders" },
   { icon: FileText, label: "Rechnungen", path: "/invoices" },
-  { icon: FileCheck, label: "Verträge", path: "/contracts" },
   { icon: FolderOpen, label: "Dokumente", path: "/documents" },
-  { icon: ClipboardList, label: "Aufgaben", path: "/tasks" },
-  { icon: Settings, label: "Einstellungen", path: "/settings" },
+  { icon: MessageCircle, label: "Nachrichten", path: "/admin/messages" },
 ];
 
-// Admin menu items
-const adminMenuItems = [
-  { icon: UserPlus, label: "Leads", path: "/crm/leads" },
-  { icon: Kanban, label: "Pipeline", path: "/crm/deals" },
-  { icon: Contact, label: "Kontakte", path: "/crm/contacts" },
-  { icon: CalendarIcon, label: "Mein Kalender", path: "/admin/my-calendar" },
-  { icon: ClipboardList, label: "Buchungen", path: "/admin/bookings" },
-  { icon: ClipboardCheck, label: "Onboarding-Daten", path: "/admin/onboarding" },
-  { icon: ShoppingCart, label: "Bestellungen", path: "/admin/orders" },
-  { icon: FileText, label: "Rechnungen", path: "/admin/invoices" },
-  { icon: FileText, label: "Verträge", path: "/admin/contracts" },
-  { icon: MessageCircle, label: "Nachrichten", path: "/admin/messages" },
-  { icon: Users, label: "Benutzer", path: "/admin/users" },
-  { icon: BarChart3, label: "Audit-Log", path: "/admin/audit" },
-  { icon: Settings, label: "Einstellungen", path: "/admin/settings" },
-  { icon: BookOpen, label: "Handbuch", path: "/admin/handbuch" },
+// Admin menu items - Organized by sections
+type MenuSection = {
+  title: string;
+  items: Array<{ icon: any; label: string; path: string }>;
+};
+
+const adminMenuSections: MenuSection[] = [
+  {
+    title: "Dashboard",
+    items: [
+      { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+    ],
+  },
+  {
+    title: "CRM",
+    items: [
+      { icon: UserPlus, label: "Leads", path: "/crm/leads" },
+      { icon: Kanban, label: "Pipeline", path: "/crm/deals" },
+      { icon: Contact, label: "Kontakte", path: "/crm/contacts" },
+    ],
+  },
+  {
+    title: "Termine",
+    items: [
+      { icon: CalendarIcon, label: "Mein Kalender", path: "/admin/my-calendar" },
+      { icon: ClipboardList, label: "Buchungen", path: "/admin/bookings" },
+    ],
+  },
+  {
+    title: "Verwaltung",
+    items: [
+      { icon: ClipboardCheck, label: "Onboarding-Daten", path: "/admin/onboarding" },
+      { icon: ShoppingCart, label: "Bestellungen", path: "/admin/orders" },
+      { icon: FileText, label: "Rechnungen", path: "/admin/invoices" },
+      { icon: FolderOpen, label: "Dokumente", path: "/documents" },
+      { icon: FileCheck, label: "Verträge", path: "/admin/contracts" },
+      { icon: MessageCircle, label: "Nachrichten", path: "/admin/messages" },
+    ],
+  },
+  {
+    title: "System",
+    items: [
+      { icon: Users, label: "Benutzer", path: "/admin/users" },
+      { icon: BarChart3, label: "Audit-Log", path: "/admin/audit" },
+      { icon: Settings, label: "Einstellungen", path: "/admin/settings" },
+      { icon: BookOpen, label: "Handbuch", path: "/admin/handbuch" },
+    ],
+  },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -164,13 +193,25 @@ function DashboardLayoutContent({
   
   // Check if user is admin
   const isAdmin = user?.role === "superadmin" || user?.role === "tenant_admin" || user?.role === "staff";
-  
-  // Combine menu items based on role
-  const allMenuItems = isAdmin 
-    ? [...clientMenuItems, ...adminMenuItems]
-    : clientMenuItems;
-  
-  const activeMenuItem = allMenuItems.find(item => item.path === location);
+
+  // Get active menu item label for header
+  const getActiveMenuLabel = () => {
+    // Check client menu
+    const clientItem = clientMenuItems.find(item => item.path === location);
+    if (clientItem) return clientItem.label;
+
+    // Check admin sections
+    if (isAdmin) {
+      for (const section of adminMenuSections) {
+        const adminItem = section.items.find(item => item.path === location);
+        if (adminItem) return adminItem.label;
+      }
+    }
+
+    return "Dashboard";
+  };
+
+  const activeMenuLabel = getActiveMenuLabel();
 
   useEffect(() => {
     if (isCollapsed) {
@@ -236,62 +277,69 @@ function DashboardLayoutContent({
           </SidebarHeader>
 
           <SidebarContent className="gap-0">
-            {/* Client Menu */}
-            <SidebarMenu className="px-2 py-1">
-              {clientMenuItems.map(item => {
-                const isActive = location === item.path;
-                return (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton
-                      isActive={isActive}
-                      onClick={() => setLocation(item.path)}
-                      tooltip={item.label}
-                      className={`h-10 transition-all font-normal`}
-                    >
-                      <item.icon
-                        className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
-                      />
-                      <span>{item.label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-            
-            {/* Admin Menu - only visible for admins */}
-            {isAdmin && (
+            {!isAdmin ? (
+              // Client Menu - Simple and clean
+              <SidebarMenu className="px-2 py-1">
+                {clientMenuItems.map(item => {
+                  const isActive = location === item.path;
+                  return (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton
+                        isActive={isActive}
+                        onClick={() => setLocation(item.path)}
+                        tooltip={item.label}
+                        className="h-10 transition-all font-normal"
+                      >
+                        <item.icon
+                          className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
+                        />
+                        <span>{item.label}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            ) : (
+              // Admin Menu - Organized by sections
               <>
-                <div className="px-4 py-2">
-                  {!isCollapsed && (
-                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <Shield className="h-3 w-3" />
-                      <span>Admin</span>
-                    </div>
-                  )}
-                  {isCollapsed && (
-                    <Separator className="my-2" />
-                  )}
-                </div>
-                <SidebarMenu className="px-2 py-1">
-                  {adminMenuItems.map(item => {
-                    const isActive = location === item.path;
-                    return (
-                      <SidebarMenuItem key={item.path}>
-                        <SidebarMenuButton
-                          isActive={isActive}
-                          onClick={() => setLocation(item.path)}
-                          tooltip={item.label}
-                          className={`h-10 transition-all font-normal`}
-                        >
-                          <item.icon
-                            className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
-                          />
-                          <span>{item.label}</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
+                {adminMenuSections.map((section, sectionIndex) => (
+                  <div key={section.title}>
+                    {/* Section Header */}
+                    {sectionIndex > 0 && (
+                      <div className="px-4 py-3 mt-2">
+                        {!isCollapsed ? (
+                          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            {section.title}
+                          </div>
+                        ) : (
+                          <Separator className="my-1" />
+                        )}
+                      </div>
+                    )}
+
+                    {/* Section Items */}
+                    <SidebarMenu className="px-2 py-1">
+                      {section.items.map(item => {
+                        const isActive = location === item.path;
+                        return (
+                          <SidebarMenuItem key={item.path}>
+                            <SidebarMenuButton
+                              isActive={isActive}
+                              onClick={() => setLocation(item.path)}
+                              tooltip={item.label}
+                              className="h-10 transition-all font-normal"
+                            >
+                              <item.icon
+                                className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
+                              />
+                              <span>{item.label}</span>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </SidebarMenu>
+                  </div>
+                ))}
               </>
             )}
           </SidebarContent>
@@ -379,7 +427,7 @@ function DashboardLayoutContent({
           <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1 lg:hidden" />
             <h1 className="text-lg font-semibold">
-              {activeMenuItem?.label || "Dashboard"}
+              {activeMenuLabel}
             </h1>
           </div>
         </header>
