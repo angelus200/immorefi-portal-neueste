@@ -103,6 +103,7 @@ const adminMenuSections: MenuSection[] = [
     items: [
       { icon: Users, label: "Benutzer", path: "/admin/users" },
       { icon: BarChart3, label: "Audit-Log", path: "/admin/audit" },
+      { icon: FileText, label: "Vertragsvorlagen", path: "/admin/contract-templates" },
       { icon: Settings, label: "Einstellungen", path: "/admin/settings" },
       { icon: BookOpen, label: "Handbuch", path: "/admin/handbuch" },
     ],

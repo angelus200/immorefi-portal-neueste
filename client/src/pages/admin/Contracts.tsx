@@ -11,18 +11,19 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { 
-  FileText, 
-  Plus, 
-  Upload, 
-  Users, 
-  CheckCircle, 
-  Clock, 
+import {
+  FileText,
+  Plus,
+  Upload,
+  Users,
+  CheckCircle,
+  Clock,
   Eye,
   UserPlus,
   Loader2
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { ContractGenerator } from "@/components/ContractGenerator";
 
 const CONTRACT_TYPES = {
   analysis: "Analyse & Strukturierungsdiagnose",
@@ -42,6 +43,7 @@ const CONTRACT_STATUS = {
 export default function AdminContracts() {
   const { user, loading: authLoading } = useAuth();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState<number | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
@@ -175,13 +177,18 @@ export default function AdminContracts() {
               Verwalten Sie Vertragsvorlagen und weisen Sie diese Kunden zu
             </p>
           </div>
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Neuer Vertrag
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsGeneratorOpen(true)}>
+              <FileText className="mr-2 h-4 w-4" />
+              Vertrag aus Vorlage
+            </Button>
+            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Neuer Vertrag
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Neuen Vertrag erstellen</DialogTitle>
@@ -277,8 +284,9 @@ export default function AdminContracts() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
-        
+
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
@@ -498,6 +506,16 @@ export default function AdminContracts() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Contract Generator */}
+        <ContractGenerator
+          open={isGeneratorOpen}
+          onOpenChange={setIsGeneratorOpen}
+          onContractCreated={(contract) => {
+            toast.success("Vertrag aus Vorlage erstellt");
+            refetchContracts();
+          }}
+        />
       </div>
     </DashboardLayout>
   );
