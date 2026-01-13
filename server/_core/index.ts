@@ -167,6 +167,24 @@ async function startServer() {
                     orderDate: order.createdAt || new Date(),
                   });
 
+                  // GoHighLevel Integration: Create/update contact and add to CRM
+                  try {
+                    const { ghlService } = await import('../services/gohighlevel');
+                    await ghlService.processNewOrder({
+                      email: invoice.customerEmail || '',
+                      name: invoice.customerName,
+                      productName: order.productName,
+                      amount: invoice.grossAmount,
+                      currency: invoice.currency,
+                      orderId: order.id,
+                      orderDate: order.createdAt || new Date(),
+                    });
+                    console.log(`[Webhook] GoHighLevel contact processed for ${invoice.customerEmail}`);
+                  } catch (ghlError) {
+                    console.error('[Webhook] Error processing GoHighLevel contact:', ghlError);
+                    // Don't fail the webhook if GHL processing fails
+                  }
+
                   console.log(`[Webhook] Invoice email notification sent for ${invoice.invoiceNumber}`);
                 }
               } catch (emailError) {
