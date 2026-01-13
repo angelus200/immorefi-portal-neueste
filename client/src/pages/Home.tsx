@@ -9,13 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { 
-  Building2, 
-  TrendingUp, 
-  Shield, 
-  Users, 
-  FileText, 
-  CheckCircle2, 
+import {
+  Building2,
+  TrendingUp,
+  Shield,
+  Users,
+  FileText,
+  CheckCircle2,
   ArrowRight,
   Phone,
   Mail,
@@ -23,14 +23,26 @@ import {
   Loader2,
   ChevronRight,
   BookOpen,
-  Download
+  Download,
+  Linkedin,
+  Facebook
 } from "lucide-react";
 import { Link } from "wouter";
 import { FinanceCalculator } from "@/components/FinanceCalculator";
 import { Calculator } from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
 // Default tenant ID for the main landing page
 const DEFAULT_TENANT_ID = 1;
+
+// Market growth data for hero chart
+const marketData = [
+  { year: '2020', value: 8 },
+  { year: '2021', value: 9.2 },
+  { year: '2022', value: 10.5 },
+  { year: '2023', value: 11.3 },
+  { year: '2024', value: 12.5 }
+];
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
@@ -205,7 +217,28 @@ export default function Home() {
                       <TrendingUp className="h-6 w-6 text-primary" />
                     </div>
                   </div>
-                  <div className="h-32 bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 rounded-lg" />
+                  <div className="h-32 rounded-lg overflow-hidden">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={marketData}>
+                        <defs>
+                          <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <XAxis dataKey="year" hide />
+                        <YAxis hide domain={[7, 13]} />
+                        <Area
+                          type="monotone"
+                          dataKey="value"
+                          stroke="#06b6d4"
+                          strokeWidth={2}
+                          fillOpacity={1}
+                          fill="url(#colorValue)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="text-center p-3 bg-muted rounded-lg">
                       <div className="text-lg font-semibold">8</div>
@@ -256,13 +289,70 @@ export default function Home() {
       <section className="py-12 border-y bg-muted/30">
         <div className="container">
           <p className="text-center text-sm text-muted-foreground mb-8">Bekannt aus</p>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60">
-            <div className="text-xl font-bold text-muted-foreground">KFW</div>
-            <div className="text-xl font-bold text-muted-foreground">FOCUS</div>
-            <div className="text-xl font-bold text-muted-foreground">Forbes</div>
-            <div className="text-xl font-bold text-muted-foreground">Handelsblatt</div>
-            <div className="text-xl font-bold text-muted-foreground">Manager Magazin</div>
+          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
+            <div className="text-xl font-bold text-muted-foreground opacity-60">KFW</div>
+            <a
+              href="https://unternehmen.focus.de/amazon-markenaufbau.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:opacity-80 transition-opacity"
+            >
+              <img src="/images/logos/focus-logo.png" alt="FOCUS" className="h-8 object-contain" />
+            </a>
+            <a
+              href="https://www.forbes.at/artikel/internationale-firmengruendung-optimiert"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:opacity-80 transition-opacity"
+            >
+              <img src="/images/logos/forbes-logo.png" alt="Forbes" className="h-8 object-contain" />
+            </a>
+            <div className="text-xl font-bold text-muted-foreground opacity-60">Handelsblatt</div>
+            <div className="text-xl font-bold text-muted-foreground opacity-60">Manager Magazin</div>
           </div>
+        </div>
+      </section>
+
+      {/* Auszeichnungen & Mitgliedschaften */}
+      <section className="py-16 bg-gray-50 dark:bg-slate-950">
+        <div className="container mx-auto px-4">
+          <h2 className="text-2xl font-bold text-center mb-8">Auszeichnungen & Mitgliedschaften</h2>
+          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
+
+            {/* diind Siegel */}
+            <a
+              href="https://kg.angelus.group/wp-content/uploads/2025/06/URKUNDE_Unternehmen_der_Zukunft_Angelus_Managment_Beratung_und_Service.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:scale-105 transition-transform"
+            >
+              <img src="/images/logos/diind-siegel.png" alt="Unternehmen der Zukunft" className="h-24 object-contain" />
+            </a>
+
+            {/* Swiss Startup Association */}
+            <a
+              href="https://swissstartupassociation.ch"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:scale-105 transition-transform"
+            >
+              <img src="/images/logos/swiss-startup-logo.png" alt="Swiss Startup Association" className="h-16 object-contain" />
+            </a>
+
+            {/* BAND Business Angels */}
+            <a
+              href="https://www.business-angels.de"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:scale-105 transition-transform"
+            >
+              <img src="/images/logos/band-logo.png" alt="BAND Business Angels Deutschland" className="h-12 object-contain" />
+            </a>
+
+          </div>
+          <p className="text-center text-muted-foreground text-sm mt-6">
+            Stolzes Mitglied führender Wirtschaftsverbände
+          </p>
         </div>
       </section>
 
