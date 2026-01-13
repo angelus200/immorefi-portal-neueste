@@ -56,7 +56,7 @@ async function startServer() {
       const { stripe } = await import('../stripe');
       const { updateOrderByStripeSessionId, createAuditLog, getOrderByStripeSessionId, getUserById } = await import('../db');
       const { createInvoiceFromStripePayment, generateInvoiceHtml, getInvoiceWithItems } = await import('../invoiceService');
-      const { sendInvoiceEmail, sendOrderConfirmationEmail } = await import('../emailService');
+      const { sendInvoiceEmail, sendOrderConfirmationEmail, sendAdminOrderNotification } = await import('../emailService');
       
       let event;
       
@@ -155,7 +155,18 @@ async function startServer() {
                     amount: invoice.grossAmount,
                     currency: invoice.currency,
                   });
-                  
+
+                  // Send admin notification about new order
+                  await sendAdminOrderNotification({
+                    customerEmail: invoice.customerEmail || '',
+                    customerName: invoice.customerName,
+                    orderId: order.id,
+                    productName: order.productName,
+                    amount: invoice.grossAmount,
+                    currency: invoice.currency,
+                    orderDate: order.createdAt || new Date(),
+                  });
+
                   console.log(`[Webhook] Invoice email notification sent for ${invoice.invoiceNumber}`);
                 }
               } catch (emailError) {
