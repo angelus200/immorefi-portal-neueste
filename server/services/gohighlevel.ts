@@ -257,15 +257,21 @@ Automatisch erfasst über ImmoRefi Portal.
       await this.addContactNote(contact.id, noteBody);
 
       // Create task for team follow-up (optional, due in 2 days)
-      const dueDate = new Date();
-      dueDate.setDate(dueDate.getDate() + 2);
+      // This is wrapped in try-catch because task creation might fail
+      // but should not prevent the order from being processed
+      try {
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 2);
 
-      await this.createTask(
-        contact.id,
-        `Follow-up: ${orderData.productName} - ${orderData.name}`,
-        `Neue Bestellung #${orderData.orderId} nachverfolgen und Kunden kontaktieren.`,
-        dueDate
-      );
+        await this.createTask(
+          contact.id,
+          `Follow-up: ${orderData.productName} - ${orderData.name}`,
+          `Neue Bestellung #${orderData.orderId} nachverfolgen und Kunden kontaktieren.`,
+          dueDate
+        );
+      } catch (taskError: any) {
+        console.warn('[GHL] Optional task creation failed (order will still be processed):', taskError.message);
+      }
 
       console.log('[GHL] Order processed successfully for contact:', contact.id);
       return true;
