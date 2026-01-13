@@ -297,7 +297,10 @@ export default function Home() {
               rel="noopener noreferrer"
               className="hover:opacity-80 transition-opacity"
             >
-              <img src="/images/logos/focus-logo.png" alt="FOCUS" className="h-8 object-contain" />
+              <svg viewBox="0 0 140 40" className="h-8" role="img" aria-label="FOCUS">
+                <rect fill="#E4002B" width="140" height="40" rx="2"/>
+                <text x="70" y="26" fill="white" fontSize="18" fontWeight="bold" textAnchor="middle" fontFamily="sans-serif">FOCUS</text>
+              </svg>
             </a>
             <a
               href="https://www.forbes.at/artikel/internationale-firmengruendung-optimiert"
@@ -305,7 +308,10 @@ export default function Home() {
               rel="noopener noreferrer"
               className="hover:opacity-80 transition-opacity"
             >
-              <img src="/images/logos/forbes-logo.png" alt="Forbes" className="h-8 object-contain" />
+              <svg viewBox="0 0 140 40" className="h-8" role="img" aria-label="Forbes">
+                <rect fill="#000000" width="140" height="40" rx="2"/>
+                <text x="70" y="28" fill="white" fontSize="20" fontWeight="normal" textAnchor="middle" fontFamily="serif">Forbes</text>
+              </svg>
             </a>
             <div className="text-xl font-bold text-muted-foreground opacity-60">Handelsblatt</div>
             <div className="text-xl font-bold text-muted-foreground opacity-60">Manager Magazin</div>
@@ -326,7 +332,11 @@ export default function Home() {
               rel="noopener noreferrer"
               className="hover:scale-105 transition-transform"
             >
-              <img src="/images/logos/diind-siegel.png" alt="Unternehmen der Zukunft" className="h-24 object-contain" />
+              <div className="bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-full w-24 h-24 flex flex-col items-center justify-center shadow-lg border-4 border-yellow-500">
+                <div className="text-[8px] font-bold text-yellow-900 uppercase tracking-tight">Unternehmen</div>
+                <div className="text-[10px] font-bold text-yellow-900 uppercase">der Zukunft</div>
+                <div className="text-[6px] text-yellow-800 mt-1 text-center px-2">diind</div>
+              </div>
             </a>
 
             {/* Swiss Startup Association */}
@@ -336,7 +346,10 @@ export default function Home() {
               rel="noopener noreferrer"
               className="hover:scale-105 transition-transform"
             >
-              <img src="/images/logos/swiss-startup-logo.png" alt="Swiss Startup Association" className="h-16 object-contain" />
+              <div className="text-center font-bold leading-tight">
+                <div className="text-sm text-foreground">swiss startup</div>
+                <div className="text-sm text-foreground">associati<span className="text-red-600">o</span>n</div>
+              </div>
             </a>
 
             {/* BAND Business Angels */}
@@ -346,7 +359,17 @@ export default function Home() {
               rel="noopener noreferrer"
               className="hover:scale-105 transition-transform"
             >
-              <img src="/images/logos/band-logo.png" alt="BAND Business Angels Deutschland" className="h-12 object-contain" />
+              <div className="flex items-center gap-3">
+                <div className="flex shadow-md">
+                  <span className="bg-red-600 text-white px-2 py-1.5 font-bold text-lg">B</span>
+                  <span className="bg-white text-red-600 px-2 py-1.5 font-bold text-lg border-2 border-red-600 border-l-0">A</span>
+                  <span className="bg-red-600 text-white px-2 py-1.5 font-bold text-lg">N</span>
+                  <span className="bg-red-600 text-white px-2 py-1.5 font-bold text-lg">D</span>
+                </div>
+                <div className="text-[9px] text-muted-foreground leading-tight font-semibold uppercase">
+                  Business<br/>Angels<br/>Deutschland
+                </div>
+              </div>
             </a>
 
           </div>
