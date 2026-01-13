@@ -208,6 +208,39 @@ class GoHighLevelService {
   }
 
   /**
+   * Determine product tags based on product name
+   */
+  private determineProductTags(productName: string): string[] {
+    const tags: string[] = [];
+    const productLower = productName.toLowerCase();
+
+    // Product mapping with keywords
+    const productMapping: Record<string, string> = {
+      'analyse': 'produkt-analyse',
+      'gutachten': 'produkt-gutachten',
+      'portfolio': 'produkt-portfolio',
+      'beratung': 'produkt-beratung',
+      'machbarkeit': 'produkt-analyse',
+      'finanzierung': 'produkt-beratung',
+    };
+
+    // Check for matching keywords
+    for (const [keyword, tag] of Object.entries(productMapping)) {
+      if (productLower.includes(keyword)) {
+        tags.push(tag);
+        break; // Only add first matching tag
+      }
+    }
+
+    // Fallback for unknown products
+    if (tags.length === 0) {
+      tags.push('produkt-sonstiges');
+    }
+
+    return tags;
+  }
+
+  /**
    * Process new order: Create/update contact, add tags, notes, and tasks
    */
   async processNewOrder(orderData: {
@@ -240,18 +273,50 @@ class GoHighLevelService {
         return false;
       }
 
-      // Add "bauträger" tag
-      await this.addContactTag(contact.id, 'bauträger');
+      // Collect all tags to add
+      const baseTags = [
+        'bauträger',
+        'immorefi-kunde',
+        'hat-bezahlt',
+      ];
+
+      // Determine product-specific tags
+      const productTags = this.determineProductTags(orderData.productName);
+
+      // Combine all tags
+      const allTags = [...baseTags, ...productTags];
+
+      console.log('[GHL] Adding tags:', allTags.join(', '));
+
+      // Add all tags (continue even if individual tags fail)
+      for (const tag of allTags) {
+        try {
+          await this.addContactTag(contact.id, tag);
+        } catch (tagError: any) {
+          console.warn(`[GHL] Failed to add tag "${tag}":`, tagError.message);
+          // Continue with next tag
+        }
+      }
 
       // Create detailed note about the order
       const noteBody = `
-🛒 Neue Bestellung #${orderData.orderId}
+🛒 NEUE BESTELLUNG
+━━━━━━━━━━━━━━━━━━━
+Produkt: ${orderData.productName}
+Betrag: €${orderData.amount.toFixed(2)}
+Bestellnummer: #${orderData.orderId}
+Datum: ${orderData.orderDate.toLocaleString('de-DE', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit'
+})}
 
-📦 Produkt: ${orderData.productName}
-💰 Betrag: ${orderData.amount} ${orderData.currency.toUpperCase()}
-📅 Datum: ${orderData.orderDate.toLocaleString('de-DE')}
+📧 Kunde: ${orderData.email}
+🔗 Portal: https://portal.immoportal.app
 
-Automatisch erfasst über ImmoRefi Portal.
+Status: Bezahlt ✅
       `.trim();
 
       await this.addContactNote(contact.id, noteBody);
@@ -332,6 +397,96 @@ Automatisch erfasst über ImmoRefi Portal.
       return true;
     } catch (error: any) {
       console.error('[GHL] Error processing onboarding:', error.message);
+      return false;
+    }
+  }
+
+  /**
+   * Process status update for an order
+   */
+  async processStatusUpdate(data: {
+    email: string;
+    orderId: number;
+    newStatus: string;
+    changedBy: string;
+  }): Promise<boolean> {
+    try {
+      console.log('[GHL] Processing status update for:', data.email);
+
+      // Find contact
+      const contact = await this.findContactByEmail(data.email);
+
+      if (!contact) {
+        console.warn('[GHL] Contact not found for status update');
+        return false;
+      }
+
+      // Create status update note
+      const noteBody = `
+📋 STATUS UPDATE
+━━━━━━━━━━━━━━━━━━━
+Bestellung #${data.orderId}
+Neuer Status: ${data.newStatus}
+Geändert von: ${data.changedBy}
+Datum: ${new Date().toLocaleString('de-DE', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit'
+})}
+      `.trim();
+
+      await this.addContactNote(contact.id, noteBody);
+
+      console.log('[GHL] Status update processed successfully');
+      return true;
+    } catch (error: any) {
+      console.error('[GHL] Error processing status update:', error.message);
+      return false;
+    }
+  }
+
+  /**
+   * Process document upload notification
+   */
+  async processDocumentUpload(data: {
+    email: string;
+    filename: string;
+    orderId?: number;
+  }): Promise<boolean> {
+    try {
+      console.log('[GHL] Processing document upload for:', data.email);
+
+      // Find contact
+      const contact = await this.findContactByEmail(data.email);
+
+      if (!contact) {
+        console.warn('[GHL] Contact not found for document upload');
+        return false;
+      }
+
+      // Create document upload note
+      const noteBody = `
+📄 DOKUMENT HOCHGELADEN
+━━━━━━━━━━━━━━━━━━━
+Datei: ${data.filename}
+${data.orderId ? `Bestellung: #${data.orderId}` : ''}
+Datum: ${new Date().toLocaleString('de-DE', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit'
+})}
+      `.trim();
+
+      await this.addContactNote(contact.id, noteBody);
+
+      console.log('[GHL] Document upload processed successfully');
+      return true;
+    } catch (error: any) {
+      console.error('[GHL] Error processing document upload:', error.message);
       return false;
     }
   }
