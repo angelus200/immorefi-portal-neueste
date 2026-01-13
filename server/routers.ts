@@ -924,6 +924,105 @@ const userRouter = router({
         user: newUser,
       };
     }),
+
+  // Admin: Benutzer aktualisieren
+  updateUser: adminProcedure
+    .input(z.object({
+      id: z.number(),
+      name: z.string().optional(),
+      email: z.string().email().optional(),
+      phone: z.string().optional(),
+      company: z.string().optional(),
+      role: z.enum(['client', 'staff', 'tenant_admin', 'superadmin']).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { id, ...updates } = input;
+
+      // Check if user exists
+      const existingUser = await db.getUserById(id);
+      if (!existingUser) {
+        throw new Error('Benutzer nicht gefunden');
+      }
+
+      // Update user
+      await db.updateUser(id, updates as any);
+
+      // Create audit log
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'update',
+        entityType: 'user',
+        entityId: id,
+        oldValues: existingUser,
+        newValues: updates,
+      });
+
+      return { success: true };
+    }),
+
+  // Admin: Benutzer löschen
+  deleteUser: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      // Check if user exists
+      const existingUser = await db.getUserById(input.id);
+      if (!existingUser) {
+        throw new Error('Benutzer nicht gefunden');
+      }
+
+      // Prevent deleting yourself
+      if (existingUser.id === ctx.user.id) {
+        throw new Error('Sie können sich nicht selbst löschen');
+      }
+
+      // Delete user and related data
+      await db.deleteUser(input.id);
+
+      // Create audit log
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'delete',
+        entityType: 'user',
+        entityId: input.id,
+        oldValues: existingUser,
+      });
+
+      return { success: true };
+    }),
+
+  // Kundennotizen abrufen
+  getNotes: adminProcedure
+    .input(z.object({ customerId: z.number() }))
+    .query(async ({ input }) => {
+      return db.getCustomerNotes(input.customerId);
+    }),
+
+  // Kundennotiz hinzufügen
+  addNote: adminProcedure
+    .input(z.object({
+      customerId: z.number(),
+      content: z.string(),
+      orderId: z.number().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      await db.createCustomerNote({
+        customerId: input.customerId,
+        content: input.content,
+        orderId: input.orderId,
+        source: 'admin',
+        createdBy: ctx.user.id,
+      });
+
+      return { success: true };
+    }),
+
+  // Kundennotiz löschen
+  deleteNote: adminProcedure
+    .input(z.object({ noteId: z.number() }))
+    .mutation(async ({ input }) => {
+      await db.deleteCustomerNote(input.noteId);
+      return { success: true };
+    }),
 });
 
 // ============================================

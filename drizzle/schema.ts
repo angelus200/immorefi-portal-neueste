@@ -5,6 +5,7 @@ import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, json, fl
 // ============================================
 
 export const roleEnum = mysqlEnum("role", ["superadmin", "tenant_admin", "staff", "client"]);
+export const userSourceEnum = mysqlEnum("userSource", ["portal", "ghl", "manual"]);
 
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
@@ -12,8 +13,11 @@ export const users = mysqlTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   phone: varchar("phone", { length: 32 }),
+  company: varchar("company", { length: 255 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: roleEnum.default("client").notNull(),
+  source: userSourceEnum.default("portal").notNull(),
+  ghlContactId: varchar("ghlContactId", { length: 64 }),
   onboardingCompleted: boolean("onboardingCompleted").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -650,3 +654,27 @@ export const messages = mysqlTable("messages", {
 
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = typeof messages.$inferInsert;
+
+// ============================================
+// CUSTOMER NOTES (Kundennotizen)
+// ============================================
+
+export const customerNoteSourceEnum = mysqlEnum("customerNoteSource", [
+  "ghl-import",  // Importiert aus GoHighLevel
+  "admin",       // Erstellt von Admin
+  "system"       // Automatisch vom System
+]);
+
+export const customerNotes = mysqlTable("customer_notes", {
+  id: int("id").autoincrement().primaryKey(),
+  customerId: int("customerId").notNull(),  // User ID des Kunden
+  orderId: int("orderId"),                   // Optional: Bezug zu Bestellung
+  content: text("content").notNull(),
+  source: customerNoteSourceEnum.default("admin").notNull(),
+  createdBy: int("createdBy"),              // User ID des Erstellers (bei admin/system)
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CustomerNote = typeof customerNotes.$inferSelect;
+export type InsertCustomerNote = typeof customerNotes.$inferInsert;

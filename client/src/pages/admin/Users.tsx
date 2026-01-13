@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
-import { Search, UserPlus, Shield, Users as UsersIcon, MessageCircle } from "lucide-react";
+import { Search, UserPlus, Shield, Users as UsersIcon, MessageCircle, Edit, Trash2, Filter } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useLocation } from "wouter";
 import {
@@ -23,6 +23,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -31,27 +41,45 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+type UserSource = 'all' | 'portal' | 'ghl' | 'manual';
 
 function UsersContent() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [sourceFilter, setSourceFilter] = useState<UserSource>("all");
   const [, setLocation] = useLocation();
+
+  // Invite Dialog
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
   const [inviteRole, setInviteRole] = useState<string>("client");
 
+  // Edit Dialog
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editUser, setEditUser] = useState<any>(null);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editCompany, setEditCompany] = useState("");
+  const [editRole, setEditRole] = useState("");
+
+  // Delete Dialog
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleteUserId, setDeleteUserId] = useState<number | null>(null);
+
   const { data: users, isLoading } = trpc.user.list.useQuery();
   const utils = trpc.useUtils();
 
-  // Start conversation as admin
+  // Mutations
   const startConversationMutation = trpc.chat.startConversationAsAdmin.useMutation({
     onSuccess: (data) => {
-      // Navigate to messages page with the conversation selected
       setLocation(`/admin/messages?conversationId=${data.conversation.id}`);
     },
   });
 
-  // Invite user mutation
   const inviteUserMutation = trpc.user.inviteUser.useMutation({
     onSuccess: () => {
       toast.success("Benutzer erfolgreich eingeladen! Eine Willkommens-E-Mail wurde versendet.");
@@ -63,11 +91,39 @@ function UsersContent() {
     },
   });
 
+  const updateUserMutation = trpc.user.updateUser.useMutation({
+    onSuccess: () => {
+      toast.success("Benutzer erfolgreich aktualisiert");
+      setIsEditDialogOpen(false);
+      utils.user.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Fehler beim Aktualisieren des Benutzers");
+    },
+  });
+
+  const deleteUserMutation = trpc.user.deleteUser.useMutation({
+    onSuccess: () => {
+      toast.success("Benutzer erfolgreich gelöscht");
+      setIsDeleteDialogOpen(false);
+      setDeleteUserId(null);
+      utils.user.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Fehler beim Löschen des Benutzers");
+    },
+  });
+
+  // Filtering
   const filteredUsers = users?.filter(user => {
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.company?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesSource = sourceFilter === 'all' || user.source === sourceFilter;
+
+    return matchesSearch && matchesSource;
   });
 
   const roleLabels: Record<string, string> = {
@@ -82,6 +138,18 @@ function UsersContent() {
     tenant_admin: "bg-blue-100 text-blue-800",
     staff: "bg-green-100 text-green-800",
     client: "bg-gray-100 text-gray-800",
+  };
+
+  const sourceLabels: Record<string, string> = {
+    portal: "Portal",
+    ghl: "GHL Import",
+    manual: "Manuell",
+  };
+
+  const sourceColors: Record<string, string> = {
+    portal: "bg-blue-50 text-blue-700 border-blue-200",
+    ghl: "bg-green-50 text-green-700 border-green-200",
+    manual: "bg-gray-50 text-gray-700 border-gray-200",
   };
 
   const handleSendMessage = (userId: number, userName: string) => {
@@ -110,6 +178,40 @@ function UsersContent() {
     setInviteName("");
     setInviteRole("client");
     setIsInviteDialogOpen(false);
+  };
+
+  const handleEditUser = (user: any) => {
+    setEditUser(user);
+    setEditName(user.name || "");
+    setEditEmail(user.email || "");
+    setEditPhone(user.phone || "");
+    setEditCompany(user.company || "");
+    setEditRole(user.role);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateUser = () => {
+    if (!editUser) return;
+
+    updateUserMutation.mutate({
+      id: editUser.id,
+      name: editName,
+      email: editEmail,
+      phone: editPhone || undefined,
+      company: editCompany || undefined,
+      role: editRole as any,
+    });
+  };
+
+  const handleDeleteUser = (userId: number) => {
+    setDeleteUserId(userId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteUser = () => {
+    if (deleteUserId) {
+      deleteUserMutation.mutate({ id: deleteUserId });
+    }
   };
 
   return (
@@ -149,12 +251,12 @@ function UsersContent() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Mitarbeiter</CardTitle>
-            <UsersIcon className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">GHL Import</CardTitle>
+            <Filter className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {users?.filter(u => u.role === 'staff').length || 0}
+              {users?.filter(u => u.source === 'ghl').length || 0}
             </div>
           </CardContent>
         </Card>
@@ -171,17 +273,27 @@ function UsersContent() {
         </Card>
       </div>
 
-      {/* Search */}
+      {/* Search & Filter */}
       <Card>
         <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Suchen nach Name oder E-Mail..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Suchen nach Name, E-Mail oder Firma..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Tabs value={sourceFilter} onValueChange={(v) => setSourceFilter(v as UserSource)}>
+              <TabsList>
+                <TabsTrigger value="all">Alle</TabsTrigger>
+                <TabsTrigger value="portal">Portal</TabsTrigger>
+                <TabsTrigger value="ghl">GHL Import</TabsTrigger>
+                <TabsTrigger value="manual">Manuell</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
         </CardContent>
       </Card>
@@ -205,8 +317,9 @@ function UsersContent() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>E-Mail</TableHead>
+                  <TableHead>Firma</TableHead>
                   <TableHead>Rolle</TableHead>
-                  <TableHead>Letzte Anmeldung</TableHead>
+                  <TableHead>Quelle</TableHead>
                   <TableHead>Erstellt</TableHead>
                   <TableHead className="text-right">Aktionen</TableHead>
                 </TableRow>
@@ -225,29 +338,51 @@ function UsersContent() {
                       </div>
                     </TableCell>
                     <TableCell>{user.email || "-"}</TableCell>
+                    <TableCell className="text-muted-foreground">{user.company || "-"}</TableCell>
                     <TableCell>
-                      <span className={`text-xs px-2 py-1 rounded ${roleColors[user.role]}`}>
+                      <Badge variant="secondary" className={roleColors[user.role]}>
                         {roleLabels[user.role]}
-                      </span>
+                      </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {user.lastSignedIn ? new Date(user.lastSignedIn).toLocaleDateString('de-DE') : "-"}
+                    <TableCell>
+                      <Badge variant="outline" className={sourceColors[user.source || 'portal']}>
+                        {sourceLabels[user.source || 'portal']}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {new Date(user.createdAt).toLocaleDateString('de-DE')}
                     </TableCell>
                     <TableCell className="text-right">
-                      {user.role === 'client' && (
+                      <div className="flex items-center justify-end gap-2">
+                        {user.role === 'client' && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleSendMessage(user.id, user.name || 'Kunde')}
+                            disabled={startConversationMutation.isPending}
+                            title="Nachricht senden"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleSendMessage(user.id, user.name || 'Kunde')}
-                          disabled={startConversationMutation.isPending}
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditUser(user)}
+                          title="Bearbeiten"
                         >
-                          <MessageCircle className="h-4 w-4 mr-2" />
-                          Nachricht
+                          <Edit className="h-4 w-4" />
                         </Button>
-                      )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteUser(user.id)}
+                          className="text-destructive hover:text-destructive"
+                          title="Löschen"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -312,18 +447,109 @@ function UsersContent() {
               onClick={handleInviteUser}
               disabled={!inviteEmail || !inviteName || inviteUserMutation.isPending}
             >
-              {inviteUserMutation.isPending ? (
-                'Lädt...'
-              ) : (
-                <>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Einladen
-                </>
-              )}
+              {inviteUserMutation.isPending ? 'Lädt...' : 'Einladen'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Benutzer bearbeiten</DialogTitle>
+            <DialogDescription>
+              Bearbeiten Sie die Benutzerdaten.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Name</Label>
+              <Input
+                id="edit-name"
+                placeholder="Max Mustermann"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">E-Mail-Adresse</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                placeholder="max@beispiel.de"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-phone">Telefon</Label>
+              <Input
+                id="edit-phone"
+                type="tel"
+                placeholder="+49 123 456789"
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-company">Firma</Label>
+              <Input
+                id="edit-company"
+                placeholder="Beispiel GmbH"
+                value={editCompany}
+                onChange={(e) => setEditCompany(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-role">Rolle</Label>
+              <Select value={editRole} onValueChange={setEditRole}>
+                <SelectTrigger id="edit-role">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="client">Kunde</SelectItem>
+                  <SelectItem value="staff">Mitarbeiter</SelectItem>
+                  <SelectItem value="tenant_admin">Admin</SelectItem>
+                  <SelectItem value="superadmin">Super Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={updateUserMutation.isPending}>
+              Abbrechen
+            </Button>
+            <Button
+              onClick={handleUpdateUser}
+              disabled={updateUserMutation.isPending}
+            >
+              {updateUserMutation.isPending ? 'Speichert...' : 'Speichern'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete User Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Benutzer löschen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Diese Aktion kann nicht rückgängig gemacht werden. Alle Daten des Benutzers (Bestellungen, Nachrichten, Notizen) werden ebenfalls gelöscht.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteUser}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Löschen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

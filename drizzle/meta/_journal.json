@@ -71,6 +71,13 @@
       "when": 1768295730240,
       "tag": "0009_careful_shard",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1768316254919,
+      "tag": "0010_grey_chimera",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,7 @@
 import { eq, desc, and, gte, lte, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { 
-  InsertUser, users, 
+import {
+  InsertUser, users,
   tenants, InsertTenant, Tenant,
   memberships, InsertMembership, Membership,
   leads, InsertLead, Lead,
@@ -21,7 +21,8 @@ import {
   invoiceItems, InsertInvoiceItem, InvoiceItem,
   invoiceCounters, InsertInvoiceCounter, InvoiceCounter,
   conversations, InsertConversation, Conversation,
-  messages, InsertMessage, Message
+  messages, InsertMessage, Message,
+  customerNotes, InsertCustomerNote, CustomerNote
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -60,7 +61,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     };
     const updateSet: Record<string, unknown> = {};
 
-    const textFields = ["name", "email", "phone", "loginMethod"] as const;
+    const textFields = ["name", "email", "phone", "company", "loginMethod", "ghlContactId"] as const;
     type TextField = (typeof textFields)[number];
 
     const assignNullable = (field: TextField) => {
@@ -88,6 +89,10 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       // Neue Benutzer bekommen standardmäßig Client-Rolle
       values.role = 'client';
       // Nicht im updateSet, damit bestehende Rollen nicht überschrieben werden
+    }
+    if (user.source !== undefined) {
+      values.source = user.source;
+      updateSet.source = user.source;
     }
 
     if (!values.lastSignedIn) {
@@ -1014,4 +1019,62 @@ export async function getTotalUnreadMessageCount(forRole: "admin" | "customer") 
     );
 
   return result.length;
+}
+
+// ============================================
+// CUSTOMER NOTES FUNCTIONS
+// ============================================
+
+export async function createCustomerNote(note: InsertCustomerNote) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(customerNotes).values(note);
+  return result;
+}
+
+export async function getCustomerNotes(customerId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(customerNotes)
+    .where(eq(customerNotes.customerId, customerId))
+    .orderBy(desc(customerNotes.createdAt));
+}
+
+export async function getCustomerNotesByOrder(orderId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(customerNotes)
+    .where(eq(customerNotes.orderId, orderId))
+    .orderBy(desc(customerNotes.createdAt));
+}
+
+export async function deleteCustomerNote(noteId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(customerNotes).where(eq(customerNotes.id, noteId));
+}
+
+export async function updateUser(userId: number, updates: Partial<InsertUser>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(users).set(updates).where(eq(users.id, userId));
+}
+
+export async function deleteUser(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Delete related data first
+  await db.delete(customerNotes).where(eq(customerNotes.customerId, userId));
+  await db.delete(conversations).where(eq(conversations.customerId, userId));
+  await db.delete(onboardingData).where(eq(onboardingData.userId, userId));
+  await db.delete(orders).where(eq(orders.userId, userId));
+
+  // Delete user
+  await db.delete(users).where(eq(users.id, userId));
 }
