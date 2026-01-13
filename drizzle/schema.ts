@@ -609,3 +609,44 @@ export const invoiceCounters = mysqlTable("invoice_counters", {
 
 export type InvoiceCounter = typeof invoiceCounters.$inferSelect;
 export type InsertInvoiceCounter = typeof invoiceCounters.$inferInsert;
+
+// ============================================
+// CHAT SYSTEM (Konversationen & Nachrichten)
+// ============================================
+
+export const conversationStatusEnum = mysqlEnum("conversationStatus", [
+  "open",      // Aktive Konversation
+  "closed",    // Geschlossene Konversation
+  "archived"   // Archivierte Konversation
+]);
+
+export const conversations = mysqlTable("conversations", {
+  id: int("id").autoincrement().primaryKey(),
+  orderId: int("orderId"),  // Optional: Bezug zu einer Bestellung
+  customerId: int("customerId").notNull(), // User ID des Kunden
+  status: conversationStatusEnum.default("open").notNull(),
+  lastMessageAt: timestamp("lastMessageAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = typeof conversations.$inferInsert;
+
+export const messageSenderRoleEnum = mysqlEnum("messageSenderRole", [
+  "admin",    // Nachricht von Admin/Support
+  "customer"  // Nachricht vom Kunden
+]);
+
+export const messages = mysqlTable("messages", {
+  id: int("id").autoincrement().primaryKey(),
+  conversationId: int("conversationId").notNull(),
+  senderId: int("senderId").notNull(), // User ID des Absenders
+  senderRole: messageSenderRoleEnum.notNull(),
+  content: text("content").notNull(),
+  readAt: timestamp("readAt"), // Null = ungelesen
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = typeof messages.$inferInsert;

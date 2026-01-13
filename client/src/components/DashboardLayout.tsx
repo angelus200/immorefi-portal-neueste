@@ -37,7 +37,8 @@ import {
   FileText,
   BarChart3,
   Calculator,
-  BookOpen
+  BookOpen,
+  MessageCircle
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -62,6 +63,7 @@ const adminMenuItems = [
   { icon: ShoppingCart, label: "Bestellungen", path: "/admin/orders" },
   { icon: FileText, label: "Rechnungen", path: "/admin/invoices" },
   { icon: FileText, label: "Verträge", path: "/admin/contracts" },
+  { icon: MessageCircle, label: "Nachrichten", path: "/admin/messages" },
   { icon: Users, label: "Benutzer", path: "/admin/users" },
   { icon: BarChart3, label: "Audit-Log", path: "/admin/audit" },
   { icon: Settings, label: "Einstellungen", path: "/admin/settings" },

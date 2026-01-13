@@ -19,7 +19,9 @@ import {
   downloadStats, InsertDownloadStat, DownloadStat,
   invoices, InsertInvoice, Invoice,
   invoiceItems, InsertInvoiceItem, InvoiceItem,
-  invoiceCounters, InsertInvoiceCounter, InvoiceCounter
+  invoiceCounters, InsertInvoiceCounter, InvoiceCounter,
+  conversations, InsertConversation, Conversation,
+  messages, InsertMessage, Message
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -863,4 +865,146 @@ export async function getDownloadStatsByDateRange(startDate: Date, endDate: Date
       )
     )
     .orderBy(desc(downloadStats.createdAt));
+}
+// ============================================
+// CHAT SYSTEM FUNCTIONS
+// ============================================
+
+// Conversations
+export async function createConversation(data: InsertConversation) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(conversations).values(data);
+  return result[0].insertId;
+}
+
+export async function getConversationById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(conversations).where(eq(conversations.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getConversationsByCustomer(customerId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(conversations)
+    .where(eq(conversations.customerId, customerId))
+    .orderBy(desc(conversations.lastMessageAt));
+}
+
+export async function getAllConversations(status?: "open" | "closed" | "archived") {
+  const db = await getDb();
+  if (!db) return [];
+
+  if (status) {
+    return db.select().from(conversations)
+      .where(eq(conversations.status, status))
+      .orderBy(desc(conversations.lastMessageAt));
+  }
+
+  return db.select().from(conversations)
+    .orderBy(desc(conversations.lastMessageAt));
+}
+
+export async function updateConversationStatus(id: number, status: "open" | "closed" | "archived") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(conversations)
+    .set({ status, updatedAt: new Date() })
+    .where(eq(conversations.id, id));
+}
+
+export async function updateConversationLastMessage(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(conversations)
+    .set({ lastMessageAt: new Date(), updatedAt: new Date() })
+    .where(eq(conversations.id, id));
+}
+
+// Messages
+export async function createMessage(data: InsertMessage) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(messages).values(data);
+
+  // Update lastMessageAt in conversation
+  await updateConversationLastMessage(data.conversationId);
+
+  return result[0].insertId;
+}
+
+export async function getMessagesByConversation(conversationId: number, limit = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(messages)
+    .where(eq(messages.conversationId, conversationId))
+    .orderBy(asc(messages.createdAt))
+    .limit(limit);
+}
+
+export async function markMessageAsRead(messageId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(messages)
+    .set({ readAt: new Date() })
+    .where(eq(messages.id, messageId));
+}
+
+export async function markConversationMessagesAsRead(conversationId: number, readByRole: "admin" | "customer") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Mark all unread messages from the OTHER role as read
+  // If admin is reading, mark customer messages as read, and vice versa
+  const senderRole = readByRole === "admin" ? "customer" : "admin";
+
+  await db.update(messages)
+    .set({ readAt: new Date() })
+    .where(
+      and(
+        eq(messages.conversationId, conversationId),
+        eq(messages.senderRole, senderRole),
+        eq(messages.readAt, null)
+      )
+    );
+}
+
+export async function getUnreadMessageCount(conversationId: number, forRole: "admin" | "customer") {
+  const db = await getDb();
+  if (!db) return 0;
+
+  // Count unread messages from the OTHER role
+  // If checking for admin, count customer messages, and vice versa
+  const senderRole = forRole === "admin" ? "customer" : "admin";
+
+  const result = await db.select().from(messages)
+    .where(
+      and(
+        eq(messages.conversationId, conversationId),
+        eq(messages.senderRole, senderRole),
+        eq(messages.readAt, null)
+      )
+    );
+
+  return result.length;
+}
+
+export async function getTotalUnreadMessageCount(forRole: "admin" | "customer") {
+  const db = await getDb();
+  if (!db) return 0;
+
+  // Count all unread messages from the OTHER role
+  const senderRole = forRole === "admin" ? "customer" : "admin";
+
+  const result = await db.select().from(messages)
+    .where(
+      and(
+        eq(messages.senderRole, senderRole),
+        eq(messages.readAt, null)
+      )
+    );
+
+  return result.length;
 }

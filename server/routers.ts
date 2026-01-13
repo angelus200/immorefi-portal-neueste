@@ -1534,6 +1534,157 @@ const invoiceRouter = router({
 });
 
 // ============================================
+// CHAT ROUTER
+// ============================================
+
+const chatRouter = router({
+  // Get all conversations (admin sees all, customer sees their own)
+  getConversations: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin') {
+      return db.getAllConversations('open');
+    }
+    return db.getConversationsByCustomer(ctx.user.id);
+  }),
+
+  // Get a specific conversation with messages
+  getConversation: protectedProcedure
+    .input(z.object({ conversationId: z.number() }))
+    .query(async ({ input, ctx }) => {
+      const conversation = await db.getConversationById(input.conversationId);
+
+      if (!conversation) {
+        throw new Error('Conversation not found');
+      }
+
+      // Check access: admins can see all, customers only their own
+      if (
+        ctx.user.role !== 'superadmin' &&
+        ctx.user.role !== 'tenant_admin' &&
+        conversation.customerId !== ctx.user.id
+      ) {
+        throw new Error('Access denied');
+      }
+
+      const messages = await db.getMessagesByConversation(input.conversationId);
+
+      // Mark messages as read for the current user's role
+      const readByRole = (ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin') ? 'admin' : 'customer';
+      await db.markConversationMessagesAsRead(input.conversationId, readByRole);
+
+      return {
+        conversation,
+        messages,
+      };
+    }),
+
+  // Start a new conversation or get existing one
+  startConversation: protectedProcedure
+    .input(z.object({ orderId: z.number().optional() }))
+    .mutation(async ({ input, ctx }) => {
+      // Check if conversation already exists for this customer
+      const existingConversations = await db.getConversationsByCustomer(ctx.user.id);
+
+      if (input.orderId) {
+        // Find conversation for specific order
+        const orderConversation = existingConversations.find(c => c.orderId === input.orderId);
+        if (orderConversation) {
+          return orderConversation;
+        }
+      } else {
+        // Find any open general conversation
+        const generalConversation = existingConversations.find(c => !c.orderId && c.conversationStatus === 'open');
+        if (generalConversation) {
+          return generalConversation;
+        }
+      }
+
+      // Create new conversation
+      const conversation = await db.createConversation({
+        customerId: ctx.user.id,
+        orderId: input.orderId ?? null,
+        conversationStatus: 'open',
+      });
+
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'create',
+        entityType: 'conversation',
+        entityId: conversation.id,
+      });
+
+      return conversation;
+    }),
+
+  // Send a message
+  sendMessage: protectedProcedure
+    .input(z.object({
+      conversationId: z.number(),
+      content: z.string().min(1),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const conversation = await db.getConversationById(input.conversationId);
+
+      if (!conversation) {
+        throw new Error('Conversation not found');
+      }
+
+      // Check access
+      if (
+        ctx.user.role !== 'superadmin' &&
+        ctx.user.role !== 'tenant_admin' &&
+        conversation.customerId !== ctx.user.id
+      ) {
+        throw new Error('Access denied');
+      }
+
+      // Determine sender role
+      const senderRole = (ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin') ? 'admin' : 'customer';
+
+      const message = await db.createMessage({
+        conversationId: input.conversationId,
+        senderId: ctx.user.id,
+        messageSenderRole: senderRole,
+        content: input.content,
+      });
+
+      // Update conversation last message timestamp
+      await db.updateConversationLastMessage(input.conversationId);
+
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'create',
+        entityType: 'message',
+        entityId: message.id,
+      });
+
+      return message;
+    }),
+
+  // Get unread message count
+  getUnreadCount: protectedProcedure.query(async ({ ctx }) => {
+    const forRole = (ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin') ? 'admin' : 'customer';
+    return db.getTotalUnreadMessageCount(forRole);
+  }),
+
+  // Admin: Close a conversation
+  closeConversation: adminProcedure
+    .input(z.object({ conversationId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      await db.updateConversationStatus(input.conversationId, 'closed');
+
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'update',
+        entityType: 'conversation',
+        entityId: input.conversationId,
+        newValues: { status: 'closed' },
+      });
+
+      return { success: true };
+    }),
+});
+
+// ============================================
 // MAIN ROUTER
 // ============================================
 
@@ -1570,6 +1721,7 @@ export const appRouter = router({
   admin: adminRouter,
   download: downloadRouter,
   invoice: invoiceRouter,
+  chat: chatRouter,
 });
 
 export type AppRouter = typeof appRouter;

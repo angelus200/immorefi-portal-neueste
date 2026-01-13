@@ -22,6 +22,7 @@ import AdminContracts from "./pages/admin/Contracts";
 import AdminOrders from "./pages/admin/Orders";
 import AdminOnboardingData from "./pages/admin/OnboardingData";
 import AdminInvoices from "./pages/admin/Invoices";
+import AdminMessages from "./pages/admin/Messages";
 import AdminHandbuch from "./pages/AdminHandbuch";
 import Shop from "./pages/Shop";
 import ShopSuccess from "./pages/ShopSuccess";
@@ -32,6 +33,7 @@ import About from "./pages/About";
 import Team from "./pages/Team";
 import Press from "./pages/Press";
 import { CookieBanner } from "./components/CookieBanner";
+import { ChatWidget } from "./components/ChatWidget";
 import InterestCalculator from "./pages/tools/InterestCalculator";
 import RefinanceCalculator from "./pages/tools/RefinanceCalculator";
 import ROECalculator from "./pages/tools/ROECalculator";
@@ -89,6 +91,7 @@ function Router() {
       <Route path="/admin/orders" component={AdminOrders} />
       <Route path="/admin/onboarding" component={AdminOnboardingData} />
       <Route path="/admin/invoices" component={AdminInvoices} />
+      <Route path="/admin/messages" component={AdminMessages} />
       <Route path="/admin/handbuch" component={AdminHandbuch} />
       
       {/* Fallback */}
@@ -106,6 +109,7 @@ function App() {
           <Toaster />
           <Router />
           <CookieBanner />
+          <ChatWidget />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
