@@ -6,6 +6,7 @@ import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, json, fl
 
 export const roleEnum = mysqlEnum("role", ["superadmin", "tenant_admin", "staff", "client"]);
 export const userSourceEnum = mysqlEnum("userSource", ["portal", "ghl", "manual"]);
+export const userStatusEnum = mysqlEnum("userStatus", ["active", "inactive", "blocked"]);
 
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
@@ -14,6 +15,14 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   phone: varchar("phone", { length: 32 }),
   company: varchar("company", { length: 255 }),
+  // Address fields
+  street: varchar("street", { length: 255 }),
+  zip: varchar("zip", { length: 20 }),
+  city: varchar("city", { length: 100 }),
+  country: varchar("country", { length: 100 }),
+  website: varchar("website", { length: 255 }),
+  // Status
+  status: userStatusEnum.default("active").notNull(),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: roleEnum.default("client").notNull(),
   source: userSourceEnum.default("portal").notNull(),

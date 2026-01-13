@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -11,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
-import { Search, UserPlus, Shield, Users as UsersIcon, MessageCircle, Edit, Trash2, Filter } from "lucide-react";
+import { Search, UserPlus, Shield, Users as UsersIcon, MessageCircle, Edit, Trash2, Filter, ExternalLink, Clock, ShoppingBag } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useLocation } from "wouter";
 import {
@@ -42,7 +43,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 type UserSource = 'all' | 'portal' | 'ghl' | 'manual';
 
@@ -60,17 +63,40 @@ function UsersContent() {
   // Edit Dialog
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editUser, setEditUser] = useState<any>(null);
+  const [editTab, setEditTab] = useState("stammdaten");
+
+  // Stammdaten
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [editCompany, setEditCompany] = useState("");
   const [editRole, setEditRole] = useState("");
+  const [editStatus, setEditStatus] = useState("");
+
+  // Adresse
+  const [editStreet, setEditStreet] = useState("");
+  const [editZip, setEditZip] = useState("");
+  const [editCity, setEditCity] = useState("");
+  const [editCountry, setEditCountry] = useState("");
+  const [editWebsite, setEditWebsite] = useState("");
+
+  // Notizen
+  const [newNoteContent, setNewNoteContent] = useState("");
 
   // Delete Dialog
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteUserId, setDeleteUserId] = useState<number | null>(null);
 
   const { data: users, isLoading } = trpc.user.list.useQuery();
+  const { data: customerNotes, refetch: refetchNotes } = trpc.user.getNotes.useQuery(
+    { customerId: editUser?.id || 0 },
+    { enabled: !!editUser?.id && isEditDialogOpen }
+  );
+  const { data: orders } = trpc.order.getUserOrders.useQuery(
+    { userId: editUser?.id || 0 },
+    { enabled: !!editUser?.id && isEditDialogOpen }
+  );
+
   const utils = trpc.useUtils();
 
   // Mutations
@@ -94,8 +120,8 @@ function UsersContent() {
   const updateUserMutation = trpc.user.updateUser.useMutation({
     onSuccess: () => {
       toast.success("Benutzer erfolgreich aktualisiert");
-      setIsEditDialogOpen(false);
       utils.user.list.invalidate();
+      refetchNotes();
     },
     onError: (error) => {
       toast.error(error.message || "Fehler beim Aktualisieren des Benutzers");
@@ -107,10 +133,29 @@ function UsersContent() {
       toast.success("Benutzer erfolgreich gelöscht");
       setIsDeleteDialogOpen(false);
       setDeleteUserId(null);
+      setIsEditDialogOpen(false);
       utils.user.list.invalidate();
     },
     onError: (error) => {
       toast.error(error.message || "Fehler beim Löschen des Benutzers");
+    },
+  });
+
+  const addNoteMutation = trpc.user.addNote.useMutation({
+    onSuccess: () => {
+      toast.success("Notiz hinzugefügt");
+      setNewNoteContent("");
+      refetchNotes();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Fehler beim Hinzufügen der Notiz");
+    },
+  });
+
+  const deleteNoteMutation = trpc.user.deleteNote.useMutation({
+    onSuccess: () => {
+      toast.success("Notiz gelöscht");
+      refetchNotes();
     },
   });
 
@@ -152,6 +197,18 @@ function UsersContent() {
     manual: "bg-gray-50 text-gray-700 border-gray-200",
   };
 
+  const statusLabels: Record<string, string> = {
+    active: "Aktiv",
+    inactive: "Inaktiv",
+    blocked: "Gesperrt",
+  };
+
+  const statusColors: Record<string, string> = {
+    active: "bg-green-100 text-green-800",
+    inactive: "bg-gray-100 text-gray-800",
+    blocked: "bg-red-100 text-red-800",
+  };
+
   const handleSendMessage = (userId: number, userName: string) => {
     const defaultMessage = `Hallo ${userName}, wie kann ich Ihnen helfen?`;
     startConversationMutation.mutate({
@@ -187,6 +244,13 @@ function UsersContent() {
     setEditPhone(user.phone || "");
     setEditCompany(user.company || "");
     setEditRole(user.role);
+    setEditStatus(user.status || "active");
+    setEditStreet(user.street || "");
+    setEditZip(user.zip || "");
+    setEditCity(user.city || "");
+    setEditCountry(user.country || "");
+    setEditWebsite(user.website || "");
+    setEditTab("stammdaten");
     setIsEditDialogOpen(true);
   };
 
@@ -199,6 +263,12 @@ function UsersContent() {
       email: editEmail,
       phone: editPhone || undefined,
       company: editCompany || undefined,
+      street: editStreet || undefined,
+      zip: editZip || undefined,
+      city: editCity || undefined,
+      country: editCountry || undefined,
+      website: editWebsite || undefined,
+      status: editStatus as any,
       role: editRole as any,
     });
   };
@@ -212,6 +282,23 @@ function UsersContent() {
     if (deleteUserId) {
       deleteUserMutation.mutate({ id: deleteUserId });
     }
+  };
+
+  const handleAddNote = () => {
+    if (!editUser || !newNoteContent.trim()) {
+      toast.error("Bitte geben Sie eine Notiz ein");
+      return;
+    }
+
+    addNoteMutation.mutate({
+      customerId: editUser.id,
+      content: newNoteContent,
+    });
+  };
+
+  const openGHLContact = (ghlContactId: string) => {
+    const ghlUrl = `https://app.gohighlevel.com/v2/location/0beKz0TSeMQXqUf2fDg7/contacts/detail/${ghlContactId}`;
+    window.open(ghlUrl, '_blank');
   };
 
   return (
@@ -319,6 +406,7 @@ function UsersContent() {
                   <TableHead>E-Mail</TableHead>
                   <TableHead>Firma</TableHead>
                   <TableHead>Rolle</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Quelle</TableHead>
                   <TableHead>Erstellt</TableHead>
                   <TableHead className="text-right">Aktionen</TableHead>
@@ -342,6 +430,11 @@ function UsersContent() {
                     <TableCell>
                       <Badge variant="secondary" className={roleColors[user.role]}>
                         {roleLabels[user.role]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={statusColors[user.status || 'active']}>
+                        {statusLabels[user.status || 'active']}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -453,79 +546,308 @@ function UsersContent() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit User Dialog */}
+      {/* Edit User Dialog with Tabs */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle>Benutzer bearbeiten</DialogTitle>
-            <DialogDescription>
-              Bearbeiten Sie die Benutzerdaten.
-            </DialogDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle>Benutzer bearbeiten</DialogTitle>
+                <DialogDescription>
+                  {editUser?.email}
+                </DialogDescription>
+              </div>
+              {editUser?.ghlContactId && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openGHLContact(editUser.ghlContactId)}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  In GHL öffnen
+                </Button>
+              )}
+            </div>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-name">Name</Label>
-              <Input
-                id="edit-name"
-                placeholder="Max Mustermann"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-email">E-Mail-Adresse</Label>
-              <Input
-                id="edit-email"
-                type="email"
-                placeholder="max@beispiel.de"
-                value={editEmail}
-                onChange={(e) => setEditEmail(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-phone">Telefon</Label>
-              <Input
-                id="edit-phone"
-                type="tel"
-                placeholder="+49 123 456789"
-                value={editPhone}
-                onChange={(e) => setEditPhone(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-company">Firma</Label>
-              <Input
-                id="edit-company"
-                placeholder="Beispiel GmbH"
-                value={editCompany}
-                onChange={(e) => setEditCompany(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-role">Rolle</Label>
-              <Select value={editRole} onValueChange={setEditRole}>
-                <SelectTrigger id="edit-role">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="client">Kunde</SelectItem>
-                  <SelectItem value="staff">Mitarbeiter</SelectItem>
-                  <SelectItem value="tenant_admin">Admin</SelectItem>
-                  <SelectItem value="superadmin">Super Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={updateUserMutation.isPending}>
-              Abbrechen
-            </Button>
+
+          <Tabs value={editTab} onValueChange={setEditTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="stammdaten">Stammdaten</TabsTrigger>
+              <TabsTrigger value="adresse">Adresse</TabsTrigger>
+              <TabsTrigger value="notizen">Notizen</TabsTrigger>
+              <TabsTrigger value="historie">Historie</TabsTrigger>
+            </TabsList>
+
+            <ScrollArea className="h-[400px] w-full pr-4">
+              {/* Stammdaten Tab */}
+              <TabsContent value="stammdaten" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name">Name</Label>
+                  <Input
+                    id="edit-name"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-email">E-Mail-Adresse</Label>
+                  <Input
+                    id="edit-email"
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-phone">Telefon</Label>
+                  <Input
+                    id="edit-phone"
+                    type="tel"
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-company">Firma</Label>
+                  <Input
+                    id="edit-company"
+                    value={editCompany}
+                    onChange={(e) => setEditCompany(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-role">Rolle</Label>
+                  <Select value={editRole} onValueChange={setEditRole}>
+                    <SelectTrigger id="edit-role">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="client">Kunde</SelectItem>
+                      <SelectItem value="staff">Mitarbeiter</SelectItem>
+                      <SelectItem value="tenant_admin">Admin</SelectItem>
+                      <SelectItem value="superadmin">Super Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-status">Status</Label>
+                  <Select value={editStatus} onValueChange={setEditStatus}>
+                    <SelectTrigger id="edit-status">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Aktiv</SelectItem>
+                      <SelectItem value="inactive">Inaktiv</SelectItem>
+                      <SelectItem value="blocked">Gesperrt</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </TabsContent>
+
+              {/* Adresse Tab */}
+              <TabsContent value="adresse" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-street">Straße</Label>
+                  <Input
+                    id="edit-street"
+                    value={editStreet}
+                    onChange={(e) => setEditStreet(e.target.value)}
+                    placeholder="Musterstraße 123"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-zip">PLZ</Label>
+                    <Input
+                      id="edit-zip"
+                      value={editZip}
+                      onChange={(e) => setEditZip(e.target.value)}
+                      placeholder="12345"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-city">Stadt</Label>
+                    <Input
+                      id="edit-city"
+                      value={editCity}
+                      onChange={(e) => setEditCity(e.target.value)}
+                      placeholder="Berlin"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-country">Land</Label>
+                  <Input
+                    id="edit-country"
+                    value={editCountry}
+                    onChange={(e) => setEditCountry(e.target.value)}
+                    placeholder="Deutschland"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-website">Website</Label>
+                  <Input
+                    id="edit-website"
+                    type="url"
+                    value={editWebsite}
+                    onChange={(e) => setEditWebsite(e.target.value)}
+                    placeholder="https://example.com"
+                  />
+                </div>
+              </TabsContent>
+
+              {/* Notizen Tab */}
+              <TabsContent value="notizen" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-note">Neue Notiz hinzufügen</Label>
+                  <Textarea
+                    id="new-note"
+                    value={newNoteContent}
+                    onChange={(e) => setNewNoteContent(e.target.value)}
+                    placeholder="Interne Notiz eingeben..."
+                    rows={3}
+                  />
+                  <Button
+                    onClick={handleAddNote}
+                    disabled={!newNoteContent.trim() || addNoteMutation.isPending}
+                    className="w-full"
+                  >
+                    Notiz hinzufügen
+                  </Button>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2">
+                  <Label>Notizen-Historie ({customerNotes?.length || 0})</Label>
+                  {customerNotes && customerNotes.length > 0 ? (
+                    <div className="space-y-2">
+                      {customerNotes.map((note: any) => (
+                        <Card key={note.id}>
+                          <CardContent className="pt-4">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Badge variant="outline" className="text-xs">
+                                    {note.source === 'ghl-import' ? 'GHL Import' :
+                                     note.source === 'admin' ? 'Admin' : 'System'}
+                                  </Badge>
+                                  <span className="text-xs text-muted-foreground">
+                                    {new Date(note.createdAt).toLocaleString('de-DE')}
+                                  </span>
+                                </div>
+                                <p className="text-sm whitespace-pre-wrap">{note.content}</p>
+                              </div>
+                              {note.source === 'admin' && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => deleteNoteMutation.mutate({ noteId: note.id })}
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      Keine Notizen vorhanden
+                    </p>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* Historie Tab */}
+              <TabsContent value="historie" className="space-y-4 mt-4">
+                <div>
+                  <Label className="flex items-center gap-2">
+                    <ShoppingBag className="h-4 w-4" />
+                    Bestellungen ({orders?.length || 0})
+                  </Label>
+                  {orders && orders.length > 0 ? (
+                    <div className="space-y-2 mt-2">
+                      {orders.map((order: any) => (
+                        <Card key={order.id}>
+                          <CardContent className="pt-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium">{order.productName}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  #{order.id} • {new Date(order.createdAt).toLocaleDateString('de-DE')}
+                                </p>
+                              </div>
+                              <Badge className={
+                                order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }>
+                                {order.status === 'completed' ? 'Bezahlt' :
+                                 order.status === 'pending' ? 'Ausstehend' : 'Fehlgeschlagen'}
+                              </Badge>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      Keine Bestellungen vorhanden
+                    </p>
+                  )}
+                </div>
+
+                <Separator />
+
+                <div>
+                  <Label className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Aktivität
+                  </Label>
+                  <div className="mt-2 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Erstellt:</span>
+                      <span>{new Date(editUser?.createdAt).toLocaleString('de-DE')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Zuletzt angemeldet:</span>
+                      <span>{new Date(editUser?.lastSignedIn).toLocaleString('de-DE')}</span>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </ScrollArea>
+          </Tabs>
+
+          <DialogFooter className="flex items-center justify-between">
             <Button
-              onClick={handleUpdateUser}
-              disabled={updateUserMutation.isPending}
+              variant="destructive"
+              onClick={() => {
+                setIsEditDialogOpen(false);
+                handleDeleteUser(editUser.id);
+              }}
             >
-              {updateUserMutation.isPending ? 'Speichert...' : 'Speichern'}
+              <Trash2 className="h-4 w-4 mr-2" />
+              Kunde löschen
             </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsEditDialogOpen(false)}
+                disabled={updateUserMutation.isPending}
+              >
+                Abbrechen
+              </Button>
+              <Button
+                onClick={handleUpdateUser}
+                disabled={updateUserMutation.isPending}
+              >
+                {updateUserMutation.isPending ? 'Speichert...' : 'Speichern'}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

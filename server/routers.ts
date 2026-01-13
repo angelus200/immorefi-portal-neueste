@@ -933,6 +933,12 @@ const userRouter = router({
       email: z.string().email().optional(),
       phone: z.string().optional(),
       company: z.string().optional(),
+      street: z.string().optional(),
+      zip: z.string().optional(),
+      city: z.string().optional(),
+      country: z.string().optional(),
+      website: z.string().optional(),
+      status: z.enum(['active', 'inactive', 'blocked']).optional(),
       role: z.enum(['client', 'staff', 'tenant_admin', 'superadmin']).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
@@ -1329,6 +1335,13 @@ const orderRouter = router({
   list: adminProcedure.query(async () => {
     return db.getAllOrders();
   }),
+
+  // Admin: Get orders for a specific user
+  getUserOrders: adminProcedure
+    .input(z.object({ userId: z.number() }))
+    .query(async ({ input }) => {
+      return db.getOrdersByUserId(input.userId);
+    }),
   
   // Create checkout session (requires login)
   createCheckout: protectedProcedure

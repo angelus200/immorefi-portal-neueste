@@ -78,6 +78,13 @@
       "when": 1768316254919,
       "tag": "0010_grey_chimera",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1768318801089,
+      "tag": "0011_rich_terror",
+      "breakpoints": true
     }
   ]
 }
