@@ -28,6 +28,15 @@ export const users = mysqlTable("users", {
   source: userSourceEnum.default("portal").notNull(),
   ghlContactId: varchar("ghlContactId", { length: 64 }),
   onboardingCompleted: boolean("onboardingCompleted").default(false).notNull(),
+  // Onboarding system fields
+  hasSeenWelcome: boolean("hasSeenWelcome").default(false).notNull(),
+  hasCompletedTour: boolean("hasCompletedTour").default(false).notNull(),
+  onboardingProgress: json("onboardingProgress").$type<{
+    profileCompleted?: boolean;
+    firstBooking?: boolean;
+    firstDocument?: boolean;
+    firstOrder?: boolean;
+  }>(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
