@@ -2505,6 +2505,124 @@ const bookingRouter = router({
 });
 
 // ============================================
+// CONTRACT TEMPLATE ROUTER
+// ============================================
+
+const contractTemplateRouter = router({
+  // List all active templates
+  list: publicProcedure.query(async () => {
+    return db.getContractTemplates();
+  }),
+
+  // Get single template by ID
+  get: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input }) => {
+      return db.getContractTemplateById(input.id);
+    }),
+
+  // Create new template (admin only)
+  create: adminProcedure
+    .input(z.object({
+      name: z.string().min(1),
+      description: z.string().optional(),
+      category: z.string().min(1),
+      content: z.string().min(1),
+      placeholders: z.array(z.string()).optional(),
+      isActive: z.boolean().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const templateId = await db.createContractTemplate(input);
+
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'create',
+        entityType: 'contract_template',
+        entityId: templateId,
+        newValues: { name: input.name, category: input.category },
+      });
+
+      return { id: templateId, success: true };
+    }),
+
+  // Update template (admin only)
+  update: adminProcedure
+    .input(z.object({
+      id: z.number(),
+      name: z.string().min(1).optional(),
+      description: z.string().optional(),
+      category: z.string().optional(),
+      content: z.string().optional(),
+      placeholders: z.array(z.string()).optional(),
+      isActive: z.boolean().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { id, ...data } = input;
+      const template = await db.getContractTemplateById(id);
+      if (!template) throw new Error('Template not found');
+
+      await db.updateContractTemplate(id, data);
+
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'update',
+        entityType: 'contract_template',
+        entityId: id,
+        oldValues: { name: template.name, category: template.category },
+        newValues: data,
+      });
+
+      return { success: true };
+    }),
+
+  // Delete template (soft delete - admin only)
+  delete: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const template = await db.getContractTemplateById(input.id);
+      if (!template) throw new Error('Template not found');
+
+      await db.deleteContractTemplate(input.id);
+
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'delete',
+        entityType: 'contract_template',
+        entityId: input.id,
+        oldValues: { name: template.name, isActive: true },
+        newValues: { isActive: false },
+      });
+
+      return { success: true };
+    }),
+
+  // Preview template with placeholders filled
+  preview: publicProcedure
+    .input(z.object({
+      id: z.number(),
+      values: z.record(z.string(), z.string()), // key-value pairs for placeholders
+    }))
+    .query(async ({ input }) => {
+      const template = await db.getContractTemplateById(input.id);
+      if (!template) throw new Error('Template not found');
+
+      let filledContent = template.content;
+
+      // Replace all placeholders with provided values
+      Object.entries(input.values).forEach(([key, value]) => {
+        const placeholder = `{{${key}}}`;
+        filledContent = filledContent.split(placeholder).join(value);
+      });
+
+      return {
+        ...template,
+        content: filledContent,
+        originalContent: template.content,
+      };
+    }),
+});
+
+// ============================================
 // MAIN ROUTER
 // ============================================
 
@@ -2544,6 +2662,7 @@ export const appRouter = router({
   chat: chatRouter,
   staffCalendar: staffCalendarRouter,
   booking: bookingRouter,
+  contractTemplate: contractTemplateRouter,
 });
 
 export type AppRouter = typeof appRouter;

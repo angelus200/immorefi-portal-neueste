@@ -24,7 +24,8 @@ import {
   messages, InsertMessage, Message,
   customerNotes, InsertCustomerNote, CustomerNote,
   staffCalendars, InsertStaffCalendar, StaffCalendar,
-  bookings, InsertBooking, Booking
+  bookings, InsertBooking, Booking,
+  contractTemplates, InsertContractTemplate, ContractTemplate
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1321,4 +1322,45 @@ export async function getBookingsNeedingReminder1h() {
       lte(bookings.startTime, in2h),
       eq(bookings.status, 'confirmed')
     ));
+}
+
+// ============================================
+// CONTRACT TEMPLATE FUNCTIONS
+// ============================================
+
+export async function getContractTemplates() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(contractTemplates)
+    .where(eq(contractTemplates.isActive, true))
+    .orderBy(asc(contractTemplates.category), asc(contractTemplates.name));
+}
+
+export async function getContractTemplateById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(contractTemplates)
+    .where(eq(contractTemplates.id, id))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function createContractTemplate(template: InsertContractTemplate) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(contractTemplates).values(template);
+  return result[0].insertId;
+}
+
+export async function updateContractTemplate(id: number, data: Partial<InsertContractTemplate>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(contractTemplates).set(data).where(eq(contractTemplates.id, id));
+}
+
+export async function deleteContractTemplate(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Soft delete by setting isActive to false
+  await db.update(contractTemplates).set({ isActive: false }).where(eq(contractTemplates.id, id));
 }
