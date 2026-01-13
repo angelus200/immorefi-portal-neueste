@@ -151,6 +151,35 @@ export async function updateUserOnboardingStatus(userId: number, completed: bool
   await db.update(users).set({ onboardingCompleted: completed }).where(eq(users.id, userId));
 }
 
+export async function updateUserOnboarding(
+  userId: number,
+  data: {
+    hasSeenWelcome?: boolean;
+    hasCompletedTour?: boolean;
+    onboardingProgress?: any;
+  }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set(data).where(eq(users.id, userId));
+}
+
+export async function getUserOnboardingStatus(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db
+    .select({
+      hasSeenWelcome: users.hasSeenWelcome,
+      hasCompletedTour: users.hasCompletedTour,
+      onboardingProgress: users.onboardingProgress,
+      onboardingCompleted: users.onboardingCompleted,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return result[0] || null;
+}
+
 // ============================================
 // TENANT FUNCTIONS
 // ============================================

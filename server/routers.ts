@@ -1876,6 +1876,28 @@ const onboardingRouter = router({
     .query(async ({ input }) => {
       return db.getOnboardingDocumentsByOnboardingId(input.onboardingId);
     }),
+
+  // User: Get my onboarding status
+  getMyStatus: protectedProcedure.query(async ({ ctx }) => {
+    return db.getUserOnboardingStatus(ctx.user.id);
+  }),
+
+  // User: Update my onboarding status
+  updateMyStatus: protectedProcedure
+    .input(z.object({
+      hasSeenWelcome: z.boolean().optional(),
+      hasCompletedTour: z.boolean().optional(),
+      onboardingProgress: z.object({
+        profileCompleted: z.boolean().optional(),
+        firstBooking: z.boolean().optional(),
+        firstDocument: z.boolean().optional(),
+        firstOrder: z.boolean().optional(),
+      }).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      await db.updateUserOnboarding(ctx.user.id, input);
+      return { success: true };
+    }),
 });
 
 // ============================================

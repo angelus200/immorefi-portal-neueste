@@ -37,6 +37,7 @@ import Team from "./pages/Team";
 import Press from "./pages/Press";
 import { CookieBanner } from "./components/CookieBanner";
 import { ChatWidget } from "./components/ChatWidget";
+import { WelcomeModal } from "./components/WelcomeModal";
 import InterestCalculator from "./pages/tools/InterestCalculator";
 import RefinanceCalculator from "./pages/tools/RefinanceCalculator";
 import ROECalculator from "./pages/tools/ROECalculator";
@@ -118,6 +119,7 @@ function App() {
           <Router />
           <CookieBanner />
           <ChatWidget />
+          <WelcomeModal />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

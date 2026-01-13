@@ -50,6 +50,7 @@ import {
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from '@/components/DashboardLayoutSkeleton';
+import { OnboardingChecklist } from '@/components/OnboardingChecklist';
 import { trpc } from "@/lib/trpc";
 
 // Tenant ID - in production this would come from context/subdomain
@@ -119,6 +120,9 @@ function DashboardContent() {
           Hier ist eine Übersicht Ihrer aktuellen Aktivitäten.
         </p>
       </div>
+
+      {/* Onboarding Checklist - only for non-admin users */}
+      {!isAdmin && <OnboardingChecklist />}
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
