@@ -14,10 +14,31 @@ import { useState } from "react";
 import { Search, UserPlus, Shield, Users as UsersIcon, MessageCircle } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useLocation } from "wouter";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 function UsersContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [, setLocation] = useLocation();
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteRole, setInviteRole] = useState<string>("client");
 
   const { data: users, isLoading } = trpc.user.list.useQuery();
   const utils = trpc.useUtils();
@@ -27,6 +48,18 @@ function UsersContent() {
     onSuccess: (data) => {
       // Navigate to messages page with the conversation selected
       setLocation(`/admin/messages?conversationId=${data.conversation.id}`);
+    },
+  });
+
+  // Invite user mutation
+  const inviteUserMutation = trpc.user.inviteUser.useMutation({
+    onSuccess: () => {
+      toast.success("Benutzer erfolgreich eingeladen! Eine Willkommens-E-Mail wurde versendet.");
+      resetInviteForm();
+      utils.user.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Fehler beim Einladen des Benutzers");
     },
   });
 
@@ -59,6 +92,26 @@ function UsersContent() {
     });
   };
 
+  const handleInviteUser = () => {
+    if (!inviteEmail || !inviteName) {
+      toast.error("Bitte füllen Sie alle Felder aus");
+      return;
+    }
+
+    inviteUserMutation.mutate({
+      email: inviteEmail,
+      name: inviteName,
+      role: inviteRole as 'client' | 'staff' | 'tenant_admin',
+    });
+  };
+
+  const resetInviteForm = () => {
+    setInviteEmail("");
+    setInviteName("");
+    setInviteRole("client");
+    setIsInviteDialogOpen(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -66,7 +119,7 @@ function UsersContent() {
           <h1 className="text-3xl font-bold tracking-tight">Benutzerverwaltung</h1>
           <p className="text-muted-foreground">Verwalten Sie Benutzer und deren Rollen</p>
         </div>
-        <Button>
+        <Button onClick={() => setIsInviteDialogOpen(true)}>
           <UserPlus className="mr-2 h-4 w-4" />
           Benutzer einladen
         </Button>
@@ -207,6 +260,70 @@ function UsersContent() {
           )}
         </CardContent>
       </Card>
+
+      {/* Invite User Dialog */}
+      <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Benutzer einladen</DialogTitle>
+            <DialogDescription>
+              Laden Sie einen neuen Benutzer ein. Eine Willkommens-E-Mail wird automatisch versendet.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="invite-name">Name *</Label>
+              <Input
+                id="invite-name"
+                placeholder="Max Mustermann"
+                value={inviteName}
+                onChange={(e) => setInviteName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="invite-email">E-Mail-Adresse *</Label>
+              <Input
+                id="invite-email"
+                type="email"
+                placeholder="max@beispiel.de"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="invite-role">Rolle</Label>
+              <Select value={inviteRole} onValueChange={setInviteRole}>
+                <SelectTrigger id="invite-role">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="client">Kunde</SelectItem>
+                  <SelectItem value="staff">Mitarbeiter</SelectItem>
+                  <SelectItem value="tenant_admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={resetInviteForm} disabled={inviteUserMutation.isPending}>
+              Abbrechen
+            </Button>
+            <Button
+              onClick={handleInviteUser}
+              disabled={!inviteEmail || !inviteName || inviteUserMutation.isPending}
+            >
+              {inviteUserMutation.isPending ? (
+                'Lädt...'
+              ) : (
+                <>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Einladen
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -861,6 +861,69 @@ const userRouter = router({
       await db.deleteOnboardingDocument(input.id);
       return { success: true };
     }),
+
+  // Admin: Benutzer einladen
+  inviteUser: adminProcedure
+    .input(z.object({
+      email: z.string().email(),
+      name: z.string(),
+      role: z.enum(['client', 'staff', 'tenant_admin']),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      // Check if user with this email already exists
+      const existingUser = await db.getUserByEmail(input.email);
+      if (existingUser) {
+        throw new Error('Ein Benutzer mit dieser E-Mail-Adresse existiert bereits');
+      }
+
+      // Generate a temporary openId (will be replaced when user signs up via Clerk/OAuth)
+      const tempOpenId = `invited_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+      // Create user in database
+      await db.upsertUser({
+        openId: tempOpenId,
+        name: input.name,
+        email: input.email,
+        role: input.role as any,
+        lastSignedIn: new Date(),
+      });
+
+      const newUser = await db.getUserByEmail(input.email);
+
+      if (!newUser) {
+        throw new Error('Fehler beim Erstellen des Benutzers');
+      }
+
+      // Send welcome email with login instructions
+      try {
+        const { sendWelcomeEmail } = await import('./emailService');
+        await sendWelcomeEmail({
+          customerEmail: input.email,
+          customerName: input.name,
+        });
+      } catch (error) {
+        console.error('[InviteUser] Failed to send welcome email:', error);
+        // Don't throw - user was created successfully
+      }
+
+      // Create audit log
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'create',
+        entityType: 'user',
+        entityId: newUser.id,
+        newValues: {
+          email: input.email,
+          name: input.name,
+          role: input.role,
+        },
+      });
+
+      return {
+        success: true,
+        user: newUser,
+      };
+    }),
 });
 
 // ============================================
