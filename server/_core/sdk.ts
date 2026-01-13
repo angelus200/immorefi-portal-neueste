@@ -7,6 +7,7 @@ import { SignJWT, jwtVerify } from "jose";
 import type { User } from "../../drizzle/schema";
 import * as db from "../db";
 import { ENV } from "./env";
+import { sendWelcomeEmail } from "../emailService";
 import type {
   ExchangeTokenRequest,
   ExchangeTokenResponse,
@@ -282,6 +283,17 @@ class SDKServer {
           lastSignedIn: signedInAt,
         });
         user = await db.getUserByOpenId(userInfo.openId);
+
+        // Send welcome email to new users
+        if (userInfo.email && userInfo.name) {
+          console.log("[SDK] Sending welcome email to new user:", userInfo.email);
+          sendWelcomeEmail({
+            customerEmail: userInfo.email,
+            customerName: userInfo.name,
+          }).catch((error) => {
+            console.error("[SDK] Failed to send welcome email:", error);
+          });
+        }
       } catch (error) {
         console.error("[Auth] Failed to sync user from OAuth:", error);
         throw ForbiddenError("Failed to sync user info");

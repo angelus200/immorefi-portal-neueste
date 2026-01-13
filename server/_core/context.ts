@@ -4,6 +4,7 @@ import type { User } from "../../drizzle/schema";
 import * as db from "../db";
 import { ENV } from "./env";
 import { parse as parseCookieHeader } from "cookie";
+import { sendWelcomeEmail } from "../emailService";
 
 export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
@@ -98,6 +99,18 @@ export async function createContext(
       user = await db.getUserByOpenId(clerkUser.id);
 
       console.log("[Auth] ✓ User created in DB:", user?.id);
+
+      // Sende Willkommens-E-Mail an neue Benutzer
+      if (userData.email && userData.name) {
+        console.log("[Auth] Sending welcome email to new user:", userData.email);
+        sendWelcomeEmail({
+          customerEmail: userData.email,
+          customerName: userData.name,
+        }).catch((error) => {
+          console.error("[Auth] Failed to send welcome email:", error);
+          // E-Mail-Fehler soll User-Erstellung nicht blockieren
+        });
+      }
     } else {
       console.log("[Auth] ✓ User found in DB:", user.id, user.email);
 
