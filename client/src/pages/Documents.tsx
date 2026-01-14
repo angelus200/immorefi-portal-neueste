@@ -85,8 +85,14 @@ function DocumentsContent() {
           "Content-Type": file.type,
         },
       });
+
+      // Success notification and refresh list
+      toast.success("Datei erfolgreich hochgeladen");
+      utils.file.list.invalidate({ tenantId: TENANT_ID });
     } catch (error) {
-      toast.error("Fehler beim Hochladen");
+      console.error("Upload error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Fehler beim Hochladen";
+      toast.error(errorMessage);
     }
 
     // Reset input
@@ -107,6 +113,7 @@ function DocumentsContent() {
             type="file"
             ref={fileInputRef}
             onChange={handleUpload}
+            accept=".pdf,.jpg,.jpeg,.png,.docx,.doc"
             className="hidden"
           />
           <Button onClick={() => fileInputRef.current?.click()}>

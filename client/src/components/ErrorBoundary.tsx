@@ -21,6 +21,14 @@ class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Log error to console for debugging
+    console.error('React Error Boundary caught an error:', error, errorInfo);
+
+    // You can also send this to an error reporting service here
+    // Example: logErrorToService(error, errorInfo);
+  }
+
   render() {
     if (this.state.hasError) {
       return (
@@ -31,13 +39,21 @@ class ErrorBoundary extends Component<Props, State> {
               className="text-destructive mb-6 flex-shrink-0"
             />
 
-            <h2 className="text-xl mb-4">An unexpected error occurred.</h2>
+            <h2 className="text-xl mb-4 font-semibold">Ein unerwarteter Fehler ist aufgetreten</h2>
+            <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">
+              Entschuldigung, etwas ist schiefgelaufen. Bitte laden Sie die Seite neu oder kontaktieren Sie den Support, wenn das Problem weiterhin besteht.
+            </p>
 
-            <div className="p-4 w-full rounded bg-muted overflow-auto mb-6">
-              <pre className="text-sm text-muted-foreground whitespace-break-spaces">
-                {this.state.error?.stack}
-              </pre>
-            </div>
+            {process.env.NODE_ENV === 'development' && (
+              <details className="p-4 w-full rounded bg-muted overflow-auto mb-6">
+                <summary className="cursor-pointer text-sm font-medium mb-2">
+                  Technische Details (nur in Entwicklung sichtbar)
+                </summary>
+                <pre className="text-xs text-muted-foreground whitespace-break-spaces mt-2">
+                  {this.state.error?.stack}
+                </pre>
+              </details>
+            )}
 
             <button
               onClick={() => window.location.reload()}

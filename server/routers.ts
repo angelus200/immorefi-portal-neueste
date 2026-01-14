@@ -937,6 +937,19 @@ const fileRouter = router({
       category: z.enum(["document", "contract", "financial", "identification", "other"]).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
+      // Validate allowed MIME types
+      const allowedMimeTypes = [
+        'application/pdf',
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+        'application/msword', // .doc
+      ];
+
+      if (!allowedMimeTypes.includes(input.mimeType)) {
+        throw new Error('Ungültiger Dateityp. Nur PDF, JPG, PNG und DOCX sind erlaubt.');
+      }
       const fileKey = `tenants/${input.tenantId}/files/${nanoid()}-${input.fileName}`;
       const { url } = await storagePut(fileKey, Buffer.from(""), input.mimeType);
       
@@ -1059,19 +1072,33 @@ const userRouter = router({
       projektbeschreibung: z.string().optional(),
       besondereAnforderungen: z.string().optional(),
       // Step 6: Zustimmungen
-      agbAkzeptiert: z.boolean().optional(),
-      datenschutzAkzeptiert: z.boolean().optional(),
+      agbAkzeptiert: z.boolean(),
+      datenschutzAkzeptiert: z.boolean(),
     }).optional())
     .mutation(async ({ ctx, input }) => {
+      // Validate required fields
+      if (!input) {
+        throw new Error('Onboarding-Daten sind erforderlich');
+      }
+
+      // Validate mandatory consents
+      if (!input.agbAkzeptiert || !input.datenschutzAkzeptiert) {
+        throw new Error('AGB und Datenschutzerklärung müssen akzeptiert werden');
+      }
+
+      // Validate required personal data
+      if (!input.vorname || !input.nachname) {
+        throw new Error('Vorname und Nachname sind Pflichtfelder');
+      }
+
       // Speichere Onboarding-Daten
-      if (input) {
-        const existingData = await db.getOnboardingDataByUserId(ctx.user.id);
-        if (existingData) {
-          await db.updateOnboardingDataByUserId(ctx.user.id, {
-            ...input,
-            status: 'completed',
-            completedAt: new Date(),
-          });
+      const existingData = await db.getOnboardingDataByUserId(ctx.user.id);
+      if (existingData) {
+        await db.updateOnboardingDataByUserId(ctx.user.id, {
+          ...input,
+          status: 'completed',
+          completedAt: new Date(),
+        });
         } else {
           await db.createOnboardingData({
             userId: ctx.user.id,
@@ -1998,12 +2025,14 @@ const invoiceRouter = router({
     .query(async ({ input, ctx }) => {
       const result = await invoiceService.getInvoiceWithItems(input.invoiceId);
       if (!result) return null;
-      
+
       // Prüfe ob der Benutzer berechtigt ist
-      if (result.invoice.userId !== ctx.user.id && ctx.user.role !== 'superadmin') {
+      const isAdmin = ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin' || ctx.user.role === 'staff';
+      const isOwner = result.invoice.userId === ctx.user.id;
+      if (!isOwner && !isAdmin) {
         throw new Error('Keine Berechtigung');
       }
-      
+
       return result;
     }),
   
@@ -2015,10 +2044,12 @@ const invoiceRouter = router({
       if (!result) throw new Error('Rechnung nicht gefunden');
       
       // Prüfe ob der Benutzer berechtigt ist
-      if (result.invoice.userId !== ctx.user.id && ctx.user.role !== 'superadmin') {
+      const isAdmin = ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin' || ctx.user.role === 'staff';
+      const isOwner = result.invoice.userId === ctx.user.id;
+      if (!isOwner && !isAdmin) {
         throw new Error('Keine Berechtigung');
       }
-      
+
       return invoiceService.generateInvoiceHtml(result.invoice, result.items);
     }),
   
