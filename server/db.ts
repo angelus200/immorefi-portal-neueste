@@ -1,5 +1,6 @@
 import { eq, desc, and, gte, lte, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import type { QuestionnaireStatus } from './types/questionnaire';
 import {
   InsertUser, users,
   tenants, InsertTenant, Tenant,
@@ -439,11 +440,122 @@ export async function getQuestionnairesByTenantId(tenantId: number) {
   return db.select().from(questionnaires).where(eq(questionnaires.tenantId, tenantId));
 }
 
+// Calculate questionnaire completion status based on responses
+export function calculateQuestionnaireStatus(
+  responses: any,
+  questionnaireSchema: any
+): QuestionnaireStatus {
+  if (!responses || typeof responses !== 'object') {
+    return "unvollständig";
+  }
+
+  // If no schema provided, assume all fields are optional
+  if (!questionnaireSchema || !questionnaireSchema.questions) {
+    return Object.keys(responses).length > 0 ? "abgeschlossen" : "unvollständig";
+  }
+
+  // Check if all required fields are filled
+  const requiredQuestions = questionnaireSchema.questions.filter((q: any) => q.required);
+
+  for (const question of requiredQuestions) {
+    const answer = responses[question.id];
+
+    // Check if answer exists and is not empty
+    if (answer === undefined || answer === null || answer === '') {
+      return "unvollständig";
+    }
+
+    // For array answers (multi-select), check if at least one option is selected
+    if (Array.isArray(answer) && answer.length === 0) {
+      return "unvollständig";
+    }
+  }
+
+  return "abgeschlossen";
+}
+
 export async function createQuestionnaireResponse(response: InsertQuestionnaireResponse) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(questionnaireResponses).values(response);
+
+  // Get questionnaire schema to calculate status
+  let status = "unvollständig";
+  let completedAt = null;
+
+  if (response.questionnaireId) {
+    const questionnaire = await db.select()
+      .from(questionnaires)
+      .where(eq(questionnaires.id, response.questionnaireId))
+      .limit(1);
+
+    if (questionnaire.length > 0) {
+      status = calculateQuestionnaireStatus(response.responses, questionnaire[0].schema);
+      if (status === "abgeschlossen") {
+        completedAt = new Date();
+      }
+    }
+  }
+
+  const result = await db.insert(questionnaireResponses).values({
+    ...response,
+    status,
+    completedAt,
+  });
   return result[0].insertId;
+}
+
+export async function updateQuestionnaireResponse(
+  id: number,
+  data: Partial<InsertQuestionnaireResponse>
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // If responses are being updated, recalculate status
+  if (data.responses) {
+    const existingResponse = await db.select()
+      .from(questionnaireResponses)
+      .where(eq(questionnaireResponses.id, id))
+      .limit(1);
+
+    if (existingResponse.length > 0) {
+      const questionnaire = await db.select()
+        .from(questionnaires)
+        .where(eq(questionnaires.id, existingResponse[0].questionnaireId))
+        .limit(1);
+
+      if (questionnaire.length > 0) {
+        const status = calculateQuestionnaireStatus(data.responses, questionnaire[0].schema);
+        data.status = status;
+
+        if (status === "abgeschlossen") {
+          data.completedAt = new Date();
+        } else {
+          data.completedAt = null;
+        }
+      }
+    }
+  }
+
+  await db.update(questionnaireResponses).set(data).where(eq(questionnaireResponses.id, id));
+}
+
+export async function getQuestionnaireResponseById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select()
+    .from(questionnaireResponses)
+    .where(eq(questionnaireResponses.id, id))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getQuestionnaireResponsesByDealId(dealId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select()
+    .from(questionnaireResponses)
+    .where(eq(questionnaireResponses.dealId, dealId));
 }
 
 

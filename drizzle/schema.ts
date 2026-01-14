@@ -275,6 +275,7 @@ export const questionnaireResponses = mysqlTable("questionnaire_responses", {
   dealId: int("dealId"),
   userId: int("userId"),
   responses: json("responses"),
+  status: varchar("status", { length: 50 }).default("unvollständig").notNull(),
   completedAt: timestamp("completedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
