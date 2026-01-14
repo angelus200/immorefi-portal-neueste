@@ -58,7 +58,7 @@ export default function Home() {
     beschreibung: "",
   });
 
-  const createLead = trpc.lead.create.useMutation({
+  const createLead = trpc.lead.createPublic.useMutation({
     onSuccess: () => {
       toast.success("Vielen Dank! Wir werden uns in Kürze bei Ihnen melden.");
       setFormData({
@@ -72,8 +72,8 @@ export default function Home() {
       });
     },
     onError: (error) => {
+      console.error('Lead creation failed:', error);
       toast.error("Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.");
-      console.error(error);
     },
   });
 
@@ -81,8 +81,14 @@ export default function Home() {
     e.preventDefault();
     createLead.mutate({
       tenantId: DEFAULT_TENANT_ID,
-      ...formData,
-      source: "landing_page",
+      name: formData.name,
+      email: formData.email || undefined,
+      phone: formData.phone || undefined,
+      company: formData.company || undefined,
+      capitalNeed: formData.kapitalbedarf || undefined,
+      timeHorizon: formData.zeithorizont || undefined,
+      description: formData.beschreibung || undefined,
+      source: "website",
     });
   };
 

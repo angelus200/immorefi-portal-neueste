@@ -157,7 +157,7 @@ const leadRouter = router({
       capitalNeed: z.string().optional(),
       timeHorizon: z.string().optional(),
       description: z.string().optional(),
-      source: z.enum(['website', 'referral', 'ghl', 'manual']).optional(),
+      source: z.enum(['website', 'referral', 'ghl', 'manual', 'landing_page']).optional(),
       assignedTo: z.number().optional(),
       notes: z.string().optional(),
     }))
@@ -178,6 +178,28 @@ const leadRouter = router({
       });
 
       return { id: leadId };
+    }),
+
+  createPublic: publicProcedure
+    .input(z.object({
+      name: z.string().min(1),
+      email: z.string().email().optional(),
+      phone: z.string().optional(),
+      company: z.string().optional(),
+      capitalNeed: z.string().optional(),
+      timeHorizon: z.string().optional(),
+      description: z.string().optional(),
+      source: z.enum(['website', 'referral', 'ghl', 'manual', 'landing_page']).default('website'),
+      tenantId: z.number().default(1),
+    }))
+    .mutation(async ({ input }) => {
+      const leadId = await db.createLead({
+        ...input,
+        status: 'new',
+      });
+
+      // No audit log for public leads (no user context)
+      return { id: leadId, success: true };
     }),
 
   update: protectedProcedure
