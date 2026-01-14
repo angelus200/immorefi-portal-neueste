@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { 
   CheckCircle2, 
   FileText, 
@@ -22,6 +22,7 @@ import {
 
 export default function Shop() {
   const { user, loading: authLoading } = useAuth();
+  const [, setLocation] = useLocation();
   
   const { data: hasPurchasedAnalysis, isLoading: analysisLoading } = trpc.order.hasPurchased.useQuery(
     { productId: 'ANALYSIS' },
@@ -77,8 +78,8 @@ export default function Shop() {
   };
   
   const handleDownloadHandbuch = () => {
-    // Download the PDF
-    window.open('/handbuch-immobilienprojektentwickler.pdf', '_blank');
+    // Navigate to integrated handbook
+    setLocation('/admin/handbuch');
   };
   
   const analysisFeatures = [

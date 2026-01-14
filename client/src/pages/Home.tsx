@@ -27,7 +27,7 @@ import {
   Linkedin,
   Facebook
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { FinanceCalculator } from "@/components/FinanceCalculator";
 import { VideoCarousel } from "@/components/VideoCarousel";
 import { Calculator } from "lucide-react";
@@ -47,6 +47,7 @@ const marketData = [
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -541,13 +542,13 @@ export default function Home() {
                   </div>
                   <div className="border-t pt-4 space-y-3">
                     {isAuthenticated ? (
-                      <Button 
-                        className="w-full bg-amber-600 hover:bg-amber-700" 
+                      <Button
+                        className="w-full bg-amber-600 hover:bg-amber-700"
                         size="lg"
-                        onClick={() => window.open('/handbuch-immobilienprojektentwickler.pdf', '_blank')}
+                        onClick={() => setLocation('/admin/handbuch')}
                       >
                         <Download className="mr-2 h-4 w-4" />
-                        Jetzt herunterladen
+                        Zum Handbuch
                       </Button>
                     ) : (
                       <>
