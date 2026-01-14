@@ -826,3 +826,22 @@ export const partnerLogos = mysqlTable("partner_logos", {
 
 export type PartnerLogo = typeof partnerLogos.$inferSelect;
 export type InsertPartnerLogo = typeof partnerLogos.$inferInsert;
+
+// ============================================
+// VIDEOS (Video Management System)
+// ============================================
+
+export const videos = mysqlTable("videos", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  youtubeUrl: varchar("youtubeUrl", { length: 500 }).notNull(),
+  thumbnailUrl: varchar("thumbnailUrl", { length: 500 }),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Video = typeof videos.$inferSelect;
+export type InsertVideo = typeof videos.$inferInsert;

@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { FinanceCalculator } from "@/components/FinanceCalculator";
+import { VideoCarousel } from "@/components/VideoCarousel";
 import { Calculator } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
@@ -265,30 +266,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Video Section */}
-      <section className="py-16 lg:py-24 bg-gradient-to-b from-background to-muted/30">
-        <div className="container">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Erfahren Sie mehr über <span className="text-primary">unsere Lösungen</span>
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              In diesem Video erklären wir, wie wir Immobilienunternehmen beim Zugang zum Kapitalmarkt unterstützen.
-            </p>
-          </div>
-          <div className="max-w-4xl mx-auto">
-            <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl border">
-              <iframe
-                className="absolute inset-0 w-full h-full"
-                src="https://www.youtube.com/embed/CQ08OZ5mn4w?rel=0"
-                title="ImmoRefi - Kapitalmarktzugang für Immobilienunternehmen"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Video Carousel Section */}
+      <VideoCarousel />
 
       {/* Trust Badges - Dynamic from DB */}
       <section className="py-12 border-y bg-muted/30">

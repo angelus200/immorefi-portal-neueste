@@ -42,7 +42,8 @@ import {
   UserPlus,
   Contact,
   Kanban,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  Video
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -105,6 +106,7 @@ const adminMenuSections: MenuSection[] = [
       { icon: BarChart3, label: "Audit-Log", path: "/admin/audit" },
       { icon: FileText, label: "Vertragsvorlagen", path: "/admin/contract-templates" },
       { icon: FileText, label: "Logos", path: "/admin/logos" },
+      { icon: Video, label: "Videos", path: "/admin/videos" },
       { icon: Settings, label: "Einstellungen", path: "/admin/settings" },
       { icon: BookOpen, label: "Handbuch", path: "/admin/handbuch" },
     ],

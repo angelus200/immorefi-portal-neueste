@@ -24,6 +24,7 @@ import Contracts from "./pages/Contracts";
 import AdminContracts from "./pages/admin/Contracts";
 import AdminContractTemplates from "./pages/admin/ContractTemplates";
 import AdminLogos from "./pages/admin/Logos";
+import AdminVideoManager from "./pages/admin/VideoManager";
 import AdminOrders from "./pages/admin/Orders";
 import AdminOnboardingData from "./pages/admin/OnboardingData";
 import AdminInvoices from "./pages/admin/Invoices";
@@ -101,6 +102,7 @@ function Router() {
       <Route path="/admin/contracts" component={AdminContracts} />
       <Route path="/admin/contract-templates" component={AdminContractTemplates} />
       <Route path="/admin/logos" component={AdminLogos} />
+      <Route path="/admin/videos" component={AdminVideoManager} />
       <Route path="/admin/orders" component={AdminOrders} />
       <Route path="/admin/onboarding" component={AdminOnboardingData} />
       <Route path="/admin/invoices" component={AdminInvoices} />

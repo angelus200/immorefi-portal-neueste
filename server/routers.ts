@@ -2623,6 +2623,120 @@ const contractTemplateRouter = router({
 });
 
 // ============================================
+// VIDEO ROUTER
+// ============================================
+
+const videoRouter = router({
+  // List all active videos (sorted by sortOrder)
+  list: publicProcedure.query(async () => {
+    return db.getVideos();
+  }),
+
+  // List all videos (admin only - includes inactive)
+  listAll: adminProcedure.query(async () => {
+    return db.getAllVideos();
+  }),
+
+  // Get single video by ID
+  get: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input }) => {
+      return db.getVideoById(input.id);
+    }),
+
+  // Create new video (admin only)
+  create: adminProcedure
+    .input(z.object({
+      title: z.string().min(1),
+      description: z.string().optional(),
+      youtubeUrl: z.string().url(),
+      thumbnailUrl: z.string().url().optional(),
+      sortOrder: z.number().optional(),
+      isActive: z.boolean().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const videoId = await db.createVideo({
+        ...input,
+        sortOrder: input.sortOrder ?? 0,
+        isActive: input.isActive ?? true,
+      });
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'create',
+        entityType: 'video',
+        entityId: videoId,
+        newValues: { title: input.title, youtubeUrl: input.youtubeUrl },
+      });
+      return { id: videoId, success: true };
+    }),
+
+  // Update video (admin only)
+  update: adminProcedure
+    .input(z.object({
+      id: z.number(),
+      title: z.string().min(1).optional(),
+      description: z.string().optional().nullable(),
+      youtubeUrl: z.string().url().optional(),
+      thumbnailUrl: z.string().url().optional().nullable(),
+      sortOrder: z.number().optional(),
+      isActive: z.boolean().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { id, ...data } = input;
+      const video = await db.getVideoById(id);
+      if (!video) throw new Error('Video not found');
+      await db.updateVideo(id, data);
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'update',
+        entityType: 'video',
+        entityId: id,
+        oldValues: { title: video.title, youtubeUrl: video.youtubeUrl },
+        newValues: data,
+      });
+      return { success: true };
+    }),
+
+  // Delete video (soft delete - admin only)
+  delete: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const video = await db.getVideoById(input.id);
+      if (!video) throw new Error('Video not found');
+      await db.deleteVideo(input.id);
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'delete',
+        entityType: 'video',
+        entityId: input.id,
+        oldValues: { title: video.title, isActive: true },
+        newValues: { isActive: false },
+      });
+      return { success: true };
+    }),
+
+  // Reorder videos (admin only)
+  reorder: adminProcedure
+    .input(z.object({
+      updates: z.array(z.object({
+        id: z.number(),
+        sortOrder: z.number(),
+      })),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      await db.reorderVideos(input.updates);
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'update',
+        entityType: 'video',
+        entityId: 0,
+        newValues: { reordered: input.updates.length },
+      });
+      return { success: true };
+    }),
+});
+
+// ============================================
 // PARTNER LOGO ROUTER
 // ============================================
 
@@ -2780,6 +2894,7 @@ export const appRouter = router({
   booking: bookingRouter,
   contractTemplate: contractTemplateRouter,
   partnerLogo: partnerLogoRouter,
+  video: videoRouter,
 });
 
 export type AppRouter = typeof appRouter;

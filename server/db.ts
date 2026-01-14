@@ -26,7 +26,8 @@ import {
   staffCalendars, InsertStaffCalendar, StaffCalendar,
   bookings, InsertBooking, Booking,
   contractTemplates, InsertContractTemplate, ContractTemplate,
-  partnerLogos, InsertPartnerLogo, PartnerLogo
+  partnerLogos, InsertPartnerLogo, PartnerLogo,
+  videos, InsertVideo, Video
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1433,5 +1434,63 @@ export async function reorderPartnerLogos(updates: { id: number; sortOrder: numb
     await db.update(partnerLogos)
       .set({ sortOrder: update.sortOrder })
       .where(eq(partnerLogos.id, update.id));
+  }
+}
+
+// ============================================
+// VIDEO FUNCTIONS
+// ============================================
+
+export async function getVideos() {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(videos)
+    .where(eq(videos.isActive, true))
+    .orderBy(asc(videos.sortOrder), asc(videos.title));
+}
+
+export async function getAllVideos() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(videos).orderBy(asc(videos.sortOrder), asc(videos.title));
+}
+
+export async function getVideoById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(videos).where(eq(videos.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createVideo(video: InsertVideo) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(videos).values(video);
+  return result[0].insertId;
+}
+
+export async function updateVideo(id: number, data: Partial<InsertVideo>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(videos).set(data).where(eq(videos.id, id));
+}
+
+export async function deleteVideo(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Soft delete by setting isActive to false
+  await db.update(videos).set({ isActive: false }).where(eq(videos.id, id));
+}
+
+export async function reorderVideos(updates: { id: number; sortOrder: number }[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Update each video's sortOrder
+  for (const update of updates) {
+    await db.update(videos)
+      .set({ sortOrder: update.sortOrder })
+      .where(eq(videos.id, update.id));
   }
 }
