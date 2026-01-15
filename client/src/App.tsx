@@ -20,6 +20,7 @@ import Documents from "./pages/Documents";
 import Tasks from "./pages/Tasks";
 import Impressum from "./pages/Impressum";
 import Datenschutz from "./pages/Datenschutz";
+import AGB from "./pages/AGB";
 import Contracts from "./pages/Contracts";
 import AdminContracts from "./pages/admin/Contracts";
 import AdminContractTemplates from "./pages/admin/ContractTemplates";
@@ -67,6 +68,7 @@ function Router() {
       <Route path="/shop/success" component={ShopSuccess} />
       <Route path="/impressum" component={Impressum} />
       <Route path="/datenschutz" component={Datenschutz} />
+      <Route path="/agb" component={AGB} />
       <Route path="/about" component={About} />
       <Route path="/team" component={Team} />
       <Route path="/press" component={Press} />
