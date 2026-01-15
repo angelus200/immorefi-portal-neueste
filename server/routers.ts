@@ -1099,15 +1099,15 @@ const userRouter = router({
           status: 'completed',
           completedAt: new Date(),
         });
-        } else {
-          await db.createOnboardingData({
-            userId: ctx.user.id,
-            ...input,
-            status: 'completed',
-            completedAt: new Date(),
-          });
-        }
+      } else {
+        await db.createOnboardingData({
+          userId: ctx.user.id,
+          ...input,
+          status: 'completed',
+          completedAt: new Date(),
+        });
       }
+
       // Markiere User als onboarding completed
       await db.updateUserOnboardingStatus(ctx.user.id, true);
       
