@@ -805,7 +805,7 @@ export default function Home() {
                   </div>
                   <div>
                     <div className="font-semibold">Telefon</div>
-                    <div className="text-muted-foreground">0800 70 800 44</div>
+                    <div className="text-muted-foreground">+41 44 500 41 00</div>
                   </div>
                 </div>
                 

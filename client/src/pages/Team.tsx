@@ -376,28 +376,28 @@ export default function Team() {
                           <Building2 className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                          <p className="font-medium">Angelus Management Beratung und Service KG</p>
-                          <p className="text-sm text-muted-foreground">Konrad Zuse Platz 8, 81829 München</p>
+                          <p className="font-medium">Marketplace24-7 GmbH</p>
+                          <p className="text-sm text-muted-foreground">Kantonsstrasse 1, 8807 Freienbach SZ, Schweiz</p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                           <Phone className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                          <p className="font-medium">Telefon (kostenlos)</p>
-                          <p className="text-sm text-muted-foreground">0800 70 800 44</p>
+                          <p className="font-medium">Telefon</p>
+                          <p className="text-sm text-muted-foreground">+41 44 500 41 00</p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                           <Mail className="h-5 w-5 text-primary" />
                         </div>
                         <div>
                           <p className="font-medium">E-Mail</p>
-                          <p className="text-sm text-muted-foreground">office@angelus.group</p>
+                          <p className="text-sm text-muted-foreground">info@non-dom.group</p>
                         </div>
                       </div>
                     </div>

@@ -258,8 +258,8 @@ export default function Invoices() {
               info@non-dom.group
             </a>
             <span className="text-gray-400">|</span>
-            <a href="tel:+41800708044" className="text-[#00B4D8] hover:underline">
-              0800 70 800 44
+            <a href="tel:+41445004100" className="text-[#00B4D8] hover:underline">
+              +41 44 500 41 00
             </a>
           </div>
         </div>
