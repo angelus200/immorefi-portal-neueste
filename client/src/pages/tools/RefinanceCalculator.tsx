@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { 
+import {
   ArrowRight,
   TrendingDown,
   TrendingUp,
@@ -13,7 +13,7 @@ import {
   AlertTriangle,
   Sparkles
 } from "lucide-react";
-import { CalculatorNav } from "@/components/CalculatorNav";
+import DashboardLayout from '@/components/DashboardLayout';
 
 export default function RefinanceCalculator() {
   // Aktuelle Finanzierung
@@ -109,10 +109,7 @@ export default function RefinanceCalculator() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Header mit Dropdown-Navigation */}
-      <CalculatorNav currentCalculator="/tools/refinance-calculator" />
-      
+    <DashboardLayout>
       <div className="max-w-7xl mx-auto p-4 md:p-8">
 
         {/* Ergebnis-Banner */}
@@ -515,6 +512,6 @@ export default function RefinanceCalculator() {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

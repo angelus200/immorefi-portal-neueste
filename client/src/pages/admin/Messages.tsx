@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Send, X, Archive, CheckCheck, Plus, User } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
+import { useAuth } from '@/_core/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -36,7 +37,11 @@ export default function AdminMessages() {
   const [newMessage, setNewMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const { user } = useAuth();
   const utils = trpc.useUtils();
+
+  // Check if current user is admin
+  const isAdmin = user?.role === 'superadmin' || user?.role === 'tenant_admin' || user?.role === 'staff';
 
   // Get all users (for new conversation dialog)
   const { data: users = [] } = trpc.user.list.useQuery({});
@@ -138,8 +143,12 @@ export default function AdminMessages() {
 
   const selectedConversation = conversationData?.conversation;
 
-  // Filter users to only show customers (not admins)
-  const customerUsers = users.filter(u => u.role === 'client');
+  // Filter users based on current user role
+  // - Admins can see customers to start conversations
+  // - Customers can only see admins/staff (NEVER other customers - DATENSCHUTZ!)
+  const availableUsers = isAdmin
+    ? users.filter(u => u.role === 'client') // Admins see customers
+    : users.filter(u => u.role === 'superadmin' || u.role === 'tenant_admin' || u.role === 'staff'); // Customers see only admins/staff
 
   return (
     <DashboardLayout>
@@ -355,23 +364,26 @@ export default function AdminMessages() {
           <DialogHeader>
             <DialogTitle>Neue Konversation starten</DialogTitle>
             <DialogDescription>
-              Wählen Sie einen Kunden aus und senden Sie die erste Nachricht.
+              {isAdmin
+                ? 'Wählen Sie einen Kunden aus und senden Sie die erste Nachricht.'
+                : 'Wählen Sie einen Berater aus und senden Sie die erste Nachricht.'
+              }
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="customer">Kunde</Label>
+              <Label htmlFor="customer">{isAdmin ? 'Kunde' : 'Berater'}</Label>
               <Select value={selectedUserId} onValueChange={setSelectedUserId}>
                 <SelectTrigger id="customer">
-                  <SelectValue placeholder="Kunde auswählen..." />
+                  <SelectValue placeholder={isAdmin ? 'Kunde auswählen...' : 'Berater auswählen...'} />
                 </SelectTrigger>
                 <SelectContent>
-                  {customerUsers.length === 0 && (
+                  {availableUsers.length === 0 && (
                     <div className="px-2 py-3 text-sm text-muted-foreground text-center">
-                      Keine Kunden gefunden
+                      {isAdmin ? 'Keine Kunden gefunden' : 'Keine Berater gefunden'}
                     </div>
                   )}
-                  {customerUsers.map((user) => (
+                  {availableUsers.map((user) => (
                     <SelectItem key={user.id} value={user.id.toString()}>
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />

@@ -13,6 +13,7 @@
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
     "db:setup": "tsx scripts/setup-database.ts",
     "db:create": "drizzle-kit push",
+    "db:sync": "tsx scripts/sync-database-schema.ts",
     "db:set-admin": "tsx scripts/set-admin.ts"
   },
   "dependencies": {

@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import { createServer } from "http";
 import net from "net";
+import path from "path";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 // import { registerOAuthRoutes } from "./oauth"; // Removed: Using Clerk instead
 import { appRouter } from "../routers";
@@ -378,7 +379,12 @@ async function startServer() {
       res.status(500).json({ error: 'Upload failed' });
     }
   });
-  
+
+  // Static file serving for local uploads
+  const uploadsPath = path.join(process.cwd(), 'uploads');
+  app.use('/uploads', express.static(uploadsPath));
+  console.log('[Storage] Local file serving enabled at /uploads');
+
   // OAuth callback - REMOVED: Using Clerk authentication instead
   // registerOAuthRoutes(app);
 

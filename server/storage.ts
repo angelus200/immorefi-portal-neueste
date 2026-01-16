@@ -1,9 +1,32 @@
 // Preconfigured storage helpers for Manus WebDev templates
 // Uses the Biz-provided storage proxy (Authorization: Bearer <token>)
+// Falls back to local filesystem storage if ENV variables are missing
 
 import { ENV } from './_core/env';
+import fs from 'fs';
+import path from 'path';
 
 type StorageConfig = { baseUrl: string; apiKey: string };
+type StorageMode = 'remote' | 'local';
+
+const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
+
+// Ensure upload directory exists
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
+function getStorageMode(): StorageMode {
+  const baseUrl = ENV.forgeApiUrl;
+  const apiKey = ENV.forgeApiKey;
+
+  if (!baseUrl || !apiKey) {
+    console.warn('[Storage] BUILT_IN_FORGE_API_URL or BUILT_IN_FORGE_API_KEY not set - using local filesystem storage');
+    return 'local';
+  }
+
+  return 'remote';
+}
 
 function getStorageConfig(): StorageConfig {
   const baseUrl = ENV.forgeApiUrl;
@@ -72,8 +95,34 @@ export async function storagePut(
   data: Buffer | Uint8Array | string,
   contentType = "application/octet-stream"
 ): Promise<{ key: string; url: string }> {
-  const { baseUrl, apiKey } = getStorageConfig();
+  const mode = getStorageMode();
   const key = normalizeKey(relKey);
+
+  // Local filesystem storage
+  if (mode === 'local') {
+    const filePath = path.join(UPLOAD_DIR, key);
+    const dirPath = path.dirname(filePath);
+
+    // Ensure directory exists
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+
+    // Convert data to Buffer if needed
+    const buffer = typeof data === 'string'
+      ? Buffer.from(data, 'utf-8')
+      : Buffer.from(data);
+
+    // Write file
+    fs.writeFileSync(filePath, buffer);
+
+    // Return local URL (will be served via /uploads route)
+    const url = `/uploads/${key}`;
+    return { key, url };
+  }
+
+  // Remote storage (original implementation)
+  const { baseUrl, apiKey } = getStorageConfig();
   const uploadUrl = buildUploadUrl(baseUrl, key);
   const formData = toFormData(data, contentType, key.split("/").pop() ?? key);
   const response = await fetch(uploadUrl, {
@@ -93,8 +142,17 @@ export async function storagePut(
 }
 
 export async function storageGet(relKey: string): Promise<{ key: string; url: string; }> {
-  const { baseUrl, apiKey } = getStorageConfig();
+  const mode = getStorageMode();
   const key = normalizeKey(relKey);
+
+  // Local filesystem storage
+  if (mode === 'local') {
+    const url = `/uploads/${key}`;
+    return { key, url };
+  }
+
+  // Remote storage (original implementation)
+  const { baseUrl, apiKey } = getStorageConfig();
   return {
     key,
     url: await buildDownloadUrl(baseUrl, key, apiKey),

@@ -1,14 +1,14 @@
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
-import { 
-  Calculator, 
-  TrendingDown, 
-  Calendar, 
+import {
+  Calculator,
+  TrendingDown,
+  Calendar,
   Euro,
   PiggyBank,
   Info
 } from "lucide-react";
-import { CalculatorNav } from "@/components/CalculatorNav";
+import DashboardLayout from '@/components/DashboardLayout';
 
 interface AmortizationRow {
   year: number;
@@ -107,10 +107,7 @@ export default function InterestCalculator() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header mit Dropdown-Navigation */}
-      <CalculatorNav currentCalculator="/tools/interest-calculator" />
-
+    <DashboardLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Eingabebereich */}
@@ -346,6 +343,6 @@ export default function InterestCalculator() {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

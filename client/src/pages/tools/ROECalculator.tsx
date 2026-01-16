@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { 
+import {
   ArrowRight,
   TrendingUp,
   TrendingDown,
@@ -15,7 +15,7 @@ import {
   CheckCircle2,
   Info
 } from "lucide-react";
-import { CalculatorNav } from "@/components/CalculatorNav";
+import DashboardLayout from '@/components/DashboardLayout';
 
 export default function ROECalculator() {
   // Immobiliendaten
@@ -117,10 +117,7 @@ export default function ROECalculator() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Header mit Dropdown-Navigation */}
-      <CalculatorNav currentCalculator="/tools/roe-calculator" />
-      
+    <DashboardLayout>
       <div className="max-w-7xl mx-auto p-4 md:p-8">
 
         {/* Leverage-Effekt Banner */}
@@ -496,6 +493,6 @@ export default function ROECalculator() {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
