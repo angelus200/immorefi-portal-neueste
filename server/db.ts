@@ -1,5 +1,6 @@
 import { eq, desc, and, gte, lte, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import mysql from "mysql2/promise";
 import type { QuestionnaireStatus } from './types/questionnaire';
 import {
   InsertUser, users,
@@ -33,14 +34,19 @@ import {
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _pool: mysql.Pool | null = null;
 
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      // Create MySQL2 connection pool
+      _pool = mysql.createPool(process.env.DATABASE_URL);
+      // Pass pool to drizzle with correct MySQL2 driver
+      _db = drizzle(_pool);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
+      _pool = null;
     }
   }
   return _db;

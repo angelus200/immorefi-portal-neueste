@@ -95,13 +95,14 @@ const MAX_WIDTH = 480;
 
 function DashboardContent() {
   const { user } = useAuth();
-  const { data: tasks } = trpc.task.list.useQuery({ tenantId: TENANT_ID });
-  const { data: deals } = trpc.deal.list.useQuery({ tenantId: TENANT_ID });
-  const { data: leads } = trpc.lead.list.useQuery({ tenantId: TENANT_ID });
-  const { data: onboardingStatus } = trpc.onboarding.getMyStatus.useQuery();
 
   const isAdmin = user?.role === 'superadmin' || user?.role === 'tenant_admin';
   const isStaff = user?.role === 'staff' || isAdmin;
+
+  const { data: tasks } = trpc.task.list.useQuery({ tenantId: TENANT_ID });
+  const { data: deals } = trpc.deal.list.useQuery({ tenantId: TENANT_ID }, { enabled: isAdmin });
+  const { data: leads } = trpc.lead.list.useQuery({ tenantId: TENANT_ID }, { enabled: isAdmin });
+  const { data: onboardingStatus } = trpc.onboarding.getMyStatus.useQuery();
 
   const pendingTasks = tasks?.filter(t => t.status === 'todo' || t.status === 'in_progress') || [];
   const completedTasks = tasks?.filter(t => t.status === 'done') || [];

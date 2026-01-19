@@ -135,7 +135,7 @@ const membershipRouter = router({
 // ============================================
 
 const leadRouter = router({
-  list: protectedProcedure
+  list: adminProcedure
     .input(z.object({ tenantId: z.number() }))
     .query(async ({ input }) => {
       return db.getLeadsByTenantId(input.tenantId);
@@ -662,7 +662,7 @@ const pipelineRouter = router({
 // ============================================
 
 const dealRouter = router({
-  list: protectedProcedure
+  list: adminProcedure
     .input(z.object({ tenantId: z.number() }))
     .query(async ({ input }) => {
       return db.getDealsByTenantId(input.tenantId);
