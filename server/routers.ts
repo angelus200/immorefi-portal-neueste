@@ -933,6 +933,7 @@ const fileRouter = router({
       tenantId: z.number(),
       fileName: z.string(),
       mimeType: z.string(),
+      userId: z.number().optional(), // Customer to assign file to
       dealId: z.number().optional(),
       category: z.enum(["document", "contract", "financial", "identification", "other"]).optional(),
     }))
@@ -952,9 +953,10 @@ const fileRouter = router({
       }
       const fileKey = `tenants/${input.tenantId}/files/${nanoid()}-${input.fileName}`;
       const { url } = await storagePut(fileKey, Buffer.from(""), input.mimeType);
-      
+
       const fileId = await db.createFile({
         tenantId: input.tenantId,
+        userId: input.userId,
         dealId: input.dealId,
         fileName: input.fileName,
         fileKey,

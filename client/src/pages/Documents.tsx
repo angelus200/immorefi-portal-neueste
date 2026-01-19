@@ -9,21 +9,40 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
 import { useState, useRef } from "react";
-import { 
-  Search, 
-  Upload, 
-  FileText, 
+import {
+  Search,
+  Upload,
+  FileText,
   Download,
   Trash2,
   FolderOpen,
   File,
   FileImage,
-  FileSpreadsheet
+  FileSpreadsheet,
+  User,
+  Filter
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { toast } from "sonner";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const TENANT_ID = 1;
 
@@ -43,10 +62,17 @@ const formatFileSize = (bytes: number | null) => {
 };
 
 function DocumentsContent() {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [filterUserId, setFilterUserId] = useState<string>("all");
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
+  const isAdmin = user?.role === "superadmin" || user?.role === "tenant_admin" || user?.role === "staff";
+
   const { data: files, isLoading, refetch } = trpc.file.list.useQuery({ tenantId: TENANT_ID });
+  const { data: users = [] } = trpc.user.list.useQuery({}, { enabled: isAdmin });
   
   const getUploadUrl = trpc.file.getUploadUrl.useMutation({
     onSuccess: () => {
@@ -69,9 +95,12 @@ function DocumentsContent() {
   });
 
   const filteredFiles = files?.filter(file => {
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       file.fileName?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
+    const matchesUser = filterUserId === "all" ||
+      (filterUserId === "unassigned" && !file.userId) ||
+      file.userId?.toString() === filterUserId;
+    return matchesSearch && matchesUser;
   });
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,6 +114,7 @@ function DocumentsContent() {
         fileName: file.name,
         mimeType: file.type,
         category: "document",
+        userId: selectedUserId ? parseInt(selectedUserId) : undefined,
       });
 
       // Upload file to S3
@@ -98,6 +128,8 @@ function DocumentsContent() {
 
       // Success notification and refresh list
       toast.success("Datei erfolgreich hochgeladen");
+      setIsUploadDialogOpen(false);
+      setSelectedUserId("");
       refetch();
     } catch (error) {
       console.error("Upload error:", error);
@@ -142,14 +174,7 @@ function DocumentsContent() {
           <p className="text-muted-foreground">Verwalten Sie Ihre Dateien und Dokumente</p>
         </div>
         <div>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleUpload}
-            accept=".pdf,.jpg,.jpeg,.png,.docx,.doc"
-            className="hidden"
-          />
-          <Button onClick={() => fileInputRef.current?.click()}>
+          <Button onClick={() => setIsUploadDialogOpen(true)}>
             <Upload className="mr-2 h-4 w-4" />
             Hochladen
           </Button>
@@ -194,17 +219,38 @@ function DocumentsContent() {
         </Card>
       </div>
 
-      {/* Search */}
+      {/* Search & Filter */}
       <Card>
         <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Suchen nach Dateiname..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Suchen nach Dateiname..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            {isAdmin && (
+              <div className="relative">
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Select value={filterUserId} onValueChange={setFilterUserId}>
+                  <SelectTrigger className="pl-10">
+                    <SelectValue placeholder="Filter nach Kunde" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Alle Dokumente</SelectItem>
+                    <SelectItem value="unassigned">Nicht zugeordnet</SelectItem>
+                    {users.filter(u => u.role === 'client').map((user) => (
+                      <SelectItem key={user.id} value={user.id.toString()}>
+                        {user.name || user.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -223,6 +269,7 @@ function DocumentsContent() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  {isAdmin && <TableHead>Kunde</TableHead>}
                   <TableHead>Typ</TableHead>
                   <TableHead>Größe</TableHead>
                   <TableHead>Hochgeladen</TableHead>
@@ -230,7 +277,9 @@ function DocumentsContent() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredFiles.map((file) => (
+                {filteredFiles.map((file) => {
+                  const fileUser = users.find(u => u.id === file.userId);
+                  return (
                   <TableRow key={file.id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -238,6 +287,18 @@ function DocumentsContent() {
                         <span className="font-medium">{file.fileName}</span>
                       </div>
                     </TableCell>
+                    {isAdmin && (
+                      <TableCell className="text-muted-foreground">
+                        {fileUser ? (
+                          <div className="flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            {fileUser.name || fileUser.email}
+                          </div>
+                        ) : (
+                          <span className="text-xs italic">Nicht zugeordnet</span>
+                        )}
+                      </TableCell>
+                    )}
                     <TableCell className="text-muted-foreground">
                       {file.mimeType?.split("/")[1]?.toUpperCase() || "-"}
                     </TableCell>
@@ -265,7 +326,8 @@ function DocumentsContent() {
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           ) : (
@@ -275,6 +337,72 @@ function DocumentsContent() {
           )}
         </CardContent>
       </Card>
+
+      {/* Upload Dialog */}
+      <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Dokument hochladen</DialogTitle>
+            <DialogDescription>
+              {isAdmin
+                ? "Wählen Sie optional einen Kunden aus, dem dieses Dokument zugeordnet werden soll."
+                : "Laden Sie ein Dokument hoch."
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {isAdmin && (
+              <div className="space-y-2">
+                <Label htmlFor="customer">Kunde (optional)</Label>
+                <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                  <SelectTrigger id="customer">
+                    <SelectValue placeholder="Keinem Kunden zuordnen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Keinem Kunden zuordnen</SelectItem>
+                    {users.filter(u => u.role === 'client').map((user) => (
+                      <SelectItem key={user.id} value={user.id.toString()}>
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          <span>{user.name || user.email}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="file">Datei</Label>
+              <input
+                id="file"
+                type="file"
+                ref={fileInputRef}
+                onChange={handleUpload}
+                accept=".pdf,.jpg,.jpeg,.png,.docx,.doc"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium"
+              />
+              <p className="text-xs text-muted-foreground">
+                Erlaubte Formate: PDF, JPG, PNG, DOCX
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsUploadDialogOpen(false);
+                setSelectedUserId("");
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = "";
+                }
+              }}
+            >
+              Abbrechen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

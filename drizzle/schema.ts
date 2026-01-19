@@ -239,13 +239,14 @@ export const fileCategoryEnum = mysqlEnum("fileCategory", ["document", "contract
 export const files = mysqlTable("files", {
   id: int("id").autoincrement().primaryKey(),
   tenantId: int("tenantId").notNull(),
+  userId: int("userId"), // Customer/user this file belongs to
   dealId: int("dealId"),
   category: fileCategoryEnum.default("document").notNull(),
   fileName: varchar("fileName", { length: 255 }).notNull(),
   fileKey: varchar("fileKey", { length: 500 }).notNull(),
   mimeType: varchar("mimeType", { length: 100 }),
   size: int("size"),
-  uploadedBy: int("uploadedBy"),
+  uploadedBy: int("uploadedBy"), // Admin who uploaded the file
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
