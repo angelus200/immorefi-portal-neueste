@@ -17,7 +17,9 @@ import { useState } from "react";
 export function OnboardingChecklist() {
   const [location, setLocation] = useLocation();
   const [dismissed, setDismissed] = useState(false);
-  const { data: onboardingStatus } = trpc.onboarding.getMyStatus.useQuery();
+  const { data: onboardingStatus } = trpc.onboarding.getMyStatus.useQuery(undefined, {
+    refetchInterval: 5000, // Refetch every 5 seconds to keep checklist updated
+  });
   const updateStatus = trpc.onboarding.updateMyStatus.useMutation();
 
   if (!onboardingStatus || dismissed) {
