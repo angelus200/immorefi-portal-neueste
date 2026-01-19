@@ -98,6 +98,7 @@ function DashboardContent() {
   const { data: tasks } = trpc.task.list.useQuery({ tenantId: TENANT_ID });
   const { data: deals } = trpc.deal.list.useQuery({ tenantId: TENANT_ID });
   const { data: leads } = trpc.lead.list.useQuery({ tenantId: TENANT_ID });
+  const { data: onboardingStatus } = trpc.onboarding.getMyStatus.useQuery();
 
   const isAdmin = user?.role === 'superadmin' || user?.role === 'tenant_admin';
   const isStaff = user?.role === 'staff' || isAdmin;
@@ -109,12 +110,20 @@ function DashboardContent() {
   const newLeads = leads?.filter(l => l.status === 'new') || [];
   const qualifiedLeads = leads?.filter(l => l.status === 'qualified') || [];
 
+  // Check if this is the user's first login (account created recently)
+  const isFirstLogin = user?.createdAt &&
+    (new Date().getTime() - new Date(user.createdAt).getTime()) < 3600000; // Within last hour
+
+  const welcomeText = isFirstLogin
+    ? `Willkommen, ${user?.name?.split(' ')[0] || 'Benutzer'}!`
+    : `Willkommen zurück, ${user?.name?.split(' ')[0] || 'Benutzer'}!`;
+
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
-          Willkommen zurück, {user?.name?.split(' ')[0] || 'Benutzer'}!
+          {welcomeText}
         </h1>
         <p className="text-muted-foreground mt-1">
           Hier ist eine Übersicht Ihrer aktuellen Aktivitäten.
