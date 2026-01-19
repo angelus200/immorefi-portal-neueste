@@ -114,7 +114,10 @@ function DocumentsContent() {
         fileName: file.name,
         mimeType: file.type,
         category: "document",
-        userId: selectedUserId ? parseInt(selectedUserId) : undefined,
+        // For clients, use their own ID; for admins, use selected user or undefined
+        userId: isAdmin
+          ? (selectedUserId ? parseInt(selectedUserId) : undefined)
+          : user?.id,
       });
 
       // Upload file to S3

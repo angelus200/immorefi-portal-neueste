@@ -351,6 +351,17 @@ export async function getFilesByTenantId(tenantId: number) {
   return db.select().from(files).where(eq(files.tenantId, tenantId)).orderBy(desc(files.createdAt));
 }
 
+export async function getFilesByUserId(userId: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(files)
+    .where(and(
+      eq(files.userId, userId),
+      eq(files.tenantId, tenantId)
+    ))
+    .orderBy(desc(files.createdAt));
+}
+
 export async function getFilesByDealId(dealId: number, tenantId: number) {
   const db = await getDb();
   if (!db) return [];

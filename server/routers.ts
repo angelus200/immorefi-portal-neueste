@@ -918,8 +918,16 @@ const taskRouter = router({
 const fileRouter = router({
   list: protectedProcedure
     .input(z.object({ tenantId: z.number() }))
-    .query(async ({ input }) => {
-      return db.getFilesByTenantId(input.tenantId);
+    .query(async ({ input, ctx }) => {
+      const isAdmin = ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin' || ctx.user.role === 'staff';
+
+      if (isAdmin) {
+        // Admins see all files for the tenant
+        return db.getFilesByTenantId(input.tenantId);
+      } else {
+        // Clients see only their own files
+        return db.getFilesByUserId(ctx.user.id, input.tenantId);
+      }
     }),
   
   byDeal: protectedProcedure
