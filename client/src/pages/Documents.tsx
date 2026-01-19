@@ -475,9 +475,33 @@ function DocumentsContent() {
 }
 
 export default function Documents() {
+  const { user } = useAuth();
+
+  // TEMPORÄR: Minimal-Render um zu sehen ob das grundsätzlich funktioniert
+  if (!user) {
+    return (
+      <DashboardLayout>
+        <div className="p-8">Loading user...</div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout>
+      <div className="p-8">
+        <h1 className="text-2xl font-bold mb-4">Documents page works!</h1>
+        <p>User: {user.email}</p>
+        <p>Role: {user.role}</p>
+        <p>ID: {user.id}</p>
+      </div>
+    </DashboardLayout>
+  );
+
+  /* ORIGINAL CODE - TEMPORARILY DISABLED
   return (
     <DashboardLayout>
       <DocumentsContent />
     </DashboardLayout>
   );
+  */
 }
