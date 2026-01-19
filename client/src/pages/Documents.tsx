@@ -74,13 +74,15 @@ function DocumentsContent() {
   const { data: files, isLoading, refetch } = trpc.file.list.useQuery({ tenantId: TENANT_ID });
   const { data: users = [] } = trpc.user.list.useQuery({}, { enabled: isAdmin });
   
-  const getUploadUrl = trpc.file.getUploadUrl.useMutation({
+  const createFileRecord = trpc.file.createFileRecord.useMutation({
     onSuccess: () => {
       toast.success("Datei hochgeladen");
       refetch();
+      setIsUploadDialogOpen(false);
+      setSelectedUserId("");
     },
-    onError: () => {
-      toast.error("Fehler beim Hochladen");
+    onError: (error) => {
+      toast.error("Fehler beim Speichern: " + error.message);
     },
   });
 
@@ -108,41 +110,80 @@ function DocumentsContent() {
     if (!file) return;
 
     try {
-      // Get presigned upload URL and create file record
-      const { uploadUrl } = await getUploadUrl.mutateAsync({
-        tenantId: TENANT_ID,
-        fileName: file.name,
-        mimeType: file.type,
-        category: "document",
-        // For clients, use their own ID; for admins, use selected user or undefined
-        userId: isAdmin
-          ? (selectedUserId ? parseInt(selectedUserId) : undefined)
-          : user?.id,
-      });
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64 = reader.result as string;
+          const base64Data = base64.split(",")[1];
 
-      // Upload file to S3
-      await fetch(uploadUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type,
-        },
-      });
+          // Upload to server via API
+          const response = await fetch("/api/upload", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              fileName: file.name,
+              mimeType: file.type,
+              data: base64Data,
+            }),
+          });
 
-      // Success notification and refresh list
-      toast.success("Datei erfolgreich hochgeladen");
-      setIsUploadDialogOpen(false);
-      setSelectedUserId("");
-      refetch();
+          if (!response.ok) {
+            throw new Error("Upload fehlgeschlagen");
+          }
+
+          const result = await response.json();
+
+          // Save document reference in database
+          await createFileRecord.mutateAsync({
+            tenantId: TENANT_ID,
+            fileName: file.name,
+            fileKey: result.key,
+            fileUrl: result.url,
+            mimeType: file.type,
+            size: file.size,
+            category: "document",
+            userId: isAdmin
+              ? (selectedUserId ? parseInt(selectedUserId) : undefined)
+              : user?.id,
+          });
+
+          // Success notification and refresh list
+          toast.success("Datei erfolgreich hochgeladen");
+          setIsUploadDialogOpen(false);
+          setSelectedUserId("");
+          refetch();
+        } catch (error) {
+          console.error("Upload error:", error);
+          const errorMessage = error instanceof Error ? error.message : "Fehler beim Hochladen";
+          toast.error(errorMessage);
+        }
+
+        // Reset input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      };
+
+      reader.onerror = () => {
+        toast.error("Fehler beim Lesen der Datei");
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      };
+
+      reader.readAsDataURL(file);
     } catch (error) {
       console.error("Upload error:", error);
       const errorMessage = error instanceof Error ? error.message : "Fehler beim Hochladen";
       toast.error(errorMessage);
-    }
 
-    // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      // Reset input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 

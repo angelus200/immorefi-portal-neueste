@@ -936,6 +936,44 @@ const fileRouter = router({
       return db.getFilesByDealId(input.dealId, input.tenantId);
     }),
   
+  // Create file record after upload (for use with /api/upload endpoint)
+  createFileRecord: protectedProcedure
+    .input(z.object({
+      tenantId: z.number(),
+      fileName: z.string(),
+      fileKey: z.string(),
+      fileUrl: z.string(),
+      mimeType: z.string(),
+      size: z.number(),
+      userId: z.number().optional(),
+      dealId: z.number().optional(),
+      category: z.enum(["document", "contract", "financial", "identification", "other"]).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const fileId = await db.createFile({
+        tenantId: input.tenantId,
+        userId: input.userId,
+        dealId: input.dealId,
+        fileName: input.fileName,
+        fileKey: input.fileKey,
+        mimeType: input.mimeType,
+        category: input.category || "document",
+        uploadedBy: ctx.user.id,
+        size: input.size,
+      });
+
+      await db.createAuditLog({
+        tenantId: input.tenantId,
+        userId: ctx.user.id,
+        action: "upload",
+        entityType: "file",
+        entityId: fileId,
+        newValues: { fileName: input.fileName },
+      });
+
+      return { fileId };
+    }),
+
   getUploadUrl: protectedProcedure
     .input(z.object({
       tenantId: z.number(),
@@ -972,7 +1010,7 @@ const fileRouter = router({
         category: input.category || "document",
         uploadedBy: ctx.user.id,
       });
-      
+
       await db.createAuditLog({
         tenantId: input.tenantId,
         userId: ctx.user.id,
@@ -981,7 +1019,7 @@ const fileRouter = router({
         entityId: fileId,
         newValues: { fileName: input.fileName },
       });
-      
+
       return { fileId, uploadUrl: url, fileKey };
     }),
   
