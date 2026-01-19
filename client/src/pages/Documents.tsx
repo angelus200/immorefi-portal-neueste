@@ -63,6 +63,50 @@ const formatFileSize = (bytes: number | null) => {
 
 function DocumentsContent() {
   const { user } = useAuth();
+  const isAdmin = user?.role === "superadmin" || user?.role === "tenant_admin" || user?.role === "staff";
+
+  // Query 1: Files
+  const { data: files, isLoading: filesLoading, error: filesError } = trpc.file.list.useQuery({ tenantId: TENANT_ID });
+
+  // Query 2: Users (nur für Admins)
+  const { data: users, isLoading: usersLoading, error: usersError } = trpc.user.list.useQuery(
+    undefined,
+    { enabled: isAdmin }
+  );
+
+  return (
+    <div className="p-8 space-y-4">
+      <h1 className="text-2xl font-bold">DocumentsContent Debug</h1>
+
+      <div className="border p-4 rounded">
+        <h2 className="font-semibold mb-2">User Info</h2>
+        <div>Email: {user?.email || "undefined"}</div>
+        <div>Role: {user?.role || "undefined"}</div>
+        <div>Is Admin: {isAdmin ? "YES" : "NO"}</div>
+      </div>
+
+      <div className="border p-4 rounded">
+        <h2 className="font-semibold mb-2">Files Query</h2>
+        <div>Loading: {filesLoading ? "YES" : "NO"}</div>
+        <div>Error: {filesError?.message || "NONE"}</div>
+        <div>Count: {files?.length ?? "undefined"}</div>
+        <div>Data: {files ? "EXISTS" : "undefined"}</div>
+      </div>
+
+      <div className="border p-4 rounded">
+        <h2 className="font-semibold mb-2">Users Query</h2>
+        <div>Loading: {usersLoading ? "YES" : "NO"}</div>
+        <div>Error: {usersError?.message || "NONE"}</div>
+        <div>Count: {users?.length ?? "undefined"}</div>
+        <div>Data: {users ? "EXISTS" : "undefined"}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ORIGINAL DocumentsContent - TEMPORARILY DISABLED
+function DocumentsContent() {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [filterUserId, setFilterUserId] = useState<string>("all");
@@ -473,35 +517,12 @@ function DocumentsContent() {
     </div>
   );
 }
+*/
 
 export default function Documents() {
-  const { user } = useAuth();
-
-  // TEMPORÄR: Minimal-Render um zu sehen ob das grundsätzlich funktioniert
-  if (!user) {
-    return (
-      <DashboardLayout>
-        <div className="p-8">Loading user...</div>
-      </DashboardLayout>
-    );
-  }
-
-  return (
-    <DashboardLayout>
-      <div className="p-8">
-        <h1 className="text-2xl font-bold mb-4">Documents page works!</h1>
-        <p>User: {user.email}</p>
-        <p>Role: {user.role}</p>
-        <p>ID: {user.id}</p>
-      </div>
-    </DashboardLayout>
-  );
-
-  /* ORIGINAL CODE - TEMPORARILY DISABLED
   return (
     <DashboardLayout>
       <DocumentsContent />
     </DashboardLayout>
   );
-  */
 }
