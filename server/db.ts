@@ -385,6 +385,13 @@ export async function getFileById(id: number, tenantId: number) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function deleteFile(id: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(files)
+    .where(and(eq(files.id, id), eq(files.tenantId, tenantId)));
+}
+
 // ============================================
 // AUDIT LOG FUNCTIONS
 // ============================================
