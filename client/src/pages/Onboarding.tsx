@@ -27,24 +27,23 @@ export default function Onboarding() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
-    // Personal
-    firstName: "",
-    lastName: "",
-    phone: "",
+    // Personal (match backend field names)
+    vorname: "",
+    nachname: "",
+    telefon: "",
     position: "",
     // Company
-    companyName: "",
-    companyType: "",
-    industry: "",
-    employees: "",
-    website: "",
+    firmenname: "",
+    rechtsform: "",
     // Project
     kapitalbedarf: "",
     zeithorizont: "",
     verwendungszweck: "",
     projektbeschreibung: "",
-    // Documents
-    documents: [] as string[],
+    website: "",
+    // Consents
+    agbAkzeptiert: false,
+    datenschutzAkzeptiert: false,
   });
 
   if (loading) {
@@ -110,7 +109,7 @@ export default function Onboarding() {
     }
   };
 
-  const updateFormData = (field: string, value: string) => {
+  const updateFormData = (field: string, value: string | boolean) => {
     setFormData({ ...formData, [field]: value });
   };
 
@@ -178,32 +177,32 @@ export default function Onboarding() {
               <>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">Vorname *</Label>
+                    <Label htmlFor="vorname">Vorname *</Label>
                     <Input
-                      id="firstName"
-                      value={formData.firstName}
-                      onChange={(e) => updateFormData("firstName", e.target.value)}
+                      id="vorname"
+                      value={formData.vorname}
+                      onChange={(e) => updateFormData("vorname", e.target.value)}
                       placeholder="Max"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Nachname *</Label>
+                    <Label htmlFor="nachname">Nachname *</Label>
                     <Input
-                      id="lastName"
-                      value={formData.lastName}
-                      onChange={(e) => updateFormData("lastName", e.target.value)}
+                      id="nachname"
+                      value={formData.nachname}
+                      onChange={(e) => updateFormData("nachname", e.target.value)}
                       placeholder="Mustermann"
                     />
                   </div>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Telefon</Label>
+                    <Label htmlFor="telefon">Telefon</Label>
                     <Input
-                      id="phone"
+                      id="telefon"
                       type="tel"
-                      value={formData.phone}
-                      onChange={(e) => updateFormData("phone", e.target.value)}
+                      value={formData.telefon}
+                      onChange={(e) => updateFormData("telefon", e.target.value)}
                       placeholder="+49 123 456789"
                     />
                   </div>
@@ -224,20 +223,20 @@ export default function Onboarding() {
             {currentStep === 2 && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="companyName">Unternehmensname *</Label>
+                  <Label htmlFor="firmenname">Unternehmensname *</Label>
                   <Input
-                    id="companyName"
-                    value={formData.companyName}
-                    onChange={(e) => updateFormData("companyName", e.target.value)}
+                    id="firmenname"
+                    value={formData.firmenname}
+                    onChange={(e) => updateFormData("firmenname", e.target.value)}
                     placeholder="Musterfirma GmbH"
                   />
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="companyType">Rechtsform</Label>
-                    <Select 
-                      value={formData.companyType} 
-                      onValueChange={(v) => updateFormData("companyType", v)}
+                    <Label htmlFor="rechtsform">Rechtsform</Label>
+                    <Select
+                      value={formData.rechtsform}
+                      onValueChange={(v) => updateFormData("rechtsform", v)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Auswählen..." />
@@ -249,45 +248,6 @@ export default function Onboarding() {
                         <SelectItem value="ohg">OHG</SelectItem>
                         <SelectItem value="einzelunternehmen">Einzelunternehmen</SelectItem>
                         <SelectItem value="other">Sonstige</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="industry">Branche</Label>
-                    <Select 
-                      value={formData.industry} 
-                      onValueChange={(v) => updateFormData("industry", v)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Auswählen..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="immobilien">Immobilien</SelectItem>
-                        <SelectItem value="handel">Handel</SelectItem>
-                        <SelectItem value="dienstleistung">Dienstleistung</SelectItem>
-                        <SelectItem value="produktion">Produktion</SelectItem>
-                        <SelectItem value="tech">Technologie</SelectItem>
-                        <SelectItem value="other">Sonstige</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="employees">Mitarbeiter</Label>
-                    <Select 
-                      value={formData.employees} 
-                      onValueChange={(v) => updateFormData("employees", v)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Auswählen..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1-10">1-10</SelectItem>
-                        <SelectItem value="11-50">11-50</SelectItem>
-                        <SelectItem value="51-200">51-200</SelectItem>
-                        <SelectItem value="201-500">201-500</SelectItem>
-                        <SelectItem value="500+">500+</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -382,11 +342,54 @@ export default function Onboarding() {
               <div className="space-y-6">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-sm text-blue-800">
-                    <strong>Optional:</strong> Sie können Dokumente jetzt hochladen oder später im Dashboard nachholen. 
-                    Klicken Sie auf "Abschließen", um fortzufahren.
+                    <strong>Optional:</strong> Sie können Dokumente jetzt hochladen oder später im Dashboard nachholen.
                   </p>
                 </div>
                 <OnboardingDocumentUpload />
+
+                {/* Consents */}
+                <div className="border-t pt-6 mt-6 space-y-4">
+                  <h3 className="font-semibold text-lg">Zustimmungen *</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        id="agb"
+                        checked={formData.agbAkzeptiert}
+                        onChange={(e) => updateFormData("agbAkzeptiert", e.target.checked)}
+                        className="mt-1 h-4 w-4 rounded border-gray-300"
+                      />
+                      <Label htmlFor="agb" className="text-sm font-normal cursor-pointer">
+                        Ich akzeptiere die{" "}
+                        <a href="/legal/terms" target="_blank" className="text-primary underline">
+                          Allgemeinen Geschäftsbedingungen
+                        </a>
+                        {" "}*
+                      </Label>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        id="datenschutz"
+                        checked={formData.datenschutzAkzeptiert}
+                        onChange={(e) => updateFormData("datenschutzAkzeptiert", e.target.checked)}
+                        className="mt-1 h-4 w-4 rounded border-gray-300"
+                      />
+                      <Label htmlFor="datenschutz" className="text-sm font-normal cursor-pointer">
+                        Ich akzeptiere die{" "}
+                        <a href="/legal/privacy" target="_blank" className="text-primary underline">
+                          Datenschutzerklärung
+                        </a>
+                        {" "}*
+                      </Label>
+                    </div>
+                  </div>
+                  {(!formData.agbAkzeptiert || !formData.datenschutzAkzeptiert) && (
+                    <p className="text-sm text-destructive">
+                      Bitte akzeptieren Sie beide Zustimmungen, um fortzufahren.
+                    </p>
+                  )}
+                </div>
               </div>
             )}
 
@@ -400,30 +403,26 @@ export default function Onboarding() {
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Zurück
               </Button>
-              <div className="flex gap-2">
-                {currentStep === 4 && (
-                  <Button 
-                    variant="ghost" 
-                    onClick={() => completeOnboarding.mutate(formData)}
-                    disabled={completeOnboarding.isPending}
-                  >
-                    Überspringen & Abschließen
-                  </Button>
+              <Button
+                onClick={handleNext}
+                disabled={
+                  isSubmitting ||
+                  completeOnboarding.isPending ||
+                  (currentStep === 4 && (!formData.agbAkzeptiert || !formData.datenschutzAkzeptiert))
+                }
+              >
+                {currentStep === steps.length ? (
+                  <>
+                    {completeOnboarding.isPending ? "Speichern..." : "Abschließen"}
+                    <Check className="ml-2 h-4 w-4" />
+                  </>
+                ) : (
+                  <>
+                    Weiter
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
                 )}
-                <Button onClick={handleNext} disabled={isSubmitting || completeOnboarding.isPending}>
-                  {currentStep === steps.length ? (
-                    <>
-                      {completeOnboarding.isPending ? "Speichern..." : "Abschließen"}
-                      <Check className="ml-2 h-4 w-4" />
-                    </>
-                  ) : (
-                    <>
-                      Weiter
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </Button>
-              </div>
+              </Button>
             </div>
           </CardContent>
         </Card>

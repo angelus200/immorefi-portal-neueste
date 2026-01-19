@@ -1128,11 +1128,6 @@ const userRouter = router({
         throw new Error('AGB und Datenschutzerklärung müssen akzeptiert werden');
       }
 
-      // Validate required personal data
-      if (!input.vorname || !input.nachname) {
-        throw new Error('Vorname und Nachname sind Pflichtfelder');
-      }
-
       // Speichere Onboarding-Daten
       const existingData = await db.getOnboardingDataByUserId(ctx.user.id);
       if (existingData) {
