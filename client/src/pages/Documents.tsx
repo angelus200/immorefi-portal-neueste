@@ -72,7 +72,7 @@ function DocumentsContent() {
   const isAdmin = user?.role === "superadmin" || user?.role === "tenant_admin" || user?.role === "staff";
 
   const { data: files, isLoading, refetch } = trpc.file.list.useQuery({ tenantId: TENANT_ID });
-  const { data: users = [] } = trpc.user.list.useQuery({}, { enabled: isAdmin });
+  const { data: users = [] } = trpc.user.list.useQuery(undefined, { enabled: isAdmin });
   
   const createFileRecord = trpc.file.createFileRecord.useMutation({
     onSuccess: () => {

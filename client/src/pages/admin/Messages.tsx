@@ -45,7 +45,7 @@ export default function AdminMessages() {
 
   // Get all users (for new conversation dialog)
   // Admins get full user list, clients get staff list
-  const { data: allUsers = [] } = trpc.user.list.useQuery({}, { enabled: isAdmin });
+  const { data: allUsers = [] } = trpc.user.list.useQuery(undefined, { enabled: isAdmin });
   const { data: staffUsers = [] } = trpc.user.listStaff.useQuery(undefined, { enabled: !isAdmin });
   const users = isAdmin ? allUsers : staffUsers;
 
