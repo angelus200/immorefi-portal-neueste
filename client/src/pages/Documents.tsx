@@ -76,6 +76,15 @@ function DocumentsContent() {
   const isAdmin = user?.role === "superadmin" || user?.role === "tenant_admin" || user?.role === "staff";
   console.log("[Documents] isAdmin:", isAdmin);
 
+  // Early return if user not loaded yet
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-muted-foreground">Laden...</div>
+      </div>
+    );
+  }
+
   // Queries with safe defaults
   console.log("[Documents] Executing file.list query with TENANT_ID:", TENANT_ID);
   const { data: files = [], isLoading, refetch, error: filesError } = trpc.file.list.useQuery({ tenantId: TENANT_ID });
@@ -384,14 +393,14 @@ function DocumentsContent() {
               <div className="space-y-2">
                 <Label htmlFor="customer">Kunde zuordnen (optional)</Label>
                 <Select
-                  value={selectedUserId?.toString() ?? ""}
-                  onValueChange={(value) => setSelectedUserId(value ? parseInt(value) : null)}
+                  value={selectedUserId?.toString() ?? "none"}
+                  onValueChange={(value) => setSelectedUserId(value && value !== "none" ? parseInt(value) : null)}
                 >
                   <SelectTrigger id="customer">
                     <SelectValue placeholder="Keinem Kunden zuordnen" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Keinem Kunden zuordnen</SelectItem>
+                    <SelectItem value="none">Keinem Kunden zuordnen</SelectItem>
                     {(users ?? []).filter(u => u.role === 'client').map((u) => (
                       <SelectItem key={u.id} value={u.id.toString()}>
                         <div className="flex items-center gap-2">
