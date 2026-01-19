@@ -40,8 +40,9 @@ export function ChatWidget() {
     }
   );
 
-  // Get unread count
+  // Get unread count (only when user is logged in)
   const { data: unreadCount } = trpc.chat.getUnreadCount.useQuery(undefined, {
+    enabled: !!user, // Only fetch when user is authenticated
     refetchInterval: 10000, // Poll every 10 seconds
   });
 

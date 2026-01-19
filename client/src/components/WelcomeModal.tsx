@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import {
   Dialog,
   DialogContent,
@@ -20,9 +21,12 @@ import {
 } from "lucide-react";
 
 export function WelcomeModal() {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [, setLocation] = useLocation();
-  const { data: onboardingStatus } = trpc.onboarding.getMyStatus.useQuery();
+  const { data: onboardingStatus } = trpc.onboarding.getMyStatus.useQuery(undefined, {
+    enabled: !!user, // Only fetch when user is authenticated
+  });
   const updateStatus = trpc.onboarding.updateMyStatus.useMutation();
 
   useEffect(() => {

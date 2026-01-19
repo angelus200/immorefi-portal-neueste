@@ -59,6 +59,7 @@ function Router() {
       <Route path="/sign-in/factor-two" component={SignIn} />
       <Route path="/sign-in/verify" component={SignIn} />
       <Route path="/sign-in/verify-email-address" component={SignIn} />
+      <Route path="/sign-in/reset-password" component={SignIn} />
       <Route path="/sign-in/sso-callback" component={SignIn} />
       <Route path="/sign-up" component={SignUp} />
       <Route path="/sign-up/verify" component={SignUp} />
