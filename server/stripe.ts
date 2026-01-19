@@ -9,7 +9,7 @@ export const STRIPE_CONFIG = {
 
 // Initialize Stripe client
 export const stripe = new Stripe(STRIPE_CONFIG.secretKey, {
-  apiVersion: '2025-12-15.clover',
+  apiVersion: '2024-12-18.acacia',
 });
 
 // Product definitions for ImmoRefi

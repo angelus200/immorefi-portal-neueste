@@ -47,15 +47,15 @@ const statusConfig = {
 function TasksContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newTask, setNewTask] = useState({ title: "", description: "" });
-  
-  const { data: tasks, isLoading, refetch } = trpc.task.list.useQuery({ tenantId: TENANT_ID });
+  const [newTask, setNewTask] = useState({ title: "", description: "", dueAt: "" });
+
+  const { data: tasks, isLoading, refetch} = trpc.task.list.useQuery({ tenantId: TENANT_ID });
   
   const createTask = trpc.task.create.useMutation({
     onSuccess: () => {
       toast.success("Aufgabe erstellt");
       setIsDialogOpen(false);
-      setNewTask({ title: "", description: "" });
+      setNewTask({ title: "", description: "", dueAt: "" });
       refetch();
     },
     onError: () => {
@@ -89,6 +89,7 @@ function TasksContent() {
       tenantId: TENANT_ID,
       title: newTask.title,
       description: newTask.description || undefined,
+      dueAt: newTask.dueAt ? new Date(newTask.dueAt) : undefined,
     });
   };
 
@@ -144,6 +145,18 @@ function TasksContent() {
                   placeholder="Optionale Beschreibung..."
                   value={newTask.description}
                   onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="dueAt" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Fälligkeitsdatum
+                </Label>
+                <Input
+                  id="dueAt"
+                  type="date"
+                  value={newTask.dueAt}
+                  onChange={(e) => setNewTask({ ...newTask, dueAt: e.target.value })}
                 />
               </div>
             </div>

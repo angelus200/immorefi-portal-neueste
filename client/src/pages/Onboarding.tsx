@@ -24,7 +24,8 @@ export default function Onboarding() {
   const { user, loading } = useAuth();
   const [, setLocation] = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [formData, setFormData] = useState({
     // Personal
     firstName: "",
@@ -82,19 +83,23 @@ export default function Onboarding() {
   const completeOnboarding = trpc.user.completeOnboarding.useMutation({
     onSuccess: () => {
       toast.success("Onboarding abgeschlossen! Wir melden uns innerhalb von 2 Werktagen bei Ihnen.");
-      setLocation("/dashboard");
+      // Verwende window.location.href für vollständige Navigation
+      window.location.href = "/dashboard";
     },
     onError: () => {
       toast.error("Fehler beim Speichern");
+      setIsSubmitting(false);
     },
   });
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (isSubmitting) return;
+
     if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
+      setCurrentStep(prev => prev + 1);
       window.scrollTo(0, 0);
     } else {
-      // Submit onboarding with all form data
+      setIsSubmitting(true);
       completeOnboarding.mutate(formData);
     }
   };
@@ -405,7 +410,7 @@ export default function Onboarding() {
                     Überspringen & Abschließen
                   </Button>
                 )}
-                <Button onClick={handleNext} disabled={completeOnboarding.isPending}>
+                <Button onClick={handleNext} disabled={isSubmitting || completeOnboarding.isPending}>
                   {currentStep === steps.length ? (
                     <>
                       {completeOnboarding.isPending ? "Speichern..." : "Abschließen"}

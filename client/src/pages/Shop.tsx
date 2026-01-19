@@ -236,13 +236,13 @@ export default function Shop() {
             <CardFooter className="flex flex-col gap-3">
               {canDownloadFree ? (
                 // Logged in user - free download
-                <Button 
-                  className="w-full bg-green-600 hover:bg-green-700" 
+                <Button
+                  className="w-full bg-green-600 hover:bg-green-700"
                   size="lg"
                   onClick={handleDownloadHandbuch}
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  Kostenlos herunterladen
+                  <FileText className="w-4 h-4 mr-2" />
+                  Kostenlos lesen
                 </Button>
               ) : (
                 // Not logged in - show both options

@@ -993,6 +993,26 @@ const fileRouter = router({
       
       return { url, fileName: file.fileName };
     }),
+
+  delete: protectedProcedure
+    .input(z.object({ id: z.number(), tenantId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const file = await db.getFileById(input.id, input.tenantId);
+      if (!file) throw new Error("File not found");
+
+      await db.deleteFile(input.id, input.tenantId);
+
+      await db.createAuditLog({
+        tenantId: input.tenantId,
+        userId: ctx.user.id,
+        action: "delete",
+        entityType: "file",
+        entityId: input.id,
+        oldValues: { fileName: file.fileName },
+      });
+
+      return { success: true };
+    }),
 });
 
 // ============================================
@@ -1021,13 +1041,33 @@ const userRouter = router({
   list: adminProcedure.query(async () => {
     return db.getAllUsers();
   }),
-  
+
+  // Get staff/admins for message recipients (available to all authenticated users)
+  listStaff: protectedProcedure.query(async () => {
+    const allUsers = await db.getAllUsers();
+    return allUsers.filter(u =>
+      u.role === 'superadmin' ||
+      u.role === 'tenant_admin' ||
+      u.role === 'staff'
+    );
+  }),
+
   getById: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
       return db.getUserById(input.id);
     }),
-  
+
+  updatePreferences: protectedProcedure
+    .input(z.object({
+      emailNotifications: z.boolean().optional(),
+      marketingEmails: z.boolean().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await db.updateUserPreferences(ctx.user.id, input);
+      return { success: true };
+    }),
+
   completeOnboarding: protectedProcedure
     .input(z.object({
       // Step 1: Kontaktdaten

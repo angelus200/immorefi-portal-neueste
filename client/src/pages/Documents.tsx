@@ -58,6 +58,16 @@ function DocumentsContent() {
     },
   });
 
+  const deleteFile = trpc.file.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Datei gelöscht");
+      refetch();
+    },
+    onError: () => {
+      toast.error("Fehler beim Löschen");
+    },
+  });
+
   const filteredFiles = files?.filter(file => {
     const matchesSearch = !searchTerm || 
       file.fileName?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -88,7 +98,7 @@ function DocumentsContent() {
 
       // Success notification and refresh list
       toast.success("Datei erfolgreich hochgeladen");
-      utils.file.list.invalidate({ tenantId: TENANT_ID });
+      refetch();
     } catch (error) {
       console.error("Upload error:", error);
       const errorMessage = error instanceof Error ? error.message : "Fehler beim Hochladen";
@@ -99,6 +109,29 @@ function DocumentsContent() {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  const handleDownload = async (fileId: number, fileName: string) => {
+    try {
+      // Call the tRPC endpoint directly via fetch
+      const response = await fetch(`/api/trpc/file.getDownloadUrl?input=${encodeURIComponent(JSON.stringify({ id: fileId, tenantId: TENANT_ID }))}`);
+      const data = await response.json();
+      if (data.result?.data?.url) {
+        window.open(data.result.data.url, '_blank');
+      } else {
+        throw new Error("Download URL nicht verfügbar");
+      }
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Fehler beim Herunterladen");
+    }
+  };
+
+  const handleDelete = async (fileId: number, fileName: string) => {
+    if (!confirm(`Möchten Sie die Datei "${fileName}" wirklich löschen?`)) {
+      return;
+    }
+    deleteFile.mutate({ id: fileId, tenantId: TENANT_ID });
   };
 
   return (
@@ -213,10 +246,21 @@ function DocumentsContent() {
                       {file.createdAt ? new Date(file.createdAt).toLocaleDateString("de-DE") : "-"}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDownload(file.id, file.fileName || '')}
+                        title="Herunterladen"
+                      >
                         <Download className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(file.id, file.fileName || '')}
+                        disabled={deleteFile.isPending}
+                        title="Löschen"
+                      >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </TableCell>

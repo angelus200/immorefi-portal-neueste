@@ -184,6 +184,18 @@ export async function getUserOnboardingStatus(userId: number) {
   return result[0] || null;
 }
 
+export async function updateUserPreferences(
+  userId: number,
+  data: {
+    emailNotifications?: boolean;
+    marketingEmails?: boolean;
+  }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set(data).where(eq(users.id, userId));
+}
+
 // ============================================
 // TENANT FUNCTIONS
 // ============================================

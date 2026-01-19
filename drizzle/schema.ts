@@ -37,6 +37,9 @@ export const users = mysqlTable("users", {
     firstDocument?: boolean;
     firstOrder?: boolean;
   }>(),
+  // Email notification preferences
+  emailNotifications: boolean("emailNotifications").default(true).notNull(),
+  marketingEmails: boolean("marketingEmails").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import {
   Dialog,
@@ -20,6 +21,7 @@ import {
 
 export function WelcomeModal() {
   const [open, setOpen] = useState(false);
+  const [, setLocation] = useLocation();
   const { data: onboardingStatus } = trpc.onboarding.getMyStatus.useQuery();
   const updateStatus = trpc.onboarding.updateMyStatus.useMutation();
 
@@ -31,15 +33,21 @@ export function WelcomeModal() {
   }, [onboardingStatus]);
 
   const handleClose = async (startTour = false) => {
-    await updateStatus.mutateAsync({
-      hasSeenWelcome: true,
-      hasCompletedTour: startTour,
-    });
+    try {
+      await updateStatus.mutateAsync({
+        hasSeenWelcome: true,
+        hasCompletedTour: startTour,
+      });
+    } catch (error) {
+      console.error("Error updating onboarding status:", error);
+    }
+
     setOpen(false);
 
     if (startTour) {
-      // TODO: Start guided tour
-      console.log("[Onboarding] Starting guided tour...");
+      setLocation("/onboarding");
+    } else {
+      setLocation("/dashboard");
     }
   };
 

@@ -6,22 +6,44 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { useState } from "react";
-import { 
-  User, 
-  Bell, 
-  Shield, 
+import { useState, useEffect } from "react";
+import {
+  User,
+  Bell,
+  Shield,
   Globe,
   Loader2,
   Save
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { trpc } from "@/lib/trpc";
 
 export default function Settings() {
   const { user, loading: authLoading } = useAuth();
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [marketingEmails, setMarketingEmails] = useState(false);
-  
+
+  // Query user data with preferences
+  const { data: userData } = trpc.auth.me.useQuery();
+
+  // Mutation to save preferences
+  const updatePreferences = trpc.user.updatePreferences.useMutation({
+    onSuccess: () => {
+      toast.success("Einstellungen gespeichert");
+    },
+    onError: () => {
+      toast.error("Fehler beim Speichern der Einstellungen");
+    },
+  });
+
+  // Load preferences from user data when available
+  useEffect(() => {
+    if (userData) {
+      setEmailNotifications(userData.emailNotifications ?? true);
+      setMarketingEmails(userData.marketingEmails ?? false);
+    }
+  }, [userData]);
+
   if (authLoading) {
     return (
       <DashboardLayout>
@@ -31,7 +53,7 @@ export default function Settings() {
       </DashboardLayout>
     );
   }
-  
+
   if (!user) {
     return (
       <DashboardLayout>
@@ -43,7 +65,10 @@ export default function Settings() {
   }
 
   const handleSave = () => {
-    toast.success("Einstellungen gespeichert");
+    updatePreferences.mutate({
+      emailNotifications,
+      marketingEmails,
+    });
   };
 
   return (
@@ -198,9 +223,18 @@ export default function Settings() {
 
         {/* Save Button */}
         <div className="flex justify-end">
-          <Button onClick={handleSave}>
-            <Save className="h-4 w-4 mr-2" />
-            Einstellungen speichern
+          <Button onClick={handleSave} disabled={updatePreferences.isPending}>
+            {updatePreferences.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Speichern...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Einstellungen speichern
+              </>
+            )}
           </Button>
         </div>
       </div>

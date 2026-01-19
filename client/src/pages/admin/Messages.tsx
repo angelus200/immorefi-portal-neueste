@@ -44,7 +44,10 @@ export default function AdminMessages() {
   const isAdmin = user?.role === 'superadmin' || user?.role === 'tenant_admin' || user?.role === 'staff';
 
   // Get all users (for new conversation dialog)
-  const { data: users = [] } = trpc.user.list.useQuery({});
+  // Admins get full user list, clients get staff list
+  const { data: allUsers = [] } = trpc.user.list.useQuery({}, { enabled: isAdmin });
+  const { data: staffUsers = [] } = trpc.user.listStaff.useQuery(undefined, { enabled: !isAdmin });
+  const users = isAdmin ? allUsers : staffUsers;
 
   // Get all conversations
   const { data: conversations = [] } = trpc.chat.getConversations.useQuery(undefined, {
