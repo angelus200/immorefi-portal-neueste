@@ -61,7 +61,11 @@ const formatFileSize = (bytes: number | null) => {
 };
 
 function DocumentsContent() {
+  console.log("[Documents] Component rendering");
+
   const { user } = useAuth();
+  console.log("[Documents] User loaded:", user ? `ID=${user.id}, Role=${user.role}` : "null");
+
   const [searchTerm, setSearchTerm] = useState("");
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -70,10 +74,16 @@ function DocumentsContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isAdmin = user?.role === "superadmin" || user?.role === "tenant_admin" || user?.role === "staff";
+  console.log("[Documents] isAdmin:", isAdmin);
 
   // Queries with safe defaults
+  console.log("[Documents] Executing file.list query with TENANT_ID:", TENANT_ID);
   const { data: files = [], isLoading, refetch, error: filesError } = trpc.file.list.useQuery({ tenantId: TENANT_ID });
+  console.log("[Documents] Files loaded:", files?.length ?? 0, "files, isLoading:", isLoading, "error:", filesError?.message);
+
+  console.log("[Documents] Executing user.list query, enabled:", isAdmin);
   const { data: users = [] } = trpc.user.list.useQuery(undefined, { enabled: isAdmin });
+  console.log("[Documents] Users loaded:", users?.length ?? 0, "users");
 
   // Upload mutation
   const createFileRecord = trpc.file.createFileRecord.useMutation({
