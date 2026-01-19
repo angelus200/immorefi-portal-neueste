@@ -54,6 +54,7 @@ import { Button } from "./ui/button";
 const clientMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: CalendarIcon, label: "Termin buchen", path: "/booking" },
+  { icon: BookOpen, label: "📖 Glossar", path: "/tools/glossary" }, // Made more prominent with emoji
   { icon: ShoppingCart, label: "Bestellungen", path: "/orders" },
   { icon: FileText, label: "Rechnungen", path: "/invoices" },
   { icon: FolderOpen, label: "Dokumente", path: "/documents" },
