@@ -22,7 +22,7 @@ import {
   FileImage,
   FileSpreadsheet
 } from "lucide-react";
-import DashboardLayout from "./crm/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { toast } from "sonner";
 
 const TENANT_ID = 1;
