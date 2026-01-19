@@ -268,19 +268,20 @@ export default function AdminOnboardingData() {
                   <TableRow key={entry.id}>
                     <TableCell className="font-mono">#{entry.id}</TableCell>
                     <TableCell>
-                      {entry.vorname && entry.nachname 
-                        ? `${entry.vorname} ${entry.nachname}` 
-                        : "-"}
+                      {(entry as any).user?.name ||
+                       (entry.vorname && entry.nachname
+                        ? `${entry.vorname} ${entry.nachname}`
+                        : "-")}
                     </TableCell>
-                    <TableCell>{entry.firmenname || "-"}</TableCell>
+                    <TableCell>{(entry as any).user?.company || entry.firmenname || "-"}</TableCell>
                     <TableCell>{entry.kapitalbedarf || "-"}</TableCell>
                     <TableCell>
                       <StatusBadge status={entry.status} />
                     </TableCell>
                     <TableCell>{formatDate(entry.completedAt)}</TableCell>
                     <TableCell className="text-right">
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="sm"
                         onClick={() => openDetail(entry as OnboardingEntry)}
                       >

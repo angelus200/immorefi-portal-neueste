@@ -759,7 +759,22 @@ export async function updateOrderByStripeSessionId(sessionId: string, data: Part
 export async function getAllOrders() {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(orders).orderBy(desc(orders.createdAt));
+
+  const result = await db
+    .select()
+    .from(orders)
+    .leftJoin(users, eq(orders.userId, users.id))
+    .orderBy(desc(orders.createdAt));
+
+  // Format to include user data
+  return result.map(row => ({
+    ...row.orders,
+    user: row.users ? {
+      name: row.users.name,
+      email: row.users.email,
+      company: row.users.company,
+    } : null
+  }));
 }
 
 export async function hasUserPurchasedProduct(userId: number, productId: string) {
@@ -821,7 +836,22 @@ export async function updateOnboardingDataByUserId(userId: number, data: Partial
 export async function getAllOnboardingData() {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(onboardingData).orderBy(desc(onboardingData.createdAt));
+
+  const result = await db
+    .select()
+    .from(onboardingData)
+    .leftJoin(users, eq(onboardingData.userId, users.id))
+    .orderBy(desc(onboardingData.createdAt));
+
+  // Format to include user data
+  return result.map(row => ({
+    ...row.onboarding_data,
+    user: row.users ? {
+      name: row.users.name,
+      email: row.users.email,
+      company: row.users.company,
+    } : null
+  }));
 }
 
 export async function getCompletedOnboardingData() {

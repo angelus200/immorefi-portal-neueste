@@ -146,13 +146,17 @@ export default function AdminOrders() {
                       <tr key={order.id} className="border-b hover:bg-muted/50">
                         <td className="py-3 px-4 font-mono text-sm">#{order.id}</td>
                         <td className="py-3 px-4">{order.productName}</td>
-                        <td className="py-3 px-4">User #{order.userId}</td>
+                        <td className="py-3 px-4">
+                          {(order as any).user?.name ||
+                           (order as any).user?.email ||
+                           `User #${order.userId}`}
+                        </td>
                         <td className="py-3 px-4">{getStatusBadge(order.status)}</td>
                         <td className="py-3 px-4 text-sm text-muted-foreground">
                           {format(new Date(order.createdAt), 'dd.MM.yyyy HH:mm', { locale: de })}
                         </td>
                         <td className="py-3 px-4 text-sm text-muted-foreground">
-                          {order.paidAt 
+                          {order.paidAt
                             ? format(new Date(order.paidAt), 'dd.MM.yyyy HH:mm', { locale: de })
                             : '-'
                           }
