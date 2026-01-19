@@ -75,6 +75,16 @@ function DocumentsContent() {
   const { data: users = [] } = trpc.user.list.useQuery(undefined, { enabled: isAdmin });
 
   // Debug logging
+  console.log("[Documents] Render state:", {
+    user: user?.id,
+    role: user?.role,
+    isAdmin,
+    filesCount: files?.length,
+    usersCount: users?.length,
+    isLoading,
+    filesError: filesError?.message
+  });
+
   if (filesError) {
     console.error("file.list error:", filesError);
   }
@@ -291,7 +301,7 @@ function DocumentsContent() {
                   <SelectContent>
                     <SelectItem value="all">Alle Dokumente</SelectItem>
                     <SelectItem value="unassigned">Nicht zugeordnet</SelectItem>
-                    {users.filter(u => u.role === 'client').map((user) => (
+                    {users?.filter(u => u.role === 'client').map((user) => (
                       <SelectItem key={user.id} value={user.id.toString()}>
                         {user.name || user.email}
                       </SelectItem>
@@ -335,7 +345,7 @@ function DocumentsContent() {
               </TableHeader>
               <TableBody>
                 {filteredFiles.map((file) => {
-                  const fileUser = isAdmin ? users.find(u => u.id === file.userId) : undefined;
+                  const fileUser = isAdmin ? users?.find(u => u.id === file.userId) : undefined;
                   return (
                   <TableRow key={file.id}>
                     <TableCell>
@@ -417,7 +427,7 @@ function DocumentsContent() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">Keinem Kunden zuordnen</SelectItem>
-                    {users.filter(u => u.role === 'client').map((user) => (
+                    {users?.filter(u => u.role === 'client').map((user) => (
                       <SelectItem key={user.id} value={user.id.toString()}>
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4" />
