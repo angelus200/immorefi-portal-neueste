@@ -756,7 +756,7 @@ export const bookingStatusEnum = mysqlEnum("bookingStatus", [
 // Staff Calendars - Calendly-Integration für Mitarbeiter
 export const staffCalendars = mysqlTable("staff_calendars", {
   id: int("id").autoincrement().primaryKey(),
-  oderId: int("oderId").notNull(), // User ID des Mitarbeiters
+  userId: int("userId").notNull(), // User ID des Mitarbeiters
   name: varchar("name", { length: 255 }).notNull(), // z.B. "Thomas Gross - Erstberatung"
   description: text("description"), // z.B. "30 Min Erstgespräch"
   calendlyUrl: varchar("calendlyUrl", { length: 500 }), // Calendly Buchungslink
@@ -772,7 +772,7 @@ export type InsertStaffCalendar = typeof staffCalendars.$inferInsert;
 // Bookings - Terminbuchungen
 export const bookings = mysqlTable("bookings", {
   id: int("id").autoincrement().primaryKey(),
-  oderId: int("oderId").notNull(), // User ID des Kunden
+  userId: int("userId").notNull(), // User ID des Kunden
   staffCalendarId: int("staffCalendarId").notNull(), // Verknüpfung zum Staff Calendar
   // Calendly IDs
   calendlyEventId: varchar("calendlyEventId", { length: 100 }),

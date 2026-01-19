@@ -1335,11 +1335,11 @@ export async function createStaffCalendar(calendar: InsertStaffCalendar) {
   return result[0].insertId;
 }
 
-export async function getStaffCalendarsByOderId(oderId: number) {
+export async function getStaffCalendarsByUserId(userId: number) {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(staffCalendars)
-    .where(eq(staffCalendars.oderId, oderId))
+    .where(eq(staffCalendars.userId, userId))
     .orderBy(desc(staffCalendars.createdAt));
 }
 
@@ -1383,11 +1383,11 @@ export async function createBooking(booking: InsertBooking) {
   return result[0].insertId;
 }
 
-export async function getBookingsByOderId(oderId: number) {
+export async function getBookingsByUserId(userId: number) {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(bookings)
-    .where(eq(bookings.oderId, oderId))
+    .where(eq(bookings.userId, userId))
     .orderBy(desc(bookings.startTime));
 }
 
@@ -1407,15 +1407,15 @@ export async function getAllBookings() {
     .orderBy(desc(bookings.startTime));
 }
 
-export async function getUpcomingBookings(oderId?: number) {
+export async function getUpcomingBookings(userId?: number) {
   const db = await getDb();
   if (!db) return [];
   const now = new Date();
 
-  if (oderId) {
+  if (userId) {
     return db.select().from(bookings)
       .where(and(
-        eq(bookings.oderId, oderId),
+        eq(bookings.userId, userId),
         gte(bookings.startTime, now)
       ))
       .orderBy(asc(bookings.startTime));

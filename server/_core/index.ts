@@ -256,7 +256,7 @@ async function startServer() {
 
         // Create booking in database
         await createBooking({
-          oderId: customer.id,
+          userId: customer.id,
           staffCalendarId: matchingCalendar.id,
           calendlyEventId: eventData.uri,
           calendlyInviteeId: invitee.uri,
@@ -307,7 +307,7 @@ async function startServer() {
           // Send cancellation email
           try {
             const { getUserById } = await import('../db');
-            const customer = await getUserById(booking.oderId);
+            const customer = await getUserById(booking.userId);
 
             if (customer && customer.email) {
               await sendBookingCancelledEmail({

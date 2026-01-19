@@ -2397,7 +2397,7 @@ const staffCalendarRouter = router({
 
   // Get own calendar (staff only)
   getMyCalendar: protectedProcedure.query(async ({ ctx }) => {
-    const calendars = await db.getStaffCalendarsByOderId(ctx.user.id);
+    const calendars = await db.getStaffCalendarsByUserId(ctx.user.id);
     return calendars.length > 0 ? calendars[0] : null;
   }),
 
@@ -2411,7 +2411,7 @@ const staffCalendarRouter = router({
       isActive: z.boolean().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const existing = await db.getStaffCalendarsByOderId(ctx.user.id);
+      const existing = await db.getStaffCalendarsByUserId(ctx.user.id);
 
       if (existing.length > 0) {
         await db.updateStaffCalendar(existing[0].id, input);
@@ -2425,7 +2425,7 @@ const staffCalendarRouter = router({
         return { success: true, id: existing[0].id };
       } else {
         const id = await db.createStaffCalendar({
-          oderId: ctx.user.id,
+          userId: ctx.user.id,
           ...input,
         });
         await db.createAuditLog({
@@ -2467,7 +2467,7 @@ const bookingRouter = router({
 
   // List user's bookings
   myBookings: protectedProcedure.query(async ({ ctx }) => {
-    return db.getBookingsByOderId(ctx.user.id);
+    return db.getBookingsByUserId(ctx.user.id);
   }),
 
   // Get upcoming bookings
@@ -2487,7 +2487,7 @@ const bookingRouter = router({
 
       // Check if user owns this booking or is admin
       const isAdmin = ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin' || ctx.user.role === 'staff';
-      if (!isAdmin && booking.oderId !== ctx.user.id) {
+      if (!isAdmin && booking.userId !== ctx.user.id) {
         throw new Error('Unauthorized');
       }
 
@@ -2510,7 +2510,7 @@ const bookingRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       const id = await db.createBooking({
-        oderId: ctx.user.id,
+        userId: ctx.user.id,
         ...input,
         status: input.status || 'pending',
       });
@@ -2535,7 +2535,7 @@ const bookingRouter = router({
 
       // Check if user owns this booking or is admin
       const isAdmin = ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin' || ctx.user.role === 'staff';
-      if (!isAdmin && booking.oderId !== ctx.user.id) {
+      if (!isAdmin && booking.userId !== ctx.user.id) {
         throw new Error('Unauthorized');
       }
 
