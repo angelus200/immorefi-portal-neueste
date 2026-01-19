@@ -69,12 +69,14 @@ export default function Orders() {
             <h1 className="text-3xl font-bold">Meine Bestellungen</h1>
             <p className="text-muted-foreground">Übersicht Ihrer gekauften Produkte</p>
           </div>
-          <Link href="/shop">
-            <Button>
-              Zum Shop
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </Link>
+          {orders && orders.length > 0 && (
+            <Link href="/shop">
+              <Button>
+                Zum Shop
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          )}
         </div>
         
         {orders && orders.length > 0 ? (
