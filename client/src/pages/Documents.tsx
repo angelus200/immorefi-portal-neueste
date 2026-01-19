@@ -71,8 +71,13 @@ function DocumentsContent() {
 
   const isAdmin = user?.role === "superadmin" || user?.role === "tenant_admin" || user?.role === "staff";
 
-  const { data: files, isLoading, refetch } = trpc.file.list.useQuery({ tenantId: TENANT_ID });
+  const { data: files, isLoading, refetch, error: filesError } = trpc.file.list.useQuery({ tenantId: TENANT_ID });
   const { data: users = [] } = trpc.user.list.useQuery(undefined, { enabled: isAdmin });
+
+  // Debug logging
+  if (filesError) {
+    console.error("file.list error:", filesError);
+  }
   
   const createFileRecord = trpc.file.createFileRecord.useMutation({
     onSuccess: () => {
@@ -306,7 +311,15 @@ function DocumentsContent() {
           <CardDescription>{filteredFiles?.length || 0} Dateien gefunden</CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {filesError ? (
+            <div className="text-center py-8">
+              <p className="text-destructive font-medium mb-2">Fehler beim Laden der Dateien</p>
+              <p className="text-sm text-muted-foreground">{filesError.message}</p>
+              <Button onClick={() => refetch()} className="mt-4" variant="outline">
+                Erneut versuchen
+              </Button>
+            </div>
+          ) : isLoading ? (
             <div className="text-center py-8 text-muted-foreground">Laden...</div>
           ) : filteredFiles && filteredFiles.length > 0 ? (
             <Table>
@@ -322,7 +335,7 @@ function DocumentsContent() {
               </TableHeader>
               <TableBody>
                 {filteredFiles.map((file) => {
-                  const fileUser = users.find(u => u.id === file.userId);
+                  const fileUser = isAdmin ? users.find(u => u.id === file.userId) : undefined;
                   return (
                   <TableRow key={file.id}>
                     <TableCell>

@@ -919,14 +919,20 @@ const fileRouter = router({
   list: protectedProcedure
     .input(z.object({ tenantId: z.number() }))
     .query(async ({ input, ctx }) => {
+      console.log('[file.list] User:', ctx.user.id, 'Role:', ctx.user.role, 'TenantId:', input.tenantId);
+
       const isAdmin = ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin' || ctx.user.role === 'staff';
 
       if (isAdmin) {
+        console.log('[file.list] Admin user - fetching all tenant files');
         // Admins see all files for the tenant
         return db.getFilesByTenantId(input.tenantId);
       } else {
+        console.log('[file.list] Client user - fetching user-specific files for userId:', ctx.user.id);
         // Clients see only their own files
-        return db.getFilesByUserId(ctx.user.id, input.tenantId);
+        const files = await db.getFilesByUserId(ctx.user.id, input.tenantId);
+        console.log('[file.list] Found', files.length, 'files for user');
+        return files;
       }
     }),
   
