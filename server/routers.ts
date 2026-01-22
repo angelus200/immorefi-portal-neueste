@@ -2839,7 +2839,7 @@ const videoRouter = router({
       return { success: true };
     }),
 
-  // Delete video (soft delete - admin only)
+  // Delete video (hard delete - admin only)
   delete: adminProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input, ctx }) => {
@@ -2851,8 +2851,8 @@ const videoRouter = router({
         action: 'delete',
         entityType: 'video',
         entityId: input.id,
-        oldValues: { title: video.title, isActive: true },
-        newValues: { isActive: false },
+        oldValues: { title: video.title, youtubeUrl: video.youtubeUrl },
+        newValues: null,
       });
       return { success: true };
     }),

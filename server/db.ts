@@ -1710,8 +1710,8 @@ export async function updateVideo(id: number, data: Partial<InsertVideo>) {
 export async function deleteVideo(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  // Soft delete by setting isActive to false
-  await db.update(videos).set({ isActive: false }).where(eq(videos.id, id));
+  // Hard delete - permanently remove from database
+  await db.delete(videos).where(eq(videos.id, id));
 }
 
 export async function reorderVideos(updates: { id: number; sortOrder: number }[]) {
