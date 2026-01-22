@@ -45,7 +45,9 @@ export default function AdminContracts() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [isAssignOpen, setIsAssignOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState<number | null>(null);
+  const [viewingContractId, setViewingContractId] = useState<number | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [assignNote, setAssignNote] = useState("");
   
@@ -66,6 +68,10 @@ export default function AdminContracts() {
   const { data: contracts, isLoading: contractsLoading, refetch: refetchContracts } = trpc.contract.list.useQuery({ tenantId });
   const { data: users } = trpc.user.list.useQuery();
   const { data: acceptances } = trpc.contract.getAcceptances.useQuery({ tenantId });
+  const { data: viewingContract } = trpc.contract.getById.useQuery(
+    { id: viewingContractId!, tenantId },
+    { enabled: !!viewingContractId }
+  );
   
   // Mutations
   const createContract = trpc.contract.create.useMutation({
@@ -373,7 +379,15 @@ export default function AdminContracts() {
                         {contract.createdAt ? new Date(contract.createdAt).toLocaleDateString("de-DE") : "-"}
                       </TableCell>
                       <TableCell className="text-right space-x-2">
-                        <Button variant="ghost" size="sm">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setViewingContractId(contract.id);
+                            setIsViewOpen(true);
+                          }}
+                          title="Ansehen"
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
                         {contract.status === "draft" && (
@@ -502,6 +516,87 @@ export default function AdminContracts() {
               <Button onClick={handleAssignContract} disabled={!selectedUserId || assignContract.isPending}>
                 {assignContract.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Zuweisen
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* View Contract Dialog (BUG-031) */}
+        <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Vertragsdetails</DialogTitle>
+              <DialogDescription>
+                Detaillierte Informationen zum Vertrag
+              </DialogDescription>
+            </DialogHeader>
+            {viewingContract ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">Name</Label>
+                    <p className="font-medium">{viewingContract.name}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Typ</Label>
+                    <p className="font-medium">
+                      {CONTRACT_TYPES[viewingContract.type as keyof typeof CONTRACT_TYPES] || viewingContract.type}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">Version</Label>
+                    <p className="font-medium">{viewingContract.version || "1.0"}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Status</Label>
+                    <Badge className={CONTRACT_STATUS[viewingContract.status as keyof typeof CONTRACT_STATUS]?.color}>
+                      {CONTRACT_STATUS[viewingContract.status as keyof typeof CONTRACT_STATUS]?.label || viewingContract.status}
+                    </Badge>
+                  </div>
+                </div>
+                {viewingContract.description && (
+                  <div>
+                    <Label className="text-muted-foreground">Beschreibung</Label>
+                    <p className="text-sm">{viewingContract.description}</p>
+                  </div>
+                )}
+                {viewingContract.governingLaw && (
+                  <div>
+                    <Label className="text-muted-foreground">Anwendbares Recht</Label>
+                    <p className="text-sm">{viewingContract.governingLaw}</p>
+                  </div>
+                )}
+                {viewingContract.arbitrationClause && (
+                  <div>
+                    <Label className="text-muted-foreground">Schiedsgerichtsklausel</Label>
+                    <p className="text-sm whitespace-pre-wrap">{viewingContract.arbitrationClause}</p>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                  <div>
+                    <Label className="text-muted-foreground">Erstellt am</Label>
+                    <p className="text-sm">
+                      {viewingContract.createdAt ? new Date(viewingContract.createdAt).toLocaleString("de-DE") : "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Aktualisiert am</Label>
+                    <p className="text-sm">
+                      {viewingContract.updatedAt ? new Date(viewingContract.updatedAt).toLocaleString("de-DE") : "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsViewOpen(false)}>
+                Schließen
               </Button>
             </DialogFooter>
           </DialogContent>

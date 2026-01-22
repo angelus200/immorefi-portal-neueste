@@ -1763,6 +1763,71 @@ const contractRouter = router({
       
       return { url, fileName: contract.fileName };
     }),
+
+  // Admin: Einzelnen Vertrag abrufen (BUG-031)
+  getById: adminProcedure
+    .input(z.object({ id: z.number(), tenantId: z.number() }))
+    .query(async ({ input }) => {
+      return db.getContractById(input.id, input.tenantId);
+    }),
+
+  // Admin: Vertrag aus Vorlage erstellen (BUG-030)
+  createFromTemplate: adminProcedure
+    .input(z.object({
+      templateId: z.number(),
+      tenantId: z.number(),
+      userId: z.number().optional(),
+      customName: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      // Template laden
+      const template = await db.getContractTemplateById(input.templateId);
+      if (!template) {
+        throw new Error('Template not found');
+      }
+
+      // Contract-Name generieren
+      const contractName = input.customName || `${template.name} - ${new Date().toLocaleDateString('de-DE')}`;
+
+      // Virtueller fileKey für template-basierte Contracts
+      const fileKey = `template-${input.templateId}-${Date.now()}`;
+      const fileName = `${contractName.replace(/[^a-zA-Z0-9-_]/g, '_')}.pdf`;
+
+      // Contract erstellen
+      const contractId = await db.createContract({
+        tenantId: input.tenantId,
+        name: contractName,
+        type: 'other', // Default type
+        description: `Erstellt aus Vorlage: ${template.name}`,
+        fileKey,
+        fileName,
+        version: '1.0',
+        status: 'draft',
+        createdBy: ctx.user.id,
+      });
+
+      // Optional: Contract einem User zuweisen
+      if (input.userId) {
+        await db.createContractAssignment({
+          contractId,
+          userId: input.userId,
+          tenantId: input.tenantId,
+          assignedBy: ctx.user.id,
+        });
+      }
+
+      // Audit-Log
+      await db.createAuditLog({
+        tenantId: input.tenantId,
+        userId: ctx.user.id,
+        action: 'create',
+        entityType: 'contract',
+        entityId: contractId,
+        newValues: { templateId: input.templateId, name: contractName },
+      });
+
+      return { id: contractId, name: contractName };
+    }),
 });
 
 // ============================================

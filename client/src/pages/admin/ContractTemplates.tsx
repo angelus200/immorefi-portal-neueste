@@ -23,22 +23,46 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Eye, Trash2, FileText, Tag } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus, Eye, Trash2, FileText, Tag, FileCheck, User } from "lucide-react";
 import { toast } from "sonner";
 
 function ContractTemplatesContent() {
   const utils = trpc.useUtils();
   const { data: templates = [], isLoading } = trpc.contractTemplate.list.useQuery();
+  const { data: users = [] } = trpc.user.list.useQuery();
 
   const [previewTemplate, setPreviewTemplate] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [showDelete, setShowDelete] = useState<number | null>(null);
+  const [showCreateContract, setShowCreateContract] = useState<number | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string>("none");
+  const [customName, setCustomName] = useState("");
 
   const deleteMutation = trpc.contractTemplate.delete.useMutation({
     onSuccess: () => {
       toast.success("Vorlage erfolgreich gelöscht");
       utils.contractTemplate.list.invalidate();
       setShowDelete(null);
+    },
+    onError: (error) => {
+      toast.error(`Fehler: ${error.message}`);
+    },
+  });
+
+  const createFromTemplateMutation = trpc.contract.createFromTemplate.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Vertrag "${data.name}" erfolgreich erstellt`);
+      utils.contract.list.invalidate();
+      setShowCreateContract(null);
+      setSelectedUserId("none");
+      setCustomName("");
     },
     onError: (error) => {
       toast.error(`Fehler: ${error.message}`);
@@ -52,6 +76,17 @@ function ContractTemplatesContent() {
 
   const handleDelete = (id: number) => {
     deleteMutation.mutate({ id });
+  };
+
+  const handleCreateContract = () => {
+    if (!showCreateContract) return;
+
+    createFromTemplateMutation.mutate({
+      templateId: showCreateContract,
+      tenantId: 1,
+      userId: selectedUserId !== "none" ? parseInt(selectedUserId) : undefined,
+      customName: customName || undefined,
+    });
   };
 
   const getCategoryLabel = (category: string) => {
@@ -173,13 +208,23 @@ function ContractTemplatesContent() {
                             size="sm"
                             variant="ghost"
                             onClick={() => handlePreview(template)}
+                            title="Vorschau"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
+                            onClick={() => setShowCreateContract(template.id)}
+                            title="Vertrag erstellen"
+                          >
+                            <FileCheck className="h-4 w-4 text-green-600" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
                             onClick={() => setShowDelete(template.id)}
+                            title="Löschen"
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
@@ -257,6 +302,62 @@ function ContractTemplatesContent() {
               disabled={deleteMutation.isPending}
             >
               {deleteMutation.isPending ? "Löschen..." : "Löschen"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Contract Dialog (BUG-030) */}
+      <Dialog open={!!showCreateContract} onOpenChange={(open) => !open && setShowCreateContract(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Vertrag aus Vorlage erstellen</DialogTitle>
+            <DialogDescription>
+              Erstellen Sie einen neuen Vertrag basierend auf dieser Vorlage.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="contractName">Vertragsname (optional)</Label>
+              <Input
+                id="contractName"
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                placeholder="Leer lassen für automatischen Namen"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Wenn leer, wird der Name automatisch generiert
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="assignUser">Kunde zuordnen (optional)</Label>
+              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                <SelectTrigger id="assignUser">
+                  <SelectValue placeholder="Keinem Kunden zuordnen" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Keinem Kunden zuordnen</SelectItem>
+                  {users.filter(u => u.role === 'client').map((u) => (
+                    <SelectItem key={u.id} value={u.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        <span>{u.name || u.email}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateContract(null)}>
+              Abbrechen
+            </Button>
+            <Button
+              onClick={handleCreateContract}
+              disabled={createFromTemplateMutation.isPending}
+            >
+              {createFromTemplateMutation.isPending ? "Erstelle..." : "Vertrag erstellen"}
             </Button>
           </DialogFooter>
         </DialogContent>
