@@ -649,6 +649,19 @@ Die Deal-Pipeline visualisiert alle aktiven Finanzierungsanfragen:
    - Kunde hat abgesagt
    - Grund dokumentieren
 
+### Deal erstellen
+1. Klicken Sie auf **"Neuer Deal"**
+2. Geben Sie den **Deal-Namen** ein
+3. Wählen Sie einen **Kontakt** (optional):
+   - Sie können einen bestehenden Kontakt zuordnen
+   - **NEU:** Option "Kein Kontakt zugeordnet" verfügbar
+   - Deals können jetzt auch **ohne Kontakt** erstellt werden
+4. Wählen Sie die **Pipeline-Phase**
+5. Geben Sie **Finanzierungsvolumen** und **Wahrscheinlichkeit** an
+6. **Speichern**
+
+> **Tipp:** Falls zum Zeitpunkt der Deal-Erstellung noch kein Kontakt existiert, können Sie den Deal trotzdem anlegen und den Kontakt später zuordnen.
+
 ### Deal bearbeiten
 1. Öffnen Sie einen Deal per **Klick**
 2. Aktualisieren Sie den **Status** durch Drag & Drop
@@ -656,6 +669,7 @@ Die Deal-Pipeline visualisiert alle aktiven Finanzierungsanfragen:
 4. Dokumentieren Sie **Aktivitäten**
 5. Laden Sie **Dokumente** hoch
 6. Setzen Sie **Fristen** für nächste Schritte
+7. Kontakt nachträglich zuweisen oder ändern
 
 ### Deal-Kennzahlen
 - **Finanzierungsvolumen** - Summe des Darlehens
@@ -946,8 +960,12 @@ Zentrale Dokumentenverwaltung:
 
 ### Dokumente aller Kunden
 - **Übersicht** über alle hochgeladenen Dokumente
+- **NEU:** Spalte "Kunde" zeigt Kundenzuordnung an (nur für Admins)
+- Admins sehen sofort, wem die Datei gehört (Name oder E-Mail)
 - **Filter** nach Kunde, Kategorie, Datum
 - **Suchfunktion** nach Dokumentennamen
+
+> **Hinweis:** Bei Dateien ohne Kundenzuordnung wird "Nicht zugeordnet" angezeigt.
 
 ### Dokument prüfen
 1. Öffnen Sie das Dokument
@@ -974,6 +992,20 @@ Sie können fehlende Dokumente nachfordern:
 Vertragsverwaltung für alle Kunden:
 
 ### Vertrag aus Vorlage erstellen
+
+**Methode 1: Über Vertragsvorlagen (/admin/contract-templates)**
+
+1. Gehen Sie zu **Vertragsvorlagen**
+2. Finden Sie die gewünschte Vorlage
+3. Klicken Sie auf das **"Vertrag erstellen"** Icon (grünes Häkchen)
+4. Im Dialog:
+   - **Vertragsname** (optional): Leer lassen für automatischen Namen
+   - **Kunde zuordnen** (optional): Wählen Sie einen Kunden aus dem Dropdown
+5. Klicken Sie auf **"Vertrag erstellen"**
+6. Der Vertrag wird automatisch erstellt mit Status **"Entwurf"**
+
+**Methode 2: Über Verträge (/admin/contracts)**
+
 1. Klicken Sie auf **"Neuer Vertrag"**
 2. Wählen Sie die **Vertragsvorlage**
 3. Wählen Sie den **Kunden**
@@ -984,6 +1016,22 @@ Vertragsverwaltung für alle Kunden:
 5. **Prüfen und anpassen** Sie die Vertragsdaten
 6. Klicken Sie auf **"Vertrag erstellen"**
 7. Status: **"Entwurf"**
+
+> **Tipp:** Die schnellste Methode ist über Vertragsvorlagen - mit nur 2 Klicks ist der Vertrag erstellt!
+
+### Vertrag ansehen
+1. Gehen Sie zu **Verträge** (/admin/contracts)
+2. Klicken Sie auf das **Auge-Icon** bei einem Vertrag
+3. Es öffnet sich ein Modal mit allen Details:
+   - **Name** und **Typ** des Vertrags
+   - **Version** und **Status**
+   - **Beschreibung**
+   - **Anwendbares Recht** (z.B. Schweizer Recht)
+   - **Schiedsgerichtsklausel**
+   - **Erstellungs-** und **Aktualisierungsdatum**
+4. Klicken Sie auf **"Schließen"** um das Modal zu verlassen
+
+> **Hinweis:** Die Vertragsansicht zeigt nur Metadaten. Zum Bearbeiten des Vertragsinhalts öffnen Sie den Vertrag in der Vertragsübersicht.
 
 ### Vertrag zur Unterschrift freigeben
 1. Öffnen Sie den Vertrag im Status **"Entwurf"**
@@ -1023,9 +1071,13 @@ Zentrale Kommunikation mit allen Kunden:
 
 ### Nachrichtenübersicht
 - **Alle Konversationen** auf einen Blick
+- **NEU:** Kundennamen werden angezeigt statt nur Nummern
+- Format: "Max Mustermann" (Name) oder E-Mail als Fallback
 - **Ungelesene Nachrichten** hervorgehoben
 - **Filter** nach Kunde, Datum, Status
 - **Suche** in allen Nachrichten
+
+> **Verbesserung:** Statt "Kunde #123" sehen Sie jetzt direkt den Namen des Kunden in der Konversationsliste und im Chat-Header.
 
 ### Nachricht senden
 1. Wählen Sie den **Kunden** oder öffnen Sie eine bestehende Konversation
@@ -1567,6 +1619,34 @@ Nutzen Sie das Audit-Log für:
 - **Compliance-Audits** - DSGVO-Nachweise
 - **Fehlersuche** - Probleme nachvollziehen
 - **Nutzungsanalyse** - Wie wird das System genutzt?
+
+## 6.8 Video-Verwaltung (/admin/videos)
+
+Verwaltung von Lernvideos und Video-Inhalten für Kunden:
+
+### Videos verwalten
+In der Video-Verwaltung können Sie:
+- **Videos hinzufügen** - YouTube-Videos einbinden
+- **Videos bearbeiten** - Titel, Beschreibung, Kategorie anpassen
+- **Videos sortieren** - Reihenfolge festlegen
+- **Videos löschen** - Dauerhaft entfernen
+
+### Video löschen (Hard Delete)
+**NEU:** Videos werden beim Löschen dauerhaft aus der Datenbank entfernt:
+
+1. Gehen Sie zu **Videos** (/admin/videos)
+2. Klicken Sie auf das **Löschen-Icon** (Mülltonne) beim Video
+3. Bestätigen Sie die Sicherheitsabfrage
+4. Das Video wird **permanent gelöscht** und ist nicht wiederherstellbar
+
+> **Wichtig:** Anders als bei anderen Inhalten (z.B. Benutzer, Verträge) erfolgt bei Videos ein **Hard Delete** - keine Soft-Delete mit isActive-Flag. Gelöschte Videos sind unwiederbringlich entfernt.
+
+> **Audit-Log:** Die Löschung wird im Audit-Log protokolliert mit den alten Werten (Titel, URL) für Nachvollziehbarkeit.
+
+### Best Practices
+- **Prüfen Sie vor dem Löschen** ob das Video noch benötigt wird
+- **Dokumentieren Sie** warum ein Video gelöscht wurde (im Audit-Log einsehbar)
+- **Alternative:** Falls Sie ein Video nur temporär ausblenden möchten, sollten Sie stattdessen das Video deaktivieren (isActive=false) - diese Funktion kann in Zukunft hinzugefügt werden
     `
   },
   {
