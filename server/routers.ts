@@ -689,7 +689,7 @@ const dealRouter = router({
   create: protectedProcedure
     .input(z.object({
       tenantId: z.number(),
-      contactId: z.number(),
+      contactId: z.number().optional(),
       leadId: z.number().optional(),
       stageId: z.number(),
       name: z.string().min(1),

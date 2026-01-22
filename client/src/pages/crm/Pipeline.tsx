@@ -49,7 +49,7 @@ function PipelineContent() {
 
   // Form state
   const [name, setName] = useState('');
-  const [contactId, setContactId] = useState<number>(0);
+  const [contactId, setContactId] = useState<number | null>(null);
   const [value, setValue] = useState('');
   const [probability, setProbability] = useState('50');
   const [expectedCloseDate, setExpectedCloseDate] = useState('');
@@ -107,7 +107,7 @@ function PipelineContent() {
 
   const resetForm = () => {
     setName('');
-    setContactId(0);
+    setContactId(null);
     setValue('');
     setProbability('50');
     setExpectedCloseDate('');
@@ -125,7 +125,7 @@ function PipelineContent() {
 
     createMutation.mutate({
       tenantId: 1,
-      contactId,
+      contactId: contactId || undefined,
       stageId: firstStage.id,
       name,
       value: value ? parseFloat(value) : undefined,
@@ -198,7 +198,8 @@ function PipelineContent() {
     return deals.filter(d => d.stage === stageKey) || [];
   };
 
-  const getContactName = (contactId: number) => {
+  const getContactName = (contactId: number | null) => {
+    if (!contactId) return 'Kein Kontakt';
     const contact = contacts.find(c => c.id === contactId);
     return contact?.name || 'Unbekannt';
   };
@@ -353,12 +354,13 @@ function PipelineContent() {
               />
             </div>
             <div>
-              <Label htmlFor="contact">Kontakt *</Label>
-              <Select value={contactId.toString()} onValueChange={(v) => setContactId(parseInt(v))}>
+              <Label htmlFor="contact">Kontakt (optional)</Label>
+              <Select value={contactId?.toString() ?? 'none'} onValueChange={(v) => setContactId(v === 'none' ? null : parseInt(v))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Kontakt auswählen" />
+                  <SelectValue placeholder="Kein Kontakt zugeordnet" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">Kein Kontakt zugeordnet</SelectItem>
                   {contacts.map((contact) => (
                     <SelectItem key={contact.id} value={contact.id.toString()}>
                       {contact.name} ({contact.email})
@@ -366,6 +368,11 @@ function PipelineContent() {
                   ))}
                 </SelectContent>
               </Select>
+              {contacts.length === 0 && (
+                <p className="text-sm text-amber-600 mt-1">
+                  ⚠️ Keine Kontakte vorhanden. Sie können trotzdem einen Deal erstellen oder zuerst einen <a href="/crm/contacts" className="underline">Kontakt anlegen</a>.
+                </p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -414,7 +421,7 @@ function PipelineContent() {
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
               Abbrechen
             </Button>
-            <Button onClick={handleCreate} disabled={!name || !contactId}>
+            <Button onClick={handleCreate} disabled={!name}>
               Deal erstellen
             </Button>
           </DialogFooter>
