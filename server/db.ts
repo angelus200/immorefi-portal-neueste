@@ -1012,23 +1012,50 @@ export async function getConversationById(id: number) {
 export async function getConversationsByCustomer(customerId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(conversations)
+  const result = await db.select()
+    .from(conversations)
+    .leftJoin(users, eq(conversations.customerId, users.id))
     .where(eq(conversations.customerId, customerId))
     .orderBy(desc(conversations.lastMessageAt));
+
+  return result.map(row => ({
+    ...row.conversations,
+    customer: row.users ? {
+      id: row.users.id,
+      firstName: row.users.firstName,
+      lastName: row.users.lastName,
+      email: row.users.email
+    } : null
+  }));
 }
 
 export async function getAllConversations(status?: "open" | "closed" | "archived") {
   const db = await getDb();
   if (!db) return [];
 
+  let result;
   if (status) {
-    return db.select().from(conversations)
+    result = await db.select()
+      .from(conversations)
+      .leftJoin(users, eq(conversations.customerId, users.id))
       .where(eq(conversations.status, status))
+      .orderBy(desc(conversations.lastMessageAt));
+  } else {
+    result = await db.select()
+      .from(conversations)
+      .leftJoin(users, eq(conversations.customerId, users.id))
       .orderBy(desc(conversations.lastMessageAt));
   }
 
-  return db.select().from(conversations)
-    .orderBy(desc(conversations.lastMessageAt));
+  return result.map(row => ({
+    ...row.conversations,
+    customer: row.users ? {
+      id: row.users.id,
+      firstName: row.users.firstName,
+      lastName: row.users.lastName,
+      email: row.users.email
+    } : null
+  }));
 }
 
 export async function updateConversationStatus(id: number, status: "open" | "closed" | "archived") {

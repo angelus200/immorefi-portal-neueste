@@ -208,7 +208,11 @@ export default function AdminMessages() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-sm truncate">
-                            Kunde #{conv.customerId}
+                            {conv.customer?.firstName && conv.customer?.lastName
+                              ? `${conv.customer.firstName} ${conv.customer.lastName}`
+                              : conv.customer?.email
+                              ? conv.customer.email
+                              : `Kunde #${conv.customerId}`}
                           </div>
                           {conv.orderId && (
                             <div className="text-xs opacity-80 mt-1">
@@ -253,7 +257,11 @@ export default function AdminMessages() {
                 <div className="p-4 border-b flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold">
-                      Kunde #{selectedConversation?.customerId}
+                      {selectedConversation?.customer?.firstName && selectedConversation?.customer?.lastName
+                        ? `${selectedConversation.customer.firstName} ${selectedConversation.customer.lastName}`
+                        : selectedConversation?.customer?.email
+                        ? selectedConversation.customer.email
+                        : `Kunde #${selectedConversation?.customerId}`}
                     </h3>
                     {selectedConversation?.orderId && (
                       <p className="text-xs text-muted-foreground">
