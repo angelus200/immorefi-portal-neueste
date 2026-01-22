@@ -354,18 +354,44 @@ export async function createFile(file: InsertFile) {
 export async function getFilesByTenantId(tenantId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(files).where(eq(files.tenantId, tenantId)).orderBy(desc(files.createdAt));
+  const result = await db.select()
+    .from(files)
+    .leftJoin(users, eq(files.userId, users.id))
+    .where(eq(files.tenantId, tenantId))
+    .orderBy(desc(files.createdAt));
+
+  return result.map(row => ({
+    ...row.files,
+    user: row.users ? {
+      id: row.users.id,
+      firstName: row.users.firstName,
+      lastName: row.users.lastName,
+      email: row.users.email
+    } : null
+  }));
 }
 
 export async function getFilesByUserId(userId: number, tenantId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(files)
+  const result = await db.select()
+    .from(files)
+    .leftJoin(users, eq(files.userId, users.id))
     .where(and(
       eq(files.userId, userId),
       eq(files.tenantId, tenantId)
     ))
     .orderBy(desc(files.createdAt));
+
+  return result.map(row => ({
+    ...row.files,
+    user: row.users ? {
+      id: row.users.id,
+      firstName: row.users.firstName,
+      lastName: row.users.lastName,
+      email: row.users.email
+    } : null
+  }));
 }
 
 export async function getFilesByDealId(dealId: number, tenantId: number) {

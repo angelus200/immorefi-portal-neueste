@@ -328,6 +328,7 @@ function DocumentsContent() {
                   <TableHead>Name</TableHead>
                   <TableHead>Typ</TableHead>
                   <TableHead>Größe</TableHead>
+                  {isAdmin && <TableHead>Kunde</TableHead>}
                   <TableHead>Hochgeladen</TableHead>
                   <TableHead className="text-right">Aktionen</TableHead>
                 </TableRow>
@@ -345,6 +346,15 @@ function DocumentsContent() {
                       {file.mimeType?.split("/")[1]?.toUpperCase() ?? "-"}
                     </TableCell>
                     <TableCell>{formatFileSize(file.size)}</TableCell>
+                    {isAdmin && (
+                      <TableCell>
+                        {file.user?.firstName && file.user?.lastName
+                          ? `${file.user.firstName} ${file.user.lastName}`
+                          : file.user?.email
+                          ? file.user.email
+                          : <span className="text-muted-foreground italic">Nicht zugeordnet</span>}
+                      </TableCell>
+                    )}
                     <TableCell>
                       {file.createdAt ? new Date(file.createdAt).toLocaleDateString("de-DE") : "-"}
                     </TableCell>
