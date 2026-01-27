@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 export function ChatWidget() {
   const { user } = useAuth();
@@ -18,18 +19,18 @@ export function ChatWidget() {
 
   const utils = trpc.useUtils();
 
-  // Get or create conversation
-  const { data: conversation } = trpc.chat.startConversation.useQuery(
-    {},
-    {
-      enabled: isOpen && !conversationId,
-      onSuccess: (data) => {
-        if (data?.id) {
-          setConversationId(data.id);
-        }
-      },
-    }
-  );
+  // Start conversation mutation
+  const startConversationMutation = trpc.chat.startConversation.useMutation({
+    onSuccess: (data) => {
+      if (data?.id) {
+        setConversationId(data.id);
+      }
+    },
+    onError: (error) => {
+      console.error('Error starting conversation:', error);
+      toast.error('Fehler beim Starten des Chats');
+    },
+  });
 
   // Get conversation with messages
   const { data: conversationData } = trpc.chat.getConversation.useQuery(
@@ -50,11 +51,16 @@ export function ChatWidget() {
   const sendMessageMutation = trpc.chat.sendMessage.useMutation({
     onSuccess: () => {
       setMessage('');
+      toast.success('Nachricht gesendet');
       // Refetch conversation to get new messages
       if (conversationId) {
         utils.chat.getConversation.invalidate({ conversationId });
       }
       utils.chat.getUnreadCount.invalidate();
+    },
+    onError: (error) => {
+      console.error('Error sending message:', error);
+      toast.error('Fehler beim Senden der Nachricht');
     },
   });
 
@@ -65,12 +71,12 @@ export function ChatWidget() {
     }
   }, [conversationData?.messages]);
 
-  // Set conversation ID when conversation is loaded
+  // Automatically start conversation when chat is opened
   useEffect(() => {
-    if (conversation?.id) {
-      setConversationId(conversation.id);
+    if (isOpen && !conversationId && !startConversationMutation.isPending) {
+      startConversationMutation.mutate({});
     }
-  }, [conversation]);
+  }, [isOpen, conversationId, startConversationMutation.isPending]);
 
   const handleSendMessage = () => {
     if (!message.trim() || !conversationId) return;

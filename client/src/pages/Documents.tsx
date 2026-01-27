@@ -73,6 +73,7 @@ function DocumentsContent() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const utils = trpc.useUtils();
   const isAdmin = user?.role === "superadmin" || user?.role === "tenant_admin" || user?.role === "staff";
   console.log("[Documents] isAdmin:", isAdmin);
 
@@ -210,10 +211,10 @@ function DocumentsContent() {
 
   const handleDownload = async (fileId: number, fileName: string) => {
     try {
-      const response = await fetch(`/api/trpc/file.getDownloadUrl?input=${encodeURIComponent(JSON.stringify({ id: fileId, tenantId: TENANT_ID }))}`);
-      const data = await response.json();
-      if (data.result?.data?.url) {
-        window.open(data.result.data.url, '_blank');
+      const data = await utils.file.getDownloadUrl.fetch({ id: fileId, tenantId: TENANT_ID });
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        toast.success(`"${fileName}" wird heruntergeladen`);
       } else {
         throw new Error("Download URL nicht verfügbar");
       }

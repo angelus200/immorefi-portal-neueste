@@ -38,7 +38,8 @@ export default function ClientContracts() {
   
   // Queries
   const { data: assignments, isLoading, refetch } = trpc.contract.myAssignments.useQuery();
-  
+  const utils = trpc.useUtils();
+
   // Mutations
   const acceptContract = trpc.contract.accept.useMutation({
     onSuccess: () => {
@@ -54,11 +55,6 @@ export default function ClientContracts() {
       toast.error(`Fehler: ${error.message}`);
     },
   });
-  
-  const getDownloadUrl = trpc.contract.getDownloadUrl.useQuery(
-    { assignmentId: selectedAssignment! },
-    { enabled: !!selectedAssignment }
-  );
   
   const handleOpenAcceptDialog = (assignmentId: number) => {
     setSelectedAssignment(assignmentId);
@@ -81,12 +77,15 @@ export default function ClientContracts() {
   
   const handleDownload = async (assignmentId: number) => {
     try {
-      // This would trigger the download
-      const result = await getDownloadUrl.refetch();
-      if (result.data?.url) {
-        window.open(result.data.url, "_blank");
+      const data = await utils.contract.getDownloadUrl.fetch({ assignmentId });
+      if (data?.url) {
+        window.open(data.url, "_blank");
+        toast.success("Vertrag wird heruntergeladen");
+      } else {
+        throw new Error("Download URL nicht verfügbar");
       }
     } catch (error) {
+      console.error("Download error:", error);
       toast.error("Fehler beim Herunterladen des Vertrags");
     }
   };
