@@ -59,6 +59,7 @@ const clientMenuItems = [
   { icon: FileText, label: "Rechnungen", path: "/invoices" },
   { icon: FolderOpen, label: "Dokumente", path: "/documents" },
   { icon: MessageCircle, label: "Nachrichten", path: "/admin/messages" },
+  { icon: Settings, label: "Einstellungen", path: "/settings" },
 ];
 
 // Admin menu items - Organized by sections
@@ -274,7 +275,7 @@ function DashboardLayoutContent({
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="font-semibold tracking-tight truncate text-primary">
-                    NON DOM
+                    NON DOM GROUP
                   </span>
                 </div>
               ) : null}

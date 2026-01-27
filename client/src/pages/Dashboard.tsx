@@ -112,12 +112,7 @@ function DashboardContent() {
   const qualifiedLeads = leads?.filter(l => l.status === 'qualified') || [];
 
   // Check if this is the user's first login (account created recently)
-  const isFirstLogin = user?.createdAt &&
-    (new Date().getTime() - new Date(user.createdAt).getTime()) < 3600000; // Within last hour
-
-  const welcomeText = isFirstLogin
-    ? `Willkommen, ${user?.name?.split(' ')[0] || 'Benutzer'}!`
-    : `Willkommen zurück, ${user?.name?.split(' ')[0] || 'Benutzer'}!`;
+  const welcomeText = `Willkommen, ${user?.name?.split(' ')[0] || 'Benutzer'}!`;
 
   return (
     <div className="space-y-8">
