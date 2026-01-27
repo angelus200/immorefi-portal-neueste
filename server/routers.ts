@@ -157,7 +157,7 @@ const leadRouter = router({
       capitalNeed: z.string().optional(),
       timeHorizon: z.string().optional(),
       description: z.string().optional(),
-      source: z.enum(['website', 'referral', 'ghl', 'manual', 'landing_page']).optional(),
+      source: z.enum(['website', 'referral', 'ghl', 'manual']).optional(),
       assignedTo: z.number().optional(),
       notes: z.string().optional(),
     }))
@@ -165,7 +165,7 @@ const leadRouter = router({
       const leadId = await db.createLead({
         ...input,
         source: input.source || 'manual',
-        status: 'new',
+        status: 'new' as const,
       });
 
       await db.createAuditLog({
@@ -189,13 +189,13 @@ const leadRouter = router({
       capitalNeed: z.string().optional(),
       timeHorizon: z.string().optional(),
       description: z.string().optional(),
-      source: z.enum(['website', 'referral', 'ghl', 'manual', 'landing_page']).default('website'),
+      source: z.enum(['website', 'referral', 'ghl', 'manual']).default('website'),
       tenantId: z.number().default(1),
     }))
     .mutation(async ({ input }) => {
       const leadId = await db.createLead({
         ...input,
-        status: 'new',
+        status: 'new' as const,
       });
 
       // No audit log for public leads (no user context)
