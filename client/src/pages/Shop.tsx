@@ -78,8 +78,8 @@ export default function Shop() {
   };
   
   const handleDownloadHandbuch = () => {
-    // Navigate to integrated handbook
-    setLocation('/admin/handbuch');
+    // Download the PDF directly
+    window.open('/downloads/handbuch-immobilienprojektentwickler.pdf', '_blank');
   };
   
   const analysisFeatures = [

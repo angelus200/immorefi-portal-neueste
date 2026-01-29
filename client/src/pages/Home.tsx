@@ -551,7 +551,7 @@ export default function Home() {
                       <Button
                         className="w-full bg-amber-600 hover:bg-amber-700"
                         size="lg"
-                        onClick={() => setLocation('/admin/handbuch')}
+                        onClick={() => window.open('/downloads/handbuch-immobilienprojektentwickler.pdf', '_blank')}
                       >
                         <Download className="mr-2 h-4 w-4" />
                         Zum Handbuch
