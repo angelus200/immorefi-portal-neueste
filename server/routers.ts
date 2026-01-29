@@ -1348,7 +1348,7 @@ const userRouter = router({
       // Hole oder erstelle Onboarding-Daten
       let onboardingData = await db.getOnboardingDataByUserId(ctx.user.id);
       let onboardingId: number;
-      
+
       if (!onboardingData) {
         onboardingId = await db.createOnboardingData({
           userId: ctx.user.id,
@@ -1357,7 +1357,8 @@ const userRouter = router({
       } else {
         onboardingId = onboardingData.id;
       }
-      
+
+      // Save in onboarding_documents table
       const docId = await db.createOnboardingDocument({
         onboardingId,
         userId: ctx.user.id,
@@ -1368,7 +1369,19 @@ const userRouter = router({
         mimeType: input.mimeType,
         size: input.size,
       });
-      
+
+      // ALSO save in files table so it appears in /documents
+      await db.createFile({
+        tenantId: ctx.user.tenantId || 1,
+        userId: ctx.user.id,
+        fileName: input.fileName,
+        fileKey: input.fileKey,
+        mimeType: input.mimeType || "application/octet-stream",
+        category: "document",
+        uploadedBy: ctx.user.id,
+        size: input.size,
+      });
+
       return { id: docId, success: true };
     }),
   
@@ -1386,7 +1399,13 @@ const userRouter = router({
       if (!doc || doc.userId !== ctx.user.id) {
         throw new Error("Dokument nicht gefunden oder keine Berechtigung");
       }
+
+      // Delete from onboarding_documents table
       await db.deleteOnboardingDocument(input.id);
+
+      // ALSO delete from files table (match by fileKey)
+      await db.deleteFileByKey(doc.fileKey, ctx.user.id);
+
       return { success: true };
     }),
 

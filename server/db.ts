@@ -418,6 +418,13 @@ export async function deleteFile(id: number, tenantId: number) {
     .where(and(eq(files.id, id), eq(files.tenantId, tenantId)));
 }
 
+export async function deleteFileByKey(fileKey: string, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(files)
+    .where(and(eq(files.fileKey, fileKey), eq(files.userId, userId)));
+}
+
 // ============================================
 // AUDIT LOG FUNCTIONS
 // ============================================
