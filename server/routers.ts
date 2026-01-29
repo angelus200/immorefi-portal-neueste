@@ -1114,11 +1114,20 @@ const userRouter = router({
 
   updatePreferences: protectedProcedure
     .input(z.object({
+      name: z.string().optional(),
       emailNotifications: z.boolean().optional(),
       marketingEmails: z.boolean().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
-      await db.updateUserPreferences(ctx.user.id, input);
+      // Update name if provided
+      if (input.name !== undefined) {
+        await db.updateUser(ctx.user.id, { name: input.name });
+      }
+
+      // Update preferences
+      const { name, ...preferences } = input;
+      await db.updateUserPreferences(ctx.user.id, preferences);
+
       return { success: true };
     }),
 

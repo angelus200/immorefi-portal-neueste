@@ -20,6 +20,7 @@ import { trpc } from "@/lib/trpc";
 
 export default function Settings() {
   const { user, loading: authLoading } = useAuth();
+  const [name, setName] = useState("");
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [marketingEmails, setMarketingEmails] = useState(false);
 
@@ -39,6 +40,7 @@ export default function Settings() {
   // Load preferences from user data when available
   useEffect(() => {
     if (userData) {
+      setName(userData.name || "");
       setEmailNotifications(userData.emailNotifications ?? true);
       setMarketingEmails(userData.marketingEmails ?? false);
     }
@@ -66,6 +68,7 @@ export default function Settings() {
 
   const handleSave = () => {
     updatePreferences.mutate({
+      name,
       emailNotifications,
       marketingEmails,
     });
@@ -97,9 +100,10 @@ export default function Settings() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
-                <Input 
-                  id="name" 
-                  defaultValue={user.name || ""} 
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   placeholder="Ihr Name"
                 />
               </div>
