@@ -1890,6 +1890,40 @@ const contractRouter = router({
 
       return { id: contractId, name: contractName };
     }),
+
+  // Admin: Delete contract assignment
+  deleteAssignment: adminProcedure
+    .input(z.object({
+      assignmentId: z.number(),
+      tenantId: z.number(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      // Get assignment before deleting for audit log
+      const assignment = await db.getContractAssignmentById(input.assignmentId);
+      if (!assignment) {
+        throw new Error('Contract assignment not found');
+      }
+
+      // Verify tenant matches
+      if (assignment.tenantId !== input.tenantId) {
+        throw new Error('Not authorized to delete this assignment');
+      }
+
+      // Delete the assignment
+      await db.deleteContractAssignment(input.assignmentId);
+
+      // Create audit log
+      await db.createAuditLog({
+        tenantId: input.tenantId,
+        userId: ctx.user.id,
+        action: 'delete',
+        entityType: 'contract_assignment',
+        entityId: input.assignmentId,
+        oldValues: assignment,
+      });
+
+      return { success: true };
+    }),
 });
 
 // ============================================
