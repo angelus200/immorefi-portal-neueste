@@ -1128,6 +1128,16 @@ const userRouter = router({
       const { name, ...preferences } = input;
       await db.updateUserPreferences(ctx.user.id, preferences);
 
+      // Mark profile as completed in onboarding progress
+      const currentStatus = await db.getUserOnboardingStatus(ctx.user.id);
+      const currentProgress = currentStatus?.onboardingProgress || {};
+      await db.updateUserOnboarding(ctx.user.id, {
+        onboardingProgress: {
+          ...currentProgress,
+          profileCompleted: true,
+        },
+      });
+
       return { success: true };
     }),
 
