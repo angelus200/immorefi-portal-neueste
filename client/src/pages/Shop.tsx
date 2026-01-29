@@ -128,9 +128,6 @@ export default function Shop() {
     "Follow-up Gespräch nach 2 Wochen",
   ];
   
-  // Check if user can download handbuch for free (logged in)
-  const canDownloadFree = !!user;
-  
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       {/* Header */}
@@ -203,12 +200,6 @@ export default function Shop() {
                   <span className="text-3xl font-bold">€29,90</span>
                   <span className="text-muted-foreground text-sm">inkl. MwSt.</span>
                 </div>
-                {canDownloadFree && (
-                  <Badge variant="outline" className="text-green-600 border-green-600">
-                    <Gift className="w-3 h-3 mr-1" />
-                    Für Sie kostenlos!
-                  </Badge>
-                )}
               </div>
               
               {/* Subtitle */}
@@ -234,54 +225,20 @@ export default function Shop() {
             </CardContent>
             
             <CardFooter className="flex flex-col gap-3">
-              {canDownloadFree ? (
-                // Logged in user - free download
-                <Button
-                  className="w-full bg-green-600 hover:bg-green-700"
-                  size="lg"
-                  onClick={handleDownloadHandbuch}
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  Kostenlos lesen
-                </Button>
-              ) : (
-                // Not logged in - show both options
-                <div className="w-full space-y-3">
-                  <Button 
-                    className="w-full" 
-                    size="lg"
-                    onClick={handlePurchaseHandbuch}
-                    disabled={createCheckout.isPending}
-                  >
-                    {createCheckout.isPending ? "Wird verarbeitet..." : (
-                      <>
-                        Jetzt kaufen (€29,90)
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </>
-                    )}
-                  </Button>
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-card px-2 text-muted-foreground">oder</span>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    className="w-full border-green-600 text-green-600 hover:bg-green-50"
-                    size="lg"
-                    onClick={() => {
-                      window.location.href = `/sign-in?redirect_url=${encodeURIComponent('/shop')}`;
-                    }}
-                  >
-                    <Gift className="w-4 h-4 mr-2" />
-                    Anmelden & kostenlos erhalten
-                  </Button>
-                </div>
-              )}
-              
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={handlePurchaseHandbuch}
+                disabled={createCheckout.isPending}
+              >
+                {createCheckout.isPending ? "Wird verarbeitet..." : (
+                  <>
+                    Jetzt kaufen (€29,90)
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
+              </Button>
+
               <p className="text-xs text-muted-foreground text-center">
                 PDF-Download • Sofort verfügbar • 28 Seiten
               </p>

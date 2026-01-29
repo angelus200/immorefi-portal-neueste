@@ -572,21 +572,6 @@ export default function Glossary() {
           </div>
         )}
 
-        {/* CTA */}
-        <Card className="mt-8 bg-gradient-to-r from-primary to-primary/80 text-white">
-          <CardContent className="p-6">
-            <h3 className="text-xl font-bold mb-2">Fragen zu Finanzbegriffen?</h3>
-            <p className="text-white/90 mb-4">
-              Unsere Experten erklären Ihnen gerne alle Details zu Kapitalmarktstrukturen und Finanzierungsoptionen.
-            </p>
-            <Link href="/#kontakt">
-              <Button variant="secondary" className="w-full sm:w-auto">
-                Kostenlose Beratung anfordern
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
       </div>
     </DashboardLayout>
   );

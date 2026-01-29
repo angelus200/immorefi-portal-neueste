@@ -273,8 +273,8 @@ function DashboardLayoutContent({
                 <PanelLeft className="h-4 w-4 text-muted-foreground" />
               </button>
               {!isCollapsed ? (
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="font-semibold tracking-tight truncate text-primary">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold tracking-tight whitespace-nowrap text-primary">
                     NON DOM GROUP
                   </span>
                 </div>
