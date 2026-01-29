@@ -2,27 +2,14 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Clock, MapPin, User } from "lucide-react";
+import { Calendar, Clock, MapPin, User, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/DashboardLayout";
-import { useEffect } from "react";
 
 function BookingContent() {
   const { user } = useAuth();
   const { data: staffCalendars = [], isLoading: calendarsLoading } = trpc.staffCalendar.list.useQuery();
   const { data: myBookings = [], isLoading: bookingsLoading } = trpc.booking.myBookings.useQuery();
-
-  // Load Calendly widget script
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://assets.calendly.com/assets/external/widget.js';
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
 
   const formatDateTime = (date: Date | string) => {
     return new Intl.DateTimeFormat('de-CH', {
@@ -177,17 +164,34 @@ function BookingContent() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-0">
+                <CardContent className="p-6">
                   {calendar.calendlyUrl ? (
-                    <div
-                      className="calendly-inline-widget"
-                      data-url={calendar.calendlyUrl}
-                      style={{ minWidth: '320px', height: '700px' }}
-                    />
+                    <div className="space-y-4">
+                      <div className="bg-primary/5 border border-primary/20 rounded-lg p-6 text-center">
+                        <Calendar className="h-12 w-12 mx-auto mb-4 text-primary" />
+                        <h3 className="text-lg font-semibold mb-2">Termin buchen</h3>
+                        <p className="text-sm text-muted-foreground mb-6">
+                          Klicken Sie auf den Button, um einen Termin mit {calendar.name.split(' ')[0]} zu buchen.
+                          Die Buchung öffnet sich in einem neuen Fenster.
+                        </p>
+                        <Button
+                          size="lg"
+                          className="w-full max-w-md"
+                          onClick={() => window.open(calendar.calendlyUrl, '_blank', 'noopener,noreferrer')}
+                        >
+                          <ExternalLink className="h-5 w-5 mr-2" />
+                          Termin bei {calendar.name.split(' ')[0]} buchen
+                        </Button>
+                      </div>
+                      <div className="text-xs text-muted-foreground text-center">
+                        <p>Nach dem Klick öffnet sich das Buchungsformular in einem neuen Tab.</p>
+                        <p className="mt-1">Sie erhalten eine Bestätigung per E-Mail.</p>
+                      </div>
+                    </div>
                   ) : (
                     <div className="py-12 text-center text-muted-foreground">
                       <Clock className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                      <p>Calendly-Link nicht verfügbar</p>
+                      <p>Buchungslink nicht verfügbar</p>
                     </div>
                   )}
                 </CardContent>
