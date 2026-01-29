@@ -328,18 +328,6 @@ export default function InterestCalculator() {
               </div>
             </div>
 
-            {/* CTA */}
-            <div className="bg-gradient-to-r from-primary to-cyan-600 rounded-2xl p-6 text-white">
-              <h3 className="text-xl font-bold mb-2">Bessere Konditionen möglich?</h3>
-              <p className="text-white/90 mb-4">
-                Lassen Sie uns Ihre aktuelle Finanzierung analysieren. Wir finden oft Einsparpotenziale von 0,5-1,5% beim Zinssatz.
-              </p>
-              <Link href="/request-analysis">
-                <a className="inline-flex items-center gap-2 bg-white text-primary px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-                  Kostenlose Analyse anfordern
-                </a>
-              </Link>
-            </div>
           </div>
         </div>
       </div>

@@ -494,21 +494,6 @@ export default function RefinanceCalculator() {
               </CardContent>
             </Card>
 
-            {/* CTA */}
-            <Card className="bg-gradient-to-r from-primary to-primary/80 text-white">
-              <CardContent className="p-6">
-                <h3 className="text-xl font-bold mb-2">Bessere Konditionen sichern</h3>
-                <p className="text-white/90 mb-4">
-                  Wir analysieren Ihre aktuelle Finanzierung und finden die besten Refinanzierungsoptionen für Sie.
-                </p>
-                <Link href="/#kontakt">
-                  <Button variant="secondary" className="w-full">
-                    Kostenlose Analyse anfordern
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
