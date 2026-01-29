@@ -490,6 +490,112 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Handbuch Section - Kostenlos bei Anmeldung */}
+      <section id="handbuch" className="py-16 lg:py-24 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
+        <div className="container">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-700 dark:text-amber-400 px-4 py-2 rounded-full text-sm font-medium">
+                <BookOpen className="h-4 w-4" />
+                Kostenloses Expertenwissen
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold">
+                Handbuch für <span className="text-amber-600">Immobilienprojektentwickler</span>
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                <strong>Private Debt</strong> – Wie Sie über den Private-Debt-Markt Refinanzierungskapital gewinnen.
+                28 Seiten Expertenwissen mit 9 Kapiteln und 5 Anhängen.
+              </p>
+              <ul className="space-y-3">
+                {[
+                  "Warum Private Debt für Projektentwickler jetzt entscheidend ist",
+                  "Wer sind die Player auf dem Private-Debt-Markt?",
+                  "Welche Strukturen und Instrumente gibt es?",
+                  "Schritt-für-Schritt zur Private-Debt-Finanzierung",
+                  "Blueprint: So machen Sie Ihr Unternehmen Private-Debt-ready",
+                ].map((item, index) => (
+                  <li key={index} className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-muted-foreground">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <Card className="border-2 border-amber-500/30 shadow-xl bg-white dark:bg-card">
+                <CardHeader className="text-center pb-4">
+                  <div className="flex justify-center mb-4">
+                    <div className="w-20 h-20 rounded-2xl bg-amber-500/10 flex items-center justify-center">
+                      <BookOpen className="h-10 w-10 text-amber-600" />
+                    </div>
+                  </div>
+                  <CardTitle className="text-2xl">Jetzt kostenlos erhalten</CardTitle>
+                  <CardDescription className="text-base">
+                    Melden Sie sich an und laden Sie das Handbuch sofort herunter
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-center gap-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-amber-600 line-through opacity-50">€29,90</div>
+                      <div className="text-sm text-muted-foreground">Normalpreis</div>
+                    </div>
+                    <ArrowRight className="h-6 w-6 text-muted-foreground" />
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-green-600">Kostenlos</div>
+                      <div className="text-sm text-muted-foreground">bei Anmeldung</div>
+                    </div>
+                  </div>
+                  <div className="border-t pt-4 space-y-3">
+                    {isAuthenticated ? (
+                      <Button
+                        className="w-full bg-amber-600 hover:bg-amber-700"
+                        size="lg"
+                        onClick={() => setLocation('/admin/handbuch')}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Zum Handbuch
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          className="w-full bg-amber-600 hover:bg-amber-700"
+                          size="lg"
+                          onClick={() => window.location.href = `/sign-in?redirect_url=${encodeURIComponent('/shop')}`}
+                        >
+                          Kostenlos anmelden & herunterladen
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                        <div className="relative">
+                          <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t" />
+                          </div>
+                          <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-white dark:bg-card px-2 text-muted-foreground">oder</span>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          className="w-full border-amber-500/50 hover:bg-amber-50 dark:hover:bg-amber-950"
+                          size="lg"
+                          onClick={handleDirectPurchaseHandbuch}
+                          disabled={guestCheckout.isPending}
+                        >
+                          {guestCheckout.isPending ? "Wird verarbeitet..." : "Direkt kaufen für €29,90"}
+                        </Button>
+                      </>
+                    )}
+                    <p className="text-xs text-center text-muted-foreground">
+                      PDF-Download • 28 Seiten • Sofort verfügbar
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Selbsttest Quiz Section */}
       <section id="selbsttest" className="py-16 lg:py-24 bg-gradient-to-b from-white to-slate-50 dark:from-background dark:to-slate-950/50">
         <div className="container">
