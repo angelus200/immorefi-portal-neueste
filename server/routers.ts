@@ -977,6 +977,18 @@ const fileRouter = router({
         newValues: { fileName: input.fileName },
       });
 
+      // Mark firstDocument as completed in onboarding progress
+      const currentStatus = await db.getUserOnboardingStatus(ctx.user.id);
+      const currentProgress = currentStatus?.onboardingProgress || {};
+      if (!currentProgress.firstDocument) {
+        await db.updateUserOnboarding(ctx.user.id, {
+          onboardingProgress: {
+            ...currentProgress,
+            firstDocument: true,
+          },
+        });
+      }
+
       return { fileId };
     }),
 
@@ -1025,6 +1037,18 @@ const fileRouter = router({
         entityId: fileId,
         newValues: { fileName: input.fileName },
       });
+
+      // Mark firstDocument as completed in onboarding progress
+      const currentStatus = await db.getUserOnboardingStatus(ctx.user.id);
+      const currentProgress = currentStatus?.onboardingProgress || {};
+      if (!currentProgress.firstDocument) {
+        await db.updateUserOnboarding(ctx.user.id, {
+          onboardingProgress: {
+            ...currentProgress,
+            firstDocument: true,
+          },
+        });
+      }
 
       return { fileId, uploadUrl: url, fileKey };
     }),
@@ -1938,6 +1962,18 @@ const orderRouter = router({
         newValues: { status: 'completed', paidAt: new Date() },
       });
 
+      // Mark firstOrder as completed in onboarding progress for the customer
+      const currentStatus = await db.getUserOnboardingStatus(order.userId);
+      const currentProgress = currentStatus?.onboardingProgress || {};
+      if (!currentProgress.firstOrder) {
+        await db.updateUserOnboarding(order.userId, {
+          onboardingProgress: {
+            ...currentProgress,
+            firstOrder: true,
+          },
+        });
+      }
+
       // Return updated order
       return db.getOrderById(input.orderId);
     }),
@@ -2080,7 +2116,19 @@ const orderRouter = router({
             stripeCustomerId: session.customer as string,
             paidAt: new Date(),
           });
-          
+
+          // Mark firstOrder as completed in onboarding progress
+          const currentStatus = await db.getUserOnboardingStatus(ctx.user.id);
+          const currentProgress = currentStatus?.onboardingProgress || {};
+          if (!currentProgress.firstOrder) {
+            await db.updateUserOnboarding(ctx.user.id, {
+              onboardingProgress: {
+                ...currentProgress,
+                firstOrder: true,
+              },
+            });
+          }
+
           return { success: true, status: 'paid' };
         }
         
