@@ -3,15 +3,27 @@ import { trpc } from "@/lib/trpc";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Loader2, ShoppingCart, CheckCircle2, XCircle, Clock, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
+import { toast } from "sonner";
 
 export default function AdminOrders() {
   const { user, loading } = useAuth({ redirectOnUnauthenticated: true });
-  
-  const { data: orders, isLoading } = trpc.order.list.useQuery(undefined, {
+
+  const { data: orders, isLoading, refetch } = trpc.order.list.useQuery(undefined, {
     enabled: !!user && (user.role === 'superadmin' || user.role === 'tenant_admin'),
+  });
+
+  const markAsPaid = trpc.order.markAsPaid.useMutation({
+    onSuccess: () => {
+      toast.success("Bestellung als bezahlt markiert");
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`Fehler: ${error.message}`);
+    },
   });
   
   if (loading || isLoading) {
@@ -139,6 +151,7 @@ export default function AdminOrders() {
                       <th className="text-left py-3 px-4 font-medium">Status</th>
                       <th className="text-left py-3 px-4 font-medium">Datum</th>
                       <th className="text-left py-3 px-4 font-medium">Bezahlt am</th>
+                      <th className="text-left py-3 px-4 font-medium">Aktionen</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -160,6 +173,25 @@ export default function AdminOrders() {
                             ? format(new Date(order.paidAt), 'dd.MM.yyyy HH:mm', { locale: de })
                             : '-'
                           }
+                        </td>
+                        <td className="py-3 px-4">
+                          {order.status === 'pending' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => markAsPaid.mutate({ orderId: order.id })}
+                              disabled={markAsPaid.isPending}
+                            >
+                              {markAsPaid.isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <CheckCircle2 className="h-4 w-4 mr-1" />
+                                  Als bezahlt markieren
+                                </>
+                              )}
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     ))}

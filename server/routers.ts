@@ -1911,7 +1911,37 @@ const orderRouter = router({
     .query(async ({ input }) => {
       return db.getOrdersByUserId(input.userId);
     }),
-  
+
+  // Admin: Mark order as paid
+  markAsPaid: adminProcedure
+    .input(z.object({ orderId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      // Get order first to verify it exists
+      const order = await db.getOrderById(input.orderId);
+      if (!order) {
+        throw new Error('Bestellung nicht gefunden');
+      }
+
+      // Update order status to completed
+      await db.updateOrder(input.orderId, {
+        status: 'completed',
+        paidAt: new Date(),
+      });
+
+      // Create audit log
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'update',
+        entityType: 'order',
+        entityId: input.orderId,
+        oldValues: { status: order.status, paidAt: order.paidAt },
+        newValues: { status: 'completed', paidAt: new Date() },
+      });
+
+      // Return updated order
+      return db.getOrderById(input.orderId);
+    }),
+
   // Create checkout session (requires login)
   createCheckout: protectedProcedure
     .input(z.object({
