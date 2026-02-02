@@ -13,7 +13,7 @@ import {
 const pressArticles = [
   {
     source: "Forbes",
-    logo: "/forbes-logo.png",
+    logo: "/images/logos/presse/forbes-logo.png",
     title: "Internationale Firmengründung optimiert",
     date: "13. Oktober 2025",
     summary: "Die Non-Dom Group positioniert sich mit internationaler Firmengründung als Partner für Wachstum. Unternehmer im Spannungsfeld globaler Märkte benötigen Strukturen, die über nationale Grenzen hinausgehen.",
@@ -23,7 +23,7 @@ const pressArticles = [
   },
   {
     source: "Focus",
-    logo: "/focus-logo.png",
+    logo: "/images/logos/presse/focus-logo.png",
     title: "Amazon Markenaufbau: Diese Firmen setzen auf datengetriebenes Wachstum",
     date: "2. September 2025",
     summary: "Unternehmen wie commercehelden, digiPULS und toolmacher zeigen, wie Amazon Markenaufbau strategisch und nachhaltig gelingt – mit operativer Betreuung durch die Angelus Group.",
@@ -33,7 +33,7 @@ const pressArticles = [
   },
   {
     source: "DUB",
-    logo: "/dub-logo.png",
+    logo: "/images/logos/partner/Logo_DUBbyAMBER_3000x900.svg",
     title: "Angelus Management Beratung und Service KG",
     date: "2025",
     summary: "Profil der Angelus Management Beratung und Service KG auf DUB.de – Deutschlands größter Unternehmer-Plattform für Nachfolge, M&A und Finanzierung.",

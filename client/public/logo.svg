@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" fill="none">
-  <text x="0" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#00A0C6">
-    <tspan>NON</tspan>
-    <tspan dx="2" fill="#00A0C6">DOM</tspan>
-  </text>
-  <text x="0" y="48" font-family="Arial, sans-serif" font-size="10" font-weight="400" letter-spacing="3" fill="#666666">GROUP</text>
-  <!-- Stylized N with pill shape -->
-  <rect x="33" y="12" width="8" height="22" rx="4" fill="#00A0C6"/>
-</svg>
