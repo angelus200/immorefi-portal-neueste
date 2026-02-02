@@ -257,10 +257,7 @@ export default function Home() {
         <div className="container">
           <p className="text-center text-sm text-muted-foreground mb-8">Bekannt aus</p>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
-            {/* Static placeholders */}
-            <div className="text-xl font-bold text-muted-foreground opacity-60">KFW</div>
-
-            {/* Dynamic press logos from database */}
+            {/* Press logos from database */}
             {pressLogos.map((logo) => (
               <a
                 key={logo.id}
