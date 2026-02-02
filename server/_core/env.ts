@@ -9,4 +9,7 @@ export const ENV = {
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
   resendApiKey: process.env.RESEND_API_KEY ?? "",
   clerkSecretKey: process.env.CLERK_SECRET_KEY ?? "",
+  // GoHighLevel Integration
+  ghlApiKey: process.env.GHL_API_KEY ?? "",
+  ghlLocationId: process.env.GHL_LOCATION_ID ?? "",
 };

@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import axios, { AxiosInstance } from 'axios';
+import { ENV } from './_core/env';
 
 // ============================================
 // TYPES
@@ -72,8 +73,9 @@ export class GoHighLevelService {
   private locationId: string;
 
   constructor() {
-    const apiKey = process.env.GHL_API_KEY || '0b1e327e-beaa-4576-a45a-71c6c01966c7';
-    const locationId = process.env.GHL_LOCATION_ID || '0beKz0TSeMQXqUf2fDg7';
+    // Use ENV with fallback to hardcoded values for backwards compatibility
+    const apiKey = ENV.ghlApiKey || '0b1e327e-beaa-4576-a45a-71c6c01966c7';
+    const locationId = ENV.ghlLocationId || '0beKz0TSeMQXqUf2fDg7';
     const baseURL = 'https://rest.gohighlevel.com/v1';
 
     this.locationId = locationId;
