@@ -23,7 +23,7 @@ export default function Team() {
         <div className="container flex items-center justify-between h-16">
           <Link href="/">
             <img 
-              src="/nondom-logo.svg" 
+              src="/images/logos/non-dom-group-logo.webp" 
               alt="NON DOM Group" 
               className="h-8 cursor-pointer"
             />
@@ -449,7 +449,7 @@ export default function Team() {
         <div className="container">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <img 
-              src="/nondom-logo.svg" 
+              src="/images/logos/non-dom-group-logo.webp" 
               alt="NON DOM Group" 
               className="h-8 brightness-0 invert"
             />

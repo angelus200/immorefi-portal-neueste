@@ -73,10 +73,17 @@ export class GoHighLevelService {
   private locationId: string;
 
   constructor() {
-    // Use ENV with fallback to hardcoded values for backwards compatibility
-    const apiKey = ENV.ghlApiKey || '0b1e327e-beaa-4576-a45a-71c6c01966c7';
-    const locationId = ENV.ghlLocationId || '0beKz0TSeMQXqUf2fDg7';
+    // Use ENV variables (warn if missing)
+    const apiKey = ENV.ghlApiKey;
+    const locationId = ENV.ghlLocationId;
     const baseURL = 'https://rest.gohighlevel.com/v1';
+
+    if (!apiKey) {
+      console.warn('[GHL] Warning: GHL_API_KEY environment variable is not set');
+    }
+    if (!locationId) {
+      console.warn('[GHL] Warning: GHL_LOCATION_ID environment variable is not set');
+    }
 
     this.locationId = locationId;
     this.client = axios.create({

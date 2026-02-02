@@ -1,9 +1,17 @@
 import axios, { AxiosInstance } from 'axios';
 
 // GoHighLevel API Configuration
-const GHL_API_KEY = process.env.GHL_API_KEY || '0b1e327e-beaa-4576-a45a-71c6c01966c7';
-const GHL_LOCATION_ID = process.env.GHL_LOCATION_ID || '0beKz0TSeMQXqUf2fDg7';
+const GHL_API_KEY = process.env.GHL_API_KEY;
+const GHL_LOCATION_ID = process.env.GHL_LOCATION_ID;
 const GHL_BASE_URL = 'https://rest.gohighlevel.com/v1';
+
+// Warn if environment variables are missing
+if (!GHL_API_KEY) {
+  console.warn('[GHL] Warning: GHL_API_KEY environment variable is not set');
+}
+if (!GHL_LOCATION_ID) {
+  console.warn('[GHL] Warning: GHL_LOCATION_ID environment variable is not set');
+}
 
 // Types
 export interface GHLContact {

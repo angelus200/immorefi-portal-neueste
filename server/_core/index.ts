@@ -332,6 +332,36 @@ async function startServer() {
     }
   });
 
+  // GoHighLevel webhook for contact/opportunity updates
+  app.post('/api/webhooks/gohighlevel', express.json(), async (req, res) => {
+    try {
+      console.log('[GHL Webhook] Received event:', JSON.stringify(req.body).substring(0, 500));
+
+      const { type, contact, opportunity } = req.body;
+
+      switch (type) {
+        case 'ContactCreate':
+        case 'ContactUpdate':
+          console.log('[GHL Webhook] Contact event:', type, contact?.id);
+          // TODO: Update local contact in DB
+          // Example: await updateContactFromGHL(contact);
+          break;
+        case 'OpportunityStatusChange':
+          console.log('[GHL Webhook] Opportunity event:', type, opportunity?.id);
+          // TODO: Update deal status in DB
+          // Example: await updateDealFromGHL(opportunity);
+          break;
+        default:
+          console.log('[GHL Webhook] Unknown event type:', type);
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('[GHL Webhook] Error:', error);
+      res.status(500).json({ error: 'Webhook processing failed' });
+    }
+  });
+
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));

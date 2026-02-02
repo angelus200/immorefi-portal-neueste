@@ -60,9 +60,9 @@ export default function Press() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
         <div className="container flex items-center justify-between h-16">
           <Link href="/">
-            <img 
-              src="/nondom-logo.svg" 
-              alt="NON DOM Group" 
+            <img
+              src="/images/logos/non-dom-group-logo.webp"
+              alt="NON DOM Group"
               className="h-8 cursor-pointer"
             />
           </Link>
@@ -285,9 +285,9 @@ export default function Press() {
       <footer className="bg-slate-900 text-slate-300 py-12">
         <div className="container">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <img 
-              src="/nondom-logo.svg" 
-              alt="NON DOM Group" 
+            <img
+              src="/images/logos/non-dom-group-logo.webp"
+              alt="NON DOM Group"
               className="h-8 brightness-0 invert"
             />
             <p className="text-sm">© {new Date().getFullYear()} Non-Dom Group GmbH. Alle Rechte vorbehalten.</p>
