@@ -217,53 +217,29 @@ export default function Home() {
             
             {/* Hero Image/Visual */}
             <div className="relative hidden lg:block">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 rounded-3xl" />
-              <div className="relative bg-white rounded-3xl shadow-2xl p-8 border">
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-sm text-muted-foreground">Marktkapitalisierung</div>
-                      <div className="text-3xl font-bold">€12.5Mrd+</div>
-                      <div className="text-xs text-muted-foreground">im Immo Private Debt Markt</div>
-                    </div>
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <TrendingUp className="h-6 w-6 text-primary" />
-                    </div>
-                  </div>
-                  <div className="h-32 rounded-lg overflow-hidden">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={marketData}>
-                        <defs>
-                          <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8}/>
-                            <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <XAxis dataKey="year" hide />
-                        <YAxis hide domain={[7, 13]} />
-                        <Area
-                          type="monotone"
-                          dataKey="value"
-                          stroke="#06b6d4"
-                          strokeWidth={2}
-                          fillOpacity={1}
-                          fill="url(#colorValue)"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 rounded-3xl blur-xl" />
+              <div className="relative rounded-3xl shadow-2xl overflow-hidden">
+                {/* Professional Real Estate Image */}
+                <img
+                  src="/images/AdobeStock_650048976.jpeg"
+                  alt="Professionelles Immobilien-Stadtmodell"
+                  className="w-full h-[500px] object-cover"
+                />
+
+                {/* Stats Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent p-8">
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center p-3 bg-muted rounded-lg">
-                      <div className="text-lg font-semibold">8</div>
-                      <div className="text-xs text-muted-foreground">Objekte</div>
+                    <div className="text-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                      <div className="text-2xl font-bold text-white">500+</div>
+                      <div className="text-xs text-white/80">Projekte</div>
                     </div>
-                    <div className="text-center p-3 bg-muted rounded-lg">
-                      <div className="text-lg font-semibold">5.2%</div>
-                      <div className="text-xs text-muted-foreground">Rendite</div>
+                    <div className="text-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                      <div className="text-2xl font-bold text-white">€2Mrd+</div>
+                      <div className="text-xs text-white/80">Volumen</div>
                     </div>
-                    <div className="text-center p-3 bg-muted rounded-lg">
-                      <div className="text-lg font-semibold">A+</div>
-                      <div className="text-xs text-muted-foreground">Rating</div>
+                    <div className="text-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                      <div className="text-2xl font-bold text-white">98%</div>
+                      <div className="text-xs text-white/80">Erfolgsquote</div>
                     </div>
                   </div>
                 </div>
