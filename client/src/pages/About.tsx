@@ -1,11 +1,11 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Building2, 
-  Target, 
-  Shield, 
-  Users, 
+import {
+  Building2,
+  Target,
+  Shield,
+  Users,
   TrendingUp,
   Award,
   Globe,
@@ -13,8 +13,34 @@ import {
   CheckCircle2,
   Briefcase
 } from "lucide-react";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 export default function About() {
+  const { user } = useAuth();
+
+  // Checkout for Analysis purchase
+  const createCheckout = trpc.order.createCheckout.useMutation({
+    onSuccess: (data) => {
+      if (data.url) {
+        toast.info("Sie werden zur Zahlungsseite weitergeleitet...");
+        window.open(data.url, '_blank');
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message || "Fehler beim Erstellen der Checkout-Session");
+    },
+  });
+
+  const handlePurchaseAnalysis = () => {
+    if (!user) {
+      window.location.href = `/sign-in?redirect_url=${encodeURIComponent('/about')}`;
+      return;
+    }
+    createCheckout.mutate({ productId: 'ANALYSIS' });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -345,12 +371,10 @@ export default function About() {
               maßgeschneiderte Lösungen entwickeln.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/onboarding">
-                <Button size="lg">
-                  Jetzt Analyse starten
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
+              <Button size="lg" onClick={handlePurchaseAnalysis} disabled={createCheckout.isPending}>
+                {createCheckout.isPending ? "Lädt..." : "Jetzt Analyse kaufen"}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
               <Link href="/team">
                 <Button variant="outline" size="lg">
                   Unser Team kennenlernen

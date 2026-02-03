@@ -1,8 +1,8 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Users, 
+import {
+  Users,
   Mail,
   ArrowRight,
   Building2,
@@ -14,8 +14,34 @@ import {
   GraduationCap,
   TrendingUp
 } from "lucide-react";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 export default function Team() {
+  const { user } = useAuth();
+
+  // Checkout for Analysis purchase
+  const createCheckout = trpc.order.createCheckout.useMutation({
+    onSuccess: (data) => {
+      if (data.url) {
+        toast.info("Sie werden zur Zahlungsseite weitergeleitet...");
+        window.open(data.url, '_blank');
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message || "Fehler beim Erstellen der Checkout-Session");
+    },
+  });
+
+  const handlePurchaseAnalysis = () => {
+    if (!user) {
+      window.location.href = `/sign-in?redirect_url=${encodeURIComponent('/team')}`;
+      return;
+    }
+    createCheckout.mutate({ productId: 'ANALYSIS' });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -41,9 +67,9 @@ export default function Team() {
             <Link href="/team" className="text-sm font-medium text-primary">
               Team
             </Link>
-            <Link href="/onboarding" className="text-sm font-medium hover:text-primary transition-colors">
-              Analyse starten
-            </Link>
+            <button onClick={handlePurchaseAnalysis} className="text-sm font-medium hover:text-primary transition-colors">
+              Analyse kaufen
+            </button>
           </div>
           <Link href="/dashboard">
             <Button>Dashboard</Button>
@@ -404,12 +430,10 @@ export default function Team() {
                   </div>
                   
                   <div className="flex flex-col justify-center">
-                    <Link href="/onboarding">
-                      <Button size="lg" className="w-full mb-4">
-                        Jetzt Analyse starten
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </Link>
+                    <Button size="lg" className="w-full mb-4" onClick={handlePurchaseAnalysis} disabled={createCheckout.isPending}>
+                      {createCheckout.isPending ? "Lädt..." : "Jetzt Analyse kaufen"}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
                     <a href="https://non-dom.group" target="_blank" rel="noopener noreferrer">
                       <Button variant="outline" size="lg" className="w-full">
                         <Globe className="mr-2 h-4 w-4" />
@@ -434,12 +458,10 @@ export default function Team() {
             <p className="text-lg text-primary-foreground/80 mb-8">
               Starten Sie Ihre Analyse und lassen Sie uns Ihre Möglichkeiten besprechen.
             </p>
-            <Link href="/onboarding">
-              <Button size="lg" variant="secondary">
-                Jetzt Analyse starten
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
+            <Button size="lg" variant="secondary" onClick={handlePurchaseAnalysis} disabled={createCheckout.isPending}>
+              {createCheckout.isPending ? "Lädt..." : "Jetzt Analyse kaufen"}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </div>
         </div>
       </section>

@@ -1,14 +1,17 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Newspaper, 
+import {
+  Newspaper,
   ExternalLink,
   Award,
   Calendar,
   ArrowRight,
   FileText
 } from "lucide-react";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 const pressArticles = [
   {
@@ -54,6 +57,29 @@ const awards = [
 ];
 
 export default function Press() {
+  const { user } = useAuth();
+
+  // Checkout for Analysis purchase
+  const createCheckout = trpc.order.createCheckout.useMutation({
+    onSuccess: (data) => {
+      if (data.url) {
+        toast.info("Sie werden zur Zahlungsseite weitergeleitet...");
+        window.open(data.url, '_blank');
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message || "Fehler beim Erstellen der Checkout-Session");
+    },
+  });
+
+  const handlePurchaseAnalysis = () => {
+    if (!user) {
+      window.location.href = `/sign-in?redirect_url=${encodeURIComponent('/press')}`;
+      return;
+    }
+    createCheckout.mutate({ productId: 'ANALYSIS' });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -82,9 +108,9 @@ export default function Press() {
             <Link href="/press" className="text-sm font-medium text-primary">
               Presse
             </Link>
-            <Link href="/onboarding" className="text-sm font-medium hover:text-primary transition-colors">
-              Analyse starten
-            </Link>
+            <button onClick={handlePurchaseAnalysis} className="text-sm font-medium hover:text-primary transition-colors">
+              Analyse kaufen
+            </button>
           </div>
           <Link href="/dashboard">
             <Button>Dashboard</Button>
@@ -271,11 +297,9 @@ export default function Press() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <Link href="/onboarding">
-                <Button size="lg" variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                  Jetzt Analyse starten
-                </Button>
-              </Link>
+              <Button size="lg" variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary" onClick={handlePurchaseAnalysis} disabled={createCheckout.isPending}>
+                {createCheckout.isPending ? "Lädt..." : "Jetzt Analyse kaufen"}
+              </Button>
             </div>
           </div>
         </div>

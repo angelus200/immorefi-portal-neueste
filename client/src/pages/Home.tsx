@@ -97,6 +97,28 @@ export default function Home() {
   const { data: membershipLogos = [] } = trpc.partnerLogo.list.useQuery({ category: "mitgliedschaft" });
   const { data: awardLogos = [] } = trpc.partnerLogo.list.useQuery({ category: "auszeichnung" });
 
+  // Checkout for Analysis purchase
+  const createCheckout = trpc.order.createCheckout.useMutation({
+    onSuccess: (data) => {
+      if (data.url) {
+        toast.info("Sie werden zur Zahlungsseite weitergeleitet...");
+        window.open(data.url, '_blank');
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message || "Fehler beim Erstellen der Checkout-Session");
+    },
+  });
+
+  const handlePurchaseAnalysis = () => {
+    if (!user) {
+      // Redirect to login with return URL
+      window.location.href = `/sign-in?redirect_url=${encodeURIComponent('/')}`;
+      return;
+    }
+    createCheckout.mutate({ productId: 'ANALYSIS' });
+  };
+
   // Guest checkout for Handbuch direct purchase
   const guestCheckout = trpc.order.guestCheckout.useMutation({
     onSuccess: (data) => {
@@ -130,9 +152,9 @@ export default function Home() {
             <a href="#prozess" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
               Prozess
             </a>
-            <Link href="/onboarding" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-              Analyse starten
-            </Link>
+            <button onClick={handlePurchaseAnalysis} className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+              Analyse kaufen
+            </button>
             <a href="#faq" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
               FAQ
             </a>
@@ -151,12 +173,10 @@ export default function Home() {
                 <Link href="/sign-in">
                   <Button variant="outline">Login</Button>
                 </Link>
-                <Link href="/onboarding">
-                  <Button>
-                    Analyse starten
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
+                <Button onClick={handlePurchaseAnalysis} disabled={createCheckout.isPending}>
+                  {createCheckout.isPending ? "Lädt..." : "Analyse kaufen"}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
               </>
             )}
           </div>
@@ -185,12 +205,10 @@ export default function Home() {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/onboarding">
-                  <Button size="lg" className="w-full sm:w-auto">
-                    Jetzt Analyse starten
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
+                <Button size="lg" className="w-full sm:w-auto" onClick={handlePurchaseAnalysis} disabled={createCheckout.isPending}>
+                  {createCheckout.isPending ? "Lädt..." : "Jetzt Analyse kaufen"}
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
                 <a href="#prozess">
                   <Button size="lg" variant="outline" className="w-full sm:w-auto">
                     So funktioniert's
@@ -450,12 +468,10 @@ export default function Home() {
                       Die Analyse ist Voraussetzung für alle weiteren Strukturierungs- oder Umsetzungsleistungen.
                     </p>
                   </div>
-                  <Link href="/onboarding">
-                    <Button className="w-full" size="lg">
-                      Jetzt Analyse starten
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
+                  <Button className="w-full" size="lg" onClick={handlePurchaseAnalysis} disabled={createCheckout.isPending}>
+                    {createCheckout.isPending ? "Lädt..." : "Jetzt Analyse kaufen"}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </CardContent>
               </Card>
             </div>
