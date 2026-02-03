@@ -26,7 +26,9 @@ import {
   Download,
   Linkedin,
   Facebook,
-  Calendar
+  Calendar,
+  Newspaper,
+  ExternalLink
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { FinanceCalculator } from "@/components/FinanceCalculator";
@@ -45,6 +47,73 @@ const marketData = [
   { year: '2023', value: 11.3 },
   { year: '2024', value: 12.5 }
 ];
+
+// NewsGrid component
+function NewsGrid() {
+  const { data: news = [], isLoading } = trpc.news.getNewsFeed.useQuery();
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+        <p className="text-muted-foreground mt-4">Lade aktuelle News...</p>
+      </div>
+    );
+  }
+
+  if (news.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <Newspaper className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+        <p className="text-muted-foreground">Keine News verfügbar</p>
+      </div>
+    );
+  }
+
+  // Format date
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat('de-DE', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      }).format(date);
+    } catch {
+      return dateString;
+    }
+  };
+
+  return (
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+      {news.slice(0, 6).map((item: any) => (
+        <Card key={item.guid} className="hover:shadow-lg transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between mb-3">
+              <div className="text-xs text-muted-foreground">
+                {formatDate(item.pubDate)}
+              </div>
+              <Newspaper className="h-4 w-4 text-primary flex-shrink-0" />
+            </div>
+            <h3 className="font-semibold text-lg mb-3 line-clamp-2">{item.title}</h3>
+            <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
+              {item.description.replace(/<[^>]*>/g, '')}
+            </p>
+            <a
+              href={item.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center text-sm font-medium text-primary hover:underline"
+            >
+              Weiterlesen
+              <ExternalLink className="ml-1 h-3 w-3" />
+            </a>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
@@ -1071,6 +1140,26 @@ export default function Home() {
               </AccordionItem>
             ))}
           </Accordion>
+        </div>
+      </section>
+
+      {/* News Section */}
+      <section className="py-16 lg:py-24 bg-slate-50 dark:bg-slate-950/50">
+        <div className="container">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
+              <Newspaper className="h-4 w-4" />
+              Aktuelle News
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Immobilienfinanzierungs-<span className="text-primary">News</span>
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Bleiben Sie informiert über aktuelle Entwicklungen am Immobilienfinanzierungsmarkt
+            </p>
+          </div>
+
+          <NewsGrid />
         </div>
       </section>
 

@@ -3299,6 +3299,44 @@ const partnerLogoRouter = router({
 });
 
 // ============================================
+// RSS NEWS FEED ROUTER
+// ============================================
+
+const newsRouter = router({
+  getNewsFeed: publicProcedure.query(async () => {
+    try {
+      const xml2js = (await import('xml2js')).default;
+      const response = await fetch('https://www.baugeldzentrum.de/rss.php');
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch RSS feed');
+      }
+
+      const xml = await response.text();
+      const parser = new xml2js.Parser({ explicitArray: false });
+
+      const result = await parser.parseStringPromise(xml);
+      const items = result.rss?.channel?.item || [];
+
+      // Normalize items to array if single item
+      const newsItems = Array.isArray(items) ? items : [items];
+
+      // Return last 10 news items with cleaned data
+      return newsItems.slice(0, 10).map((item: any) => ({
+        title: item.title || '',
+        description: item.description || '',
+        link: item.link || '',
+        pubDate: item.pubDate || '',
+        guid: item.guid?._text || item.guid || item.link || '',
+      }));
+    } catch (error) {
+      console.error('Error fetching RSS feed:', error);
+      return [];
+    }
+  }),
+});
+
+// ============================================
 // MAIN ROUTER
 // ============================================
 
@@ -3341,6 +3379,7 @@ export const appRouter = router({
   contractTemplate: contractTemplateRouter,
   partnerLogo: partnerLogoRouter,
   video: videoRouter,
+  news: newsRouter,
 });
 
 export type AppRouter = typeof appRouter;
