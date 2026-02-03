@@ -947,77 +947,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Contact Section */}
+      {/* Erstberatung Section */}
       <section id="kontakt" className="py-20 lg:py-32">
         <div className="container">
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                  Kontaktieren Sie <span className="text-primary">uns</span>
-                </h2>
-                <p className="text-lg text-muted-foreground">
-                  Buchen Sie eine persönliche Erstberatung oder kontaktieren Sie uns direkt
-                  per Telefon oder E-Mail.
-                </p>
-              </div>
-              
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Phone className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-semibold">Telefon</div>
-                    <div className="text-muted-foreground">+41 44 500 41 00</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-4">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Mail className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-semibold">E-Mail</div>
-                    <div className="text-muted-foreground">info@non-dom.group</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-4">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <MapPin className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-semibold">Adresse</div>
-                    <div className="text-muted-foreground">
-                      Marketplace24-7 GmbH<br />
-                      Kantonsstrasse 1<br />
-                      8807 Freienbach SZ<br />
-                      Schweiz
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-2">
-                      HR Kanton Schwyz: CH-130.4.033.363-2
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Google Maps */}
-              <div className="mt-8 rounded-xl overflow-hidden border shadow-lg">
-                <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2711.8!2d8.7547!3d47.2047!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x479ab6d8e8a8b8b7%3A0x8b8b8b8b8b8b8b8b!2sKantonsstrasse%201%2C%208807%20Freienbach%2C%20Switzerland!5e0!3m2!1sen!2sch!4v1704672000000!5m2!1sen!2sch"
-                  width="100%"
-                  height="250"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title="Standort Marketplace24-7 GmbH"
-                  className="grayscale hover:grayscale-0 transition-all duration-500"
-                ></iframe>
-              </div>
-            </div>
-            
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Starten Sie <span className="text-primary">hier</span>
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Buchen Sie eine persönliche Erstberatung und erhalten Sie eine fundierte
+              Einschätzung Ihrer Kapitalmarktoptionen.
+            </p>
+          </div>
+
+          <div className="max-w-2xl mx-auto">
             {/* Erstberatung Box */}
             <Card className="shadow-xl border-2 border-primary">
               <CardHeader className="text-center pb-2">
