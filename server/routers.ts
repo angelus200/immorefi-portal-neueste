@@ -2614,10 +2614,11 @@ const chatRouter = router({
       // Determine sender role
       const senderRole = (ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin') ? 'admin' : 'customer';
 
+      // Create message with correct field name: senderRole (not messageSenderRole!)
       const message = await db.createMessage({
         conversationId: input.conversationId,
         senderId: ctx.user.id,
-        senderRole,
+        senderRole, // ✅ Correct field name matching schema
         content: input.content,
       });
 
