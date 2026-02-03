@@ -82,8 +82,8 @@ export default function Press() {
             <Link href="/press" className="text-sm font-medium text-primary">
               Presse
             </Link>
-            <Link href="/#kontakt" className="text-sm font-medium hover:text-primary transition-colors">
-              Kontakt
+            <Link href="/onboarding" className="text-sm font-medium hover:text-primary transition-colors">
+              Analyse starten
             </Link>
           </div>
           <Link href="/dashboard">
@@ -271,9 +271,9 @@ export default function Press() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <Link href="/#kontakt">
+              <Link href="/onboarding">
                 <Button size="lg" variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                  Kontakt aufnehmen
+                  Jetzt Analyse starten
                 </Button>
               </Link>
             </div>

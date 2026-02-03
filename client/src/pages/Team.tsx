@@ -41,8 +41,8 @@ export default function Team() {
             <Link href="/team" className="text-sm font-medium text-primary">
               Team
             </Link>
-            <Link href="/#kontakt" className="text-sm font-medium hover:text-primary transition-colors">
-              Kontakt
+            <Link href="/onboarding" className="text-sm font-medium hover:text-primary transition-colors">
+              Analyse starten
             </Link>
           </div>
           <Link href="/dashboard">
@@ -404,9 +404,9 @@ export default function Team() {
                   </div>
                   
                   <div className="flex flex-col justify-center">
-                    <Link href="/#kontakt">
+                    <Link href="/onboarding">
                       <Button size="lg" className="w-full mb-4">
-                        Analyse anfordern
+                        Jetzt Analyse starten
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </Link>
@@ -432,11 +432,11 @@ export default function Team() {
               Lassen Sie uns sprechen
             </h2>
             <p className="text-lg text-primary-foreground/80 mb-8">
-              Unser Team steht Ihnen für ein unverbindliches Erstgespräch zur Verfügung.
+              Starten Sie Ihre Analyse und lassen Sie uns Ihre Möglichkeiten besprechen.
             </p>
-            <Link href="/#kontakt">
+            <Link href="/onboarding">
               <Button size="lg" variant="secondary">
-                Kontakt aufnehmen
+                Jetzt Analyse starten
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>

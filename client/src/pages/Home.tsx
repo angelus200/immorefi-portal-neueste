@@ -130,9 +130,9 @@ export default function Home() {
             <a href="#prozess" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
               Prozess
             </a>
-            <a href="#kontakt" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-              Kontakt
-            </a>
+            <Link href="/onboarding" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+              Analyse starten
+            </Link>
             <a href="#faq" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
               FAQ
             </a>
@@ -151,12 +151,12 @@ export default function Home() {
                 <Link href="/sign-in">
                   <Button variant="outline">Login</Button>
                 </Link>
-                <a href="#kontakt">
+                <Link href="/onboarding">
                   <Button>
-                    Beratung anfragen
+                    Analyse starten
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
-                </a>
+                </Link>
               </>
             )}
           </div>
@@ -185,12 +185,12 @@ export default function Home() {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4">
-                <a href="#kontakt">
+                <Link href="/onboarding">
                   <Button size="lg" className="w-full sm:w-auto">
-                    Analyse anfordern
+                    Jetzt Analyse starten
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
-                </a>
+                </Link>
                 <a href="#prozess">
                   <Button size="lg" variant="outline" className="w-full sm:w-auto">
                     So funktioniert's
@@ -450,9 +450,9 @@ export default function Home() {
                       Die Analyse ist Voraussetzung für alle weiteren Strukturierungs- oder Umsetzungsleistungen.
                     </p>
                   </div>
-                  <Link href="/shop">
+                  <Link href="/onboarding">
                     <Button className="w-full" size="lg">
-                      Analyse kaufen
+                      Jetzt Analyse starten
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
