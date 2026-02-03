@@ -171,17 +171,17 @@ export default function Home() {
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
                 <TrendingUp className="h-4 w-4" />
-                Kapitalmarktzugang für Immobilienunternehmen
+                Die Alternative zur Bankfinanzierung
               </div>
-              
+
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
-                <span className="text-foreground">Ihr Zugang zum</span>{" "}
-                <span className="text-primary">Kapitalmarkt</span>
+                <span className="text-foreground">Immobilienfinanzierung</span>{" "}
+                <span className="text-primary">ohne Bank</span>
               </h1>
-              
+
               <p className="text-xl text-muted-foreground max-w-lg">
-                Wir strukturieren für Immobilienunternehmen Credit Linked Notes, Anleihen, 
-                Zertifikate und Fonds. Profitieren Sie von unserem Netzwerk aus Banken und Kapitalmarktexperten.
+                Kapitalmarkt statt Kreditinstitut: Wir strukturieren Credit Linked Notes, Anleihen und Fonds für Ihr Immobilienprojekt.
+                Alles aus einer Hand – von der Analyse bis zur Platzierung.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4">
