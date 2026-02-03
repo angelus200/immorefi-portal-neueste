@@ -341,16 +341,109 @@ async function startServer() {
 
       switch (type) {
         case 'ContactCreate':
-        case 'ContactUpdate':
+        case 'ContactUpdate': {
           console.log('[GHL Webhook] Contact event:', type, contact?.id);
-          // TODO: Update local contact in DB
-          // Example: await updateContactFromGHL(contact);
+
+          // FIX 2: Process contact events from GHL → Portal
+          if (!contact || !contact.id) {
+            console.warn('[GHL Webhook] Missing contact data');
+            break;
+          }
+
+          const {
+            getLeadByGHLContactId,
+            updateLead,
+            getContactByGHLContactId,
+            updateContact,
+            createLead
+          } = await import('../db');
+
+          // Check if contact exists as Lead
+          const existingLead = await getLeadByGHLContactId(contact.id);
+          if (existingLead) {
+            await updateLead(existingLead.id, existingLead.tenantId, {
+              name: contact.name || contact.firstName || '',
+              email: contact.email,
+              phone: contact.phone,
+              company: contact.companyName,
+              lastSyncedAt: new Date(),
+            });
+            console.log(`[GHL Webhook] Lead updated: ${existingLead.id}`);
+            break;
+          }
+
+          // Check if contact exists as Contact
+          const existingContact = await getContactByGHLContactId(contact.id);
+          if (existingContact) {
+            await updateContact(existingContact.id, existingContact.tenantId, {
+              name: contact.name || contact.firstName || '',
+              email: contact.email,
+              phone: contact.phone,
+              company: contact.companyName,
+              street: contact.address1,
+              city: contact.city,
+              zip: contact.postalCode,
+              country: contact.country,
+              website: contact.website,
+              lastSyncedAt: new Date(),
+            });
+            console.log(`[GHL Webhook] Contact updated: ${existingContact.id}`);
+            break;
+          }
+
+          // Create new lead if contact doesn't exist (ContactCreate event)
+          if (type === 'ContactCreate' && contact.email) {
+            const leadId = await createLead({
+              tenantId: 1,
+              ghlContactId: contact.id,
+              name: contact.name || contact.firstName || '',
+              email: contact.email,
+              phone: contact.phone,
+              company: contact.companyName,
+              source: 'ghl',
+              status: 'new',
+              lastSyncedAt: new Date(),
+            });
+            console.log(`[GHL Webhook] New lead created from GHL: ${leadId}`);
+          }
           break;
-        case 'OpportunityStatusChange':
+        }
+
+        case 'OpportunityStatusChange': {
           console.log('[GHL Webhook] Opportunity event:', type, opportunity?.id);
-          // TODO: Update deal status in DB
-          // Example: await updateDealFromGHL(opportunity);
+
+          // FIX 2: Process opportunity status changes
+          if (!opportunity || !opportunity.id) {
+            console.warn('[GHL Webhook] Missing opportunity data');
+            break;
+          }
+
+          const { getDealByGHLOpportunityId, updateDeal } = await import('../db');
+
+          // Check if deal exists with this GHL opportunity ID
+          const existingDeal = await getDealByGHLOpportunityId(opportunity.id);
+          if (existingDeal) {
+            // Map GHL status to portal stage
+            const statusMapping: Record<string, 'new' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost'> = {
+              'open': 'new',
+              'won': 'won',
+              'lost': 'lost',
+              'abandoned': 'lost',
+            };
+            const newStage = statusMapping[opportunity.status?.toLowerCase()] || 'new';
+
+            await updateDeal(existingDeal.id, existingDeal.tenantId, {
+              stage: newStage,
+              value: opportunity.monetaryValue,
+              lastSyncedAt: new Date(),
+            });
+            console.log(`[GHL Webhook] Deal updated: ${existingDeal.id} → ${newStage}`);
+          } else {
+            console.log(`[GHL Webhook] No deal found for opportunity: ${opportunity.id}`);
+          }
           break;
+        }
+
         default:
           console.log('[GHL Webhook] Unknown event type:', type);
       }

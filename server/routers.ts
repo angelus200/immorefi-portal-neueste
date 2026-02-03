@@ -177,6 +177,29 @@ const leadRouter = router({
         newValues: input,
       });
 
+      // FIX 1: Auto-sync to GoHighLevel (Portal → GHL)
+      if (input.email && input.source !== 'ghl') {
+        try {
+          const { getGHLService } = await import('./gohighlevelService');
+          const ghl = getGHLService();
+          const ghlContact = await ghl.createContact({
+            email: input.email,
+            name: input.name,
+            phone: input.phone,
+            companyName: input.company,
+            tags: ['lead', 'portal-auto-sync'],
+          });
+
+          if (ghlContact) {
+            await db.updateLead(leadId, input.tenantId, { ghlContactId: ghlContact.id });
+            console.log(`[Lead Create] Synced to GHL: ${ghlContact.id}`);
+          }
+        } catch (error) {
+          console.error('[Lead Create] GHL sync failed:', error);
+          // Don't fail lead creation if GHL sync fails
+        }
+      }
+
       return { id: leadId };
     }),
 
@@ -197,6 +220,29 @@ const leadRouter = router({
         ...input,
         status: 'new' as const,
       });
+
+      // FIX 1: Auto-sync to GoHighLevel (Portal → GHL)
+      if (input.email && input.source !== 'ghl') {
+        try {
+          const { getGHLService } = await import('./gohighlevelService');
+          const ghl = getGHLService();
+          const ghlContact = await ghl.createContact({
+            email: input.email,
+            name: input.name,
+            phone: input.phone,
+            companyName: input.company,
+            tags: ['lead', 'portal-auto-sync', 'public-form'],
+          });
+
+          if (ghlContact) {
+            await db.updateLead(leadId, input.tenantId, { ghlContactId: ghlContact.id });
+            console.log(`[Lead CreatePublic] Synced to GHL: ${ghlContact.id}`);
+          }
+        } catch (error) {
+          console.error('[Lead CreatePublic] GHL sync failed:', error);
+          // Don't fail lead creation if GHL sync fails
+        }
+      }
 
       // No audit log for public leads (no user context)
       return { id: leadId, success: true };
@@ -409,6 +455,33 @@ const contactRouter = router({
         entityId: id,
         newValues: input,
       });
+
+      // FIX 1: Auto-sync to GoHighLevel (Portal → GHL)
+      try {
+        const { getGHLService } = await import('./gohighlevelService');
+        const ghl = getGHLService();
+        const ghlContact = await ghl.createContact({
+          email: input.email,
+          name: input.name,
+          phone: input.phone,
+          companyName: input.company,
+          address1: input.street,
+          city: input.city,
+          postalCode: input.zip,
+          country: input.country,
+          website: input.website,
+          tags: ['kunde', 'portal-auto-sync'],
+        });
+
+        if (ghlContact) {
+          await db.updateContact(id, input.tenantId, { ghlContactId: ghlContact.id });
+          console.log(`[Contact Create] Synced to GHL: ${ghlContact.id}`);
+        }
+      } catch (error) {
+        console.error('[Contact Create] GHL sync failed:', error);
+        // Don't fail contact creation if GHL sync fails
+      }
+
       return { id };
     }),
 
