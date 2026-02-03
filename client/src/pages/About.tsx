@@ -297,6 +297,11 @@ export default function About() {
               </Card>
             ))}
           </div>
+
+          {/* Lizenz-Hinweis */}
+          <p className="text-sm text-gray-500 text-center mt-8 max-w-2xl mx-auto">
+            Regulierte Finanzdienstleistungen werden ausschließlich durch unsere lizenzierten Partner mit entsprechenden Genehmigungen erbracht.
+          </p>
         </div>
       </section>
 
