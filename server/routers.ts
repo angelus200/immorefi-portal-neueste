@@ -1883,12 +1883,41 @@ const contractRouter = router({
       if (assignment.userId !== ctx.user.id && ctx.user.role !== "superadmin" && ctx.user.role !== "tenant_admin") {
         throw new Error("Nicht autorisiert");
       }
-      
+
       const contract = await db.getContractById(assignment.contractId, assignment.tenantId);
       if (!contract) throw new Error("Vertrag nicht gefunden");
-      
-      const { url } = await storageGet(contract.fileKey);
-      
+
+      let url: string;
+
+      // Check if this is a template-based contract (virtual fileKey)
+      if (contract.fileKey.startsWith('template-')) {
+        // Extract template ID from fileKey format: template-{id}-{timestamp}
+        const templateId = parseInt(contract.fileKey.split('-')[1]);
+
+        if (!isNaN(templateId)) {
+          // Fetch the template content
+          const template = await db.getContractTemplateById(templateId);
+
+          if (template && template.content) {
+            // Return template content as base64 data URL for HTML display
+            const base64Content = Buffer.from(template.content).toString('base64');
+            url = `data:text/html;base64,${base64Content}`;
+          } else {
+            throw new Error("Template-Inhalt nicht gefunden");
+          }
+        } else {
+          throw new Error("Ungültige Template-ID im Vertrag");
+        }
+      } else if (contract.fileContent) {
+        // If fileContent exists in database, use it (for future DB-stored files)
+        const mimeType = contract.fileMimeType || 'application/pdf';
+        url = `data:${mimeType};base64,${contract.fileContent}`;
+      } else {
+        // Fall back to storage for legacy uploaded files
+        const storage = await storageGet(contract.fileKey);
+        url = storage.url;
+      }
+
       await db.createAuditLog({
         tenantId: assignment.tenantId,
         userId: ctx.user.id,
@@ -1896,7 +1925,7 @@ const contractRouter = router({
         entityType: "contract",
         entityId: contract.id,
       });
-      
+
       return { url, fileName: contract.fileName };
     }),
 

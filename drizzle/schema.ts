@@ -358,6 +358,8 @@ export const contracts = mysqlTable("contracts", {
   description: text("description"),
   fileKey: varchar("fileKey", { length: 500 }).notNull(),
   fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileContent: text("fileContent", { length: 16777215 }), // LONGTEXT for storing file as base64
+  fileMimeType: varchar("fileMimeType", { length: 100 }), // e.g., application/pdf
   version: varchar("version", { length: 20 }).default("1.0").notNull(),
   status: contractStatusEnum.default("draft").notNull(),
   // Rechtliche Hinweise
