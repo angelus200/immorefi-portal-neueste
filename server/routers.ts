@@ -2617,7 +2617,7 @@ const chatRouter = router({
       const message = await db.createMessage({
         conversationId: input.conversationId,
         senderId: ctx.user.id,
-        messageSenderRole: senderRole,
+        senderRole,
         content: input.content,
       });
 
@@ -2682,7 +2682,7 @@ const chatRouter = router({
       const message = await db.createMessage({
         conversationId: conversation.id,
         senderId: ctx.user.id,
-        messageSenderRole: 'admin',
+        senderRole: 'admin',
         content: input.message,
       });
 
