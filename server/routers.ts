@@ -1,5 +1,6 @@
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "./db";
 import { storagePut, storageGet } from "./storage";
@@ -2532,22 +2533,27 @@ const chatRouter = router({
       const conversation = await db.getConversationById(input.conversationId);
 
       if (!conversation) {
-        throw new Error('Conversation not found');
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Conversation not found',
+        });
       }
 
       // Check access: admins can see all, customers only their own
-      if (
-        ctx.user.role !== 'superadmin' &&
-        ctx.user.role !== 'tenant_admin' &&
-        conversation.customerId !== ctx.user.id
-      ) {
-        throw new Error('Access denied');
+      const isAdmin = ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin';
+      const isConversationOwner = conversation.customerId === ctx.user.id;
+
+      if (!isAdmin && !isConversationOwner) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have access to this conversation',
+        });
       }
 
       const messages = await db.getMessagesByConversation(input.conversationId);
 
       // Mark messages as read for the current user's role
-      const readByRole = (ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin') ? 'admin' : 'customer';
+      const readByRole = isAdmin ? 'admin' : 'customer';
       await db.markConversationMessagesAsRead(input.conversationId, readByRole);
 
       return {
@@ -2604,20 +2610,25 @@ const chatRouter = router({
       const conversation = await db.getConversationById(input.conversationId);
 
       if (!conversation) {
-        throw new Error('Conversation not found');
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Conversation not found',
+        });
       }
 
-      // Check access
-      if (
-        ctx.user.role !== 'superadmin' &&
-        ctx.user.role !== 'tenant_admin' &&
-        conversation.customerId !== ctx.user.id
-      ) {
-        throw new Error('Access denied');
+      // Check access: admins can send to any conversation, customers only to their own
+      const isAdmin = ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin';
+      const isConversationOwner = conversation.customerId === ctx.user.id;
+
+      if (!isAdmin && !isConversationOwner) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have access to this conversation',
+        });
       }
 
       // Determine sender role
-      const senderRole = (ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin') ? 'admin' : 'customer';
+      const senderRole = isAdmin ? 'admin' : 'customer';
 
       // IMPORTANT: DB column name is 'messageSenderRole' (from enum name), not 'senderRole'
       // createMessage returns just the ID (number), not the full object!
