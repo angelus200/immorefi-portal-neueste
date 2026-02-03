@@ -870,49 +870,49 @@ export default function Home() {
               <CardHeader>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-primary">Woche 11-16</span>
-                  <span className="text-lg font-bold text-primary">Erfolgsbasis</span>
+                  <span className="text-lg font-bold text-primary">Nach Vereinbarung</span>
                 </div>
                 <CardTitle className="text-2xl">Kapitalakquise</CardTitle>
-                <CardDescription>Platzierung bei Investoren</CardDescription>
+                <CardDescription>Platzierung über Kapitalmarkt</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <h4 className="font-semibold text-sm mb-2 text-primary">Sie präsentieren:</h4>
+                  <h4 className="font-semibold text-sm mb-2 text-primary">Sie erhalten:</h4>
                   <ul className="space-y-1 text-sm text-muted-foreground">
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                      <span>Ihr Projekt in Investorengesprächen</span>
+                      <span>Zugang zu OTC-Marktplätzen</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                      <span>Q&A mit potenziellen Investoren</span>
+                      <span>Listung auf Private Debt Plattformen</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                      <span>Due Diligence Unterlagen</span>
+                      <span>Professionelle Investorendokumentation</span>
                     </li>
                   </ul>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm mb-2 text-primary">Wir platzieren:</h4>
+                  <h4 className="font-semibold text-sm mb-2 text-primary">Wir übernehmen:</h4>
                   <ul className="space-y-1 text-sm text-muted-foreground">
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                      <span>Zugang zu unserem Investorennetzwerk</span>
+                      <span>Platzierung auf regulierten Marktplätzen</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                      <span>Verhandlung & Vertragsabschluss</span>
+                      <span>Koordination mit Handelspartnern</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                      <span>Closing & Kapitalbereitstellung</span>
+                      <span>Abwicklung & Settlement</span>
                     </li>
                   </ul>
                 </div>
                 <div className="pt-4 border-t">
                   <p className="text-xs text-muted-foreground">
-                    <strong>Ergebnis:</strong> Kapital auf Ihrem Konto – Vergütung nur bei Erfolg
+                    <strong>Ergebnis:</strong> Kapital auf Ihrem Konto über regulierte Marktinfrastruktur
                   </p>
                 </div>
               </CardContent>
@@ -920,7 +920,7 @@ export default function Home() {
           </div>
 
           {/* Bottom Info */}
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto space-y-6">
             <Card className="border-primary/20 bg-primary/5">
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
@@ -939,6 +939,10 @@ export default function Home() {
                 </div>
               </CardContent>
             </Card>
+
+            <p className="text-sm text-center text-muted-foreground">
+              Regulierte Finanzdienstleistungen werden ausschließlich durch unsere lizenzierten Partner mit entsprechenden Genehmigungen erbracht.
+            </p>
           </div>
         </div>
       </section>
