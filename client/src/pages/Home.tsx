@@ -239,7 +239,7 @@ export default function Home() {
               <div className="relative rounded-3xl shadow-2xl overflow-hidden">
                 {/* Professional Real Estate Image */}
                 <img
-                  src="/images/AdobeStock_650048976.jpeg"
+                  src="/images/hero-immobilien.jpg"
                   alt="Professionelles Immobilien-Stadtmodell"
                   className="w-full h-[500px] object-cover"
                 />
