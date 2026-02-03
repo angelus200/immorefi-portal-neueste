@@ -2614,11 +2614,11 @@ const chatRouter = router({
       // Determine sender role
       const senderRole = (ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin') ? 'admin' : 'customer';
 
-      // Create message with correct field name: senderRole (not messageSenderRole!)
+      // IMPORTANT: DB column name is 'messageSenderRole' (from enum name), not 'senderRole'
       const message = await db.createMessage({
         conversationId: input.conversationId,
         senderId: ctx.user.id,
-        senderRole, // ✅ Correct field name matching schema
+        messageSenderRole: senderRole, // ✅ Matches DB column name
         content: input.content,
       });
 
@@ -2680,10 +2680,11 @@ const chatRouter = router({
       }
 
       // Send the first message
+      // IMPORTANT: DB column name is 'messageSenderRole' (from enum name)
       const message = await db.createMessage({
         conversationId: conversation.id,
         senderId: ctx.user.id,
-        senderRole: 'admin',
+        messageSenderRole: 'admin', // ✅ Matches DB column name
         content: input.message,
       });
 
