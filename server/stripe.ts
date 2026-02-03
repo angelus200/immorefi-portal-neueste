@@ -28,6 +28,14 @@ export const PRODUCTS = {
     price: 2990, // €29,90 in cents
     currency: 'eur',
   },
+  ERSTBERATUNG: {
+    id: 'erstberatung',
+    name: 'Persönliche Erstberatung',
+    description: 'Persönliches 1:1 Gespräch (60 Minuten) zur Analyse Ihrer Finanzierungssituation, Einschätzung der Kapitalmarktoptionen und konkreten Handlungsempfehlungen.',
+    price: 85000, // €850,00 in cents
+    currency: 'eur',
+    successUrl: 'https://calendly.com/t-gross-lce/besprechung',
+  },
 } as const;
 
 export type ProductId = keyof typeof PRODUCTS;

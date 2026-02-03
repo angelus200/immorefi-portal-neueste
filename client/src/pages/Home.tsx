@@ -947,18 +947,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Contact Form Section */}
+      {/* Contact Section */}
       <section id="kontakt" className="py-20 lg:py-32">
         <div className="container">
           <div className="grid lg:grid-cols-2 gap-12 items-start">
             <div className="space-y-8">
               <div>
                 <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                  Starten Sie Ihre <span className="text-primary">Anfrage</span>
+                  Kontaktieren Sie <span className="text-primary">uns</span>
                 </h2>
                 <p className="text-lg text-muted-foreground">
-                  Füllen Sie das Formular aus und wir melden uns innerhalb von 48 Stunden 
-                  für ein erstes Gespräch bei Ihnen.
+                  Buchen Sie eine persönliche Erstberatung oder kontaktieren Sie uns direkt
+                  per Telefon oder E-Mail.
                 </p>
               </div>
               
@@ -1018,134 +1018,65 @@ export default function Home() {
               </div>
             </div>
             
-            {/* Lead Form */}
-            <Card className="shadow-xl border-2">
-              <CardHeader>
-                <CardTitle>Kontaktformular</CardTitle>
-                <CardDescription>
-                  Alle Felder mit * sind Pflichtfelder
-                </CardDescription>
+            {/* Erstberatung Box */}
+            <Card className="shadow-xl border-2 border-primary">
+              <CardHeader className="text-center pb-2">
+                <CardTitle className="text-2xl">Persönliche Erstberatung</CardTitle>
+                <div className="text-5xl font-bold text-primary mt-4">€ 850</div>
+                <div className="text-sm text-muted-foreground">zzgl. MwSt. | 60 Minuten</div>
               </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Name *</Label>
-                      <Input
-                        id="name"
-                        placeholder="Max Mustermann"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">E-Mail *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="max@beispiel.de"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Telefon</Label>
-                      <Input
-                        id="phone"
-                        placeholder="+49 123 456789"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="company">Unternehmen</Label>
-                      <Input
-                        id="company"
-                        placeholder="Firma GmbH"
-                        value={formData.company}
-                        onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="kapitalbedarf">Kapitalbedarf</Label>
-                      <Select
-                        value={formData.kapitalbedarf}
-                        onValueChange={(value) => setFormData({ ...formData, kapitalbedarf: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Bitte wählen" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="unter-500k">Unter 500.000 €</SelectItem>
-                          <SelectItem value="500k-1m">500.000 € - 1 Mio. €</SelectItem>
-                          <SelectItem value="1m-5m">1 Mio. € - 5 Mio. €</SelectItem>
-                          <SelectItem value="5m-10m">5 Mio. € - 10 Mio. €</SelectItem>
-                          <SelectItem value="ueber-10m">Über 10 Mio. €</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="zeithorizont">Zeithorizont</Label>
-                      <Select
-                        value={formData.zeithorizont}
-                        onValueChange={(value) => setFormData({ ...formData, zeithorizont: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Bitte wählen" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="sofort">Sofort</SelectItem>
-                          <SelectItem value="1-3-monate">1-3 Monate</SelectItem>
-                          <SelectItem value="3-6-monate">3-6 Monate</SelectItem>
-                          <SelectItem value="6-12-monate">6-12 Monate</SelectItem>
-                          <SelectItem value="ueber-12-monate">Über 12 Monate</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="beschreibung">Projektbeschreibung</Label>
-                    <Textarea
-                      id="beschreibung"
-                      placeholder="Beschreiben Sie kurz Ihr Projekt oder Anliegen..."
-                      rows={4}
-                      value={formData.beschreibung}
-                      onChange={(e) => setFormData({ ...formData, beschreibung: e.target.value })}
-                    />
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    size="lg" 
+              <CardContent className="space-y-6">
+                <div className="border-t pt-6">
+                  <h4 className="font-semibold mb-4">Leistungsumfang:</h4>
+                  <ul className="space-y-3">
+                    {[
+                      'Persönliches 1:1 Gespräch',
+                      'Analyse Ihrer Finanzierungssituation',
+                      'Einschätzung der Kapitalmarktoptionen',
+                      'Konkrete Handlungsempfehlungen',
+                    ].map((item, index) => (
+                      <li key={index} className="flex items-center gap-3">
+                        <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="border-t pt-6">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Nach Ihrer Zahlung werden Sie direkt zur Terminbuchung weitergeleitet.
+                    Wählen Sie Ihren Wunschtermin aus unserem Kalender.
+                  </p>
+                  <Button
                     className="w-full"
-                    disabled={createLead.isPending}
+                    size="lg"
+                    onClick={() => {
+                      if (!user) {
+                        window.location.href = `/sign-in?redirect_url=${encodeURIComponent('/#kontakt')}`;
+                        return;
+                      }
+                      createCheckout.mutate({ productId: 'ERSTBERATUNG' });
+                    }}
+                    disabled={createCheckout.isPending}
                   >
-                    {createLead.isPending ? (
+                    {createCheckout.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Wird gesendet...
+                        Lädt...
                       </>
                     ) : (
                       <>
-                        Anfrage absenden
-                        <ArrowRight className="ml-2 h-5 w-5" />
+                        Erstberatung buchen
+                        <ArrowRight className="ml-2 h-4 w-4" />
                       </>
                     )}
                   </Button>
-                  
-                  <p className="text-xs text-muted-foreground text-center">
-                    Mit dem Absenden stimmen Sie unserer Datenschutzerklärung zu.
-                  </p>
-                </form>
+                </div>
+
+                <p className="text-xs text-center text-muted-foreground">
+                  Nach der Zahlung können Sie sofort einen Termin buchen
+                </p>
               </CardContent>
             </Card>
           </div>

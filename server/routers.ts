@@ -2124,7 +2124,12 @@ const orderRouter = router({
       }
       
       const origin = ctx.req.headers.origin || 'http://localhost:3000';
-      
+
+      // Use custom success URL if defined in product, otherwise default
+      const successUrl = 'successUrl' in product && product.successUrl
+        ? product.successUrl
+        : `${origin}/shop/success?session_id={CHECKOUT_SESSION_ID}`;
+
       // Create Stripe checkout session
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
@@ -2142,7 +2147,7 @@ const orderRouter = router({
           },
         ],
         mode: 'payment',
-        success_url: `${origin}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
+        success_url: successUrl,
         cancel_url: `${origin}/shop`,
         client_reference_id: ctx.user.id.toString(),
         customer_email: ctx.user.email || undefined,
