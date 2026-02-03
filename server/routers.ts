@@ -2615,7 +2615,8 @@ const chatRouter = router({
       const senderRole = (ctx.user.role === 'superadmin' || ctx.user.role === 'tenant_admin') ? 'admin' : 'customer';
 
       // IMPORTANT: DB column name is 'messageSenderRole' (from enum name), not 'senderRole'
-      const message = await db.createMessage({
+      // createMessage returns just the ID (number), not the full object!
+      const messageId = await db.createMessage({
         conversationId: input.conversationId,
         senderId: ctx.user.id,
         messageSenderRole: senderRole, // ✅ Matches DB column name
@@ -2629,10 +2630,10 @@ const chatRouter = router({
         userId: ctx.user.id,
         action: 'create',
         entityType: 'message',
-        entityId: message.id,
+        entityId: messageId, // ✅ Using the ID directly
       });
 
-      return message;
+      return { id: messageId, conversationId: input.conversationId };
     }),
 
   // Get unread message count
@@ -2664,8 +2665,10 @@ const chatRouter = router({
       }
 
       // Create conversation if it doesn't exist
+      let conversationId: number;
       if (!conversation) {
-        conversation = await db.createConversation({
+        // createConversation returns just the ID (number), not the full object!
+        conversationId = await db.createConversation({
           customerId: input.customerId,
           orderId: input.orderId ?? null,
           conversationStatus: 'open',
@@ -2675,32 +2678,38 @@ const chatRouter = router({
           userId: ctx.user.id,
           action: 'create',
           entityType: 'conversation',
-          entityId: conversation.id,
+          entityId: conversationId,
         });
+
+        // Fetch the full conversation object for return
+        conversation = await db.getConversationById(conversationId);
+      } else {
+        conversationId = conversation.id;
       }
 
       // Send the first message
       // IMPORTANT: DB column name is 'messageSenderRole' (from enum name)
-      const message = await db.createMessage({
-        conversationId: conversation.id,
+      // createMessage returns just the ID (number), not the full object!
+      const messageId = await db.createMessage({
+        conversationId, // ✅ Now using the actual ID
         senderId: ctx.user.id,
-        messageSenderRole: 'admin', // ✅ Matches DB column name
+        messageSenderRole: 'admin',
         content: input.message,
       });
 
       // Update conversation last message timestamp
-      await db.updateConversationLastMessage(conversation.id);
+      await db.updateConversationLastMessage(conversationId);
 
       await db.createAuditLog({
         userId: ctx.user.id,
         action: 'create',
         entityType: 'message',
-        entityId: message.id,
+        entityId: messageId, // ✅ Using the ID directly
       });
 
       return {
         conversation,
-        message,
+        messageId, // Return the ID instead of trying to return non-existent object
       };
     }),
 
