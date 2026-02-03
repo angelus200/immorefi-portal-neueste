@@ -707,67 +707,237 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Process Section - Stufenmodell */}
+      {/* Process Section - Timeline Roadmap */}
       <section id="prozess" className="py-20 lg:py-32 bg-muted/30">
         <div className="container">
-          <div className="text-center max-w-3xl mx-auto mb-16">
+          {/* Header */}
+          <div className="text-center max-w-4xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Unser <span className="text-primary">Stufenmodell</span>
+              Von der Analyse zum <span className="text-primary">Kapital</span>
             </h2>
-            <p className="text-lg text-muted-foreground">
-              Die Leistungserbringung erfolgt stufenweise – transparent und planbar
+            <p className="text-xl text-muted-foreground mb-8">
+              Von der ersten Analyse bis zum Kapital auf Ihrem Konto: In 90-120 Tagen strukturieren
+              wir Ihre Immobilienfinanzierung über den Kapitalmarkt.
             </p>
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium">
+              <Calendar className="h-4 w-4" />
+              Gesamtdauer: 90-120 Tage bis zur Finanzierung
+            </div>
           </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                step: "Stufe 1",
-                title: "Analyse & Strukturierungsdiagnose",
-                price: "€ 2.990",
-                description: "Eigenständige, abgeschlossene Beratungsleistung als Voraussetzung für alle weiteren Schritte. Inkl. SWOT-Analyse, Finanzierungsfähigkeit, Strukturierungsoptionen und Handlungsempfehlungen.",
-                highlight: true,
-              },
-              {
-                step: "Stufe 2",
-                title: "Strukturierung",
-                price: "Pauschale je Modul",
-                description: "CLN-Strukturen, Fonds- oder SPV-Setups, Holding-Umbauten, Anleihen oder AMC – separate Pauschalen je nach gewähltem Strukturierungsansatz.",
-                highlight: false,
-              },
-              {
-                step: "Stufe 3",
-                title: "Umsetzung & Kapitalakquise",
-                price: "Erfolgsabhängig",
-                description: "Erfolgsabhängige Vergütung ausschließlich auf tatsächlich eingeworbenes Kapital. Platzierung durch lizenzierte Partner.",
-                highlight: false,
-              },
-            ].map((item, index) => (
-              <Card key={index} className={`relative ${item.highlight ? 'border-primary border-2 shadow-lg' : ''}`}>
-                {item.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
-                      Einstieg
-                    </span>
+
+          {/* Timeline Visual */}
+          <div className="max-w-6xl mx-auto mb-16">
+            <div className="hidden md:flex items-center justify-between relative mb-12">
+              {/* Timeline Line */}
+              <div className="absolute top-8 left-0 right-0 h-1 bg-primary/20" style={{ width: 'calc(100% - 64px)', marginLeft: '32px' }} />
+
+              {/* Timeline Points */}
+              <div className="relative flex justify-between w-full">
+                {[
+                  { week: "Woche 1-4", label: "Analyse" },
+                  { week: "Woche 5-10", label: "Strukturierung" },
+                  { week: "Woche 11-16", label: "Kapitalakquise" },
+                  { week: "Tag X", label: "Kapital!" }
+                ].map((point, index) => (
+                  <div key={index} className="flex flex-col items-center relative z-10">
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold ${
+                      index === 3
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-primary/20 text-primary'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    <div className="text-sm font-semibold mt-2 text-center">{point.week}</div>
+                    <div className="text-xs text-muted-foreground text-center">{point.label}</div>
                   </div>
-                )}
-                <CardHeader className="text-center">
-                  <div className="text-sm font-medium text-primary mb-2">{item.step}</div>
-                  <CardTitle className="text-xl">{item.title}</CardTitle>
-                  <div className="text-2xl font-bold text-primary mt-2">{item.price}</div>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-base text-center">{item.description}</CardDescription>
-                </CardContent>
-              </Card>
-            ))}
+                ))}
+              </div>
+            </div>
           </div>
-          
-          <div className="mt-12 text-center">
-            <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-              Eine Anrechnung des Analysehonorars auf spätere Leistungen erfolgt nicht automatisch, 
-              sondern nur auf Basis gesonderter Vereinbarung. Alle Preise zzgl. MwSt.
-            </p>
+
+          {/* Stage Cards */}
+          <div className="grid lg:grid-cols-3 gap-8 mb-12">
+            {/* Stage 1: Analyse */}
+            <Card className="border-2 border-primary shadow-lg relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-primary" />
+              <CardHeader>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-primary">Woche 1-4</span>
+                  <span className="text-2xl font-bold text-primary">€ 2.990</span>
+                </div>
+                <CardTitle className="text-2xl">Analyse & Diagnose</CardTitle>
+                <CardDescription>Fundierte Bewertung Ihrer Ausgangslage</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-sm mb-2 text-primary">Sie liefern:</h4>
+                  <ul className="space-y-1 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Jahresabschlüsse & Projektkalkulationen</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Bestehende Finanzierungsverträge</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Grundbuchauszüge & Bewertungen</span>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm mb-2 text-primary">Wir analysieren:</h4>
+                  <ul className="space-y-1 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Ihre Kapitalstruktur & Schwachstellen</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Finanzierungsoptionen (CLN, Fonds, etc.)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Regulatorische Anforderungen</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="pt-4 border-t">
+                  <p className="text-xs text-muted-foreground">
+                    <strong>Ergebnis:</strong> Detaillierter Analysebericht mit Roadmap und klarer Handlungsempfehlung
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Stage 2: Strukturierung */}
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardHeader>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-primary">Woche 5-10</span>
+                  <span className="text-lg font-bold text-primary">Pauschale</span>
+                </div>
+                <CardTitle className="text-2xl">Strukturierung</CardTitle>
+                <CardDescription>Umsetzung der Kapitalmarktstrategie</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-sm mb-2 text-primary">Sie entscheiden:</h4>
+                  <ul className="space-y-1 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Welches Strukturierungsmodell</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Welche Investorengruppe</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Zeitplan & Meilensteine</span>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm mb-2 text-primary">Wir strukturieren:</h4>
+                  <ul className="space-y-1 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>CLN, Fonds oder SPV-Setup</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Rechtliche & regulatorische Dokumente</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Term Sheets & Investorenunterlagen</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="pt-4 border-t">
+                  <p className="text-xs text-muted-foreground">
+                    <strong>Ergebnis:</strong> Vollständige Kapitalmarkt-Struktur, rechtssicher und platzierungsbereit
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Stage 3: Kapitalakquise */}
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardHeader>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-primary">Woche 11-16</span>
+                  <span className="text-lg font-bold text-primary">Erfolgsbasis</span>
+                </div>
+                <CardTitle className="text-2xl">Kapitalakquise</CardTitle>
+                <CardDescription>Platzierung bei Investoren</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-sm mb-2 text-primary">Sie präsentieren:</h4>
+                  <ul className="space-y-1 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Ihr Projekt in Investorengesprächen</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Q&A mit potenziellen Investoren</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Due Diligence Unterlagen</span>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm mb-2 text-primary">Wir platzieren:</h4>
+                  <ul className="space-y-1 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Zugang zu unserem Investorennetzwerk</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Verhandlung & Vertragsabschluss</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Closing & Kapitalbereitstellung</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="pt-4 border-t">
+                  <p className="text-xs text-muted-foreground">
+                    <strong>Ergebnis:</strong> Kapital auf Ihrem Konto – Vergütung nur bei Erfolg
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Bottom Info */}
+          <div className="max-w-4xl mx-auto">
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Transparenz & Planbarkeit</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Stufe 1 ist eine eigenständige Leistung (€ 2.990 zzgl. MwSt.) und Voraussetzung für alle weiteren Schritte.
+                      Stufe 2 wird als Pauschale je nach gewähltem Strukturierungsansatz vereinbart.
+                      Stufe 3 wird ausschließlich erfolgsabhängig auf tatsächlich eingeworbenes Kapital vergütet.
+                      Platzierung erfolgt durch lizenzierte Partner.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
