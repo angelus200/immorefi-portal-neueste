@@ -53,33 +53,6 @@ function KapitallueckenRechner() {
   const [zeitverzug, setZeitverzug] = useState(6);
   const [showResult, setShowResult] = useState(false);
 
-  // Auth and navigation
-  const { user } = useAuth();
-  const [, setLocation] = useLocation();
-
-  // Stripe checkout mutation
-  const checkoutMutation = trpc.order.createCheckout.useMutation({
-    onSuccess: (data) => {
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    },
-    onError: (error) => {
-      toast.error(error.message || 'Fehler beim Checkout');
-    },
-  });
-
-  // Handle Analyse anfordern button click
-  const handleAnalyseClick = () => {
-    if (!user) {
-      setLocation('/sign-in?redirect=/');
-      toast.info('Bitte melden Sie sich an, um fortzufahren');
-      return;
-    }
-    // Trigger Stripe checkout for ANALYSIS product
-    checkoutMutation.mutate({ productId: 'ANALYSIS' });
-  };
-
   const verzugskosten = (baukosten * 0.005) * zeitverzug; // 0.5% pro Monat
   const gesamtbedarf = baukosten + verzugskosten;
   const verfuegbar = eigenkapital + bankdarlehen;
@@ -1149,6 +1122,33 @@ function VerzuegungskostenRechner() {
 // MAIN COMPONENT
 // ============================================
 export function FinanceCalculator() {
+  // Auth and navigation for Analyse button
+  const { user } = useAuth();
+  const [, setLocation] = useLocation();
+
+  // Stripe checkout mutation
+  const checkoutMutation = trpc.order.createCheckout.useMutation({
+    onSuccess: (data) => {
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Fehler beim Checkout');
+    },
+  });
+
+  // Handle Analyse anfordern button click
+  const handleAnalyseClick = () => {
+    if (!user) {
+      setLocation('/sign-in?redirect=/');
+      toast.info('Bitte melden Sie sich an, um fortzufahren');
+      return;
+    }
+    // Trigger Stripe checkout for ANALYSIS product
+    checkoutMutation.mutate({ productId: 'ANALYSIS' });
+  };
+
   return (
     <div className="space-y-6">
       <Tabs defaultValue="kapitalluecke" className="w-full">
