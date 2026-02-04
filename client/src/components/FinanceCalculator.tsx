@@ -7,11 +7,11 @@ import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { 
-  Calculator, 
-  TrendingUp, 
-  AlertTriangle, 
-  CheckCircle2, 
+import {
+  Calculator,
+  TrendingUp,
+  AlertTriangle,
+  CheckCircle2,
   ArrowRight,
   Building2,
   Banknote,
@@ -20,7 +20,10 @@ import {
   BarChart3,
   Shield
 } from "lucide-react";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 // Utility function to format currency
 const formatCurrency = (value: number): string => {
@@ -49,6 +52,33 @@ function KapitallueckenRechner() {
   const [baukosten, setBaukosten] = useState(12000000);
   const [zeitverzug, setZeitverzug] = useState(6);
   const [showResult, setShowResult] = useState(false);
+
+  // Auth and navigation
+  const { user } = useAuth();
+  const [, setLocation] = useLocation();
+
+  // Stripe checkout mutation
+  const checkoutMutation = trpc.order.createCheckout.useMutation({
+    onSuccess: (data) => {
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Fehler beim Checkout');
+    },
+  });
+
+  // Handle Analyse anfordern button click
+  const handleAnalyseClick = () => {
+    if (!user) {
+      setLocation('/sign-in?redirect=/');
+      toast.info('Bitte melden Sie sich an, um fortzufahren');
+      return;
+    }
+    // Trigger Stripe checkout for ANALYSIS product
+    checkoutMutation.mutate({ productId: 'ANALYSIS' });
+  };
 
   const verzugskosten = (baukosten * 0.005) * zeitverzug; // 0.5% pro Monat
   const gesamtbedarf = baukosten + verzugskosten;
@@ -1314,12 +1344,15 @@ export function FinanceCalculator() {
                 </p>
               </div>
             </div>
-            <Link href="/#kontakt">
-              <Button size="lg" className="whitespace-nowrap">
-                Analyse anfordern
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
+            <Button
+              size="lg"
+              className="whitespace-nowrap"
+              onClick={handleAnalyseClick}
+              disabled={checkoutMutation.isPending}
+            >
+              {checkoutMutation.isPending ? 'Lädt...' : 'Analyse anfordern'}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </div>
         </CardContent>
       </Card>
