@@ -90,8 +90,15 @@ function NewsGrid() {
         <Card key={item.guid} className="hover:shadow-lg transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-start justify-between mb-3">
-              <div className="text-xs text-muted-foreground">
-                {formatDate(item.pubDate)}
+              <div className="flex flex-col gap-1">
+                <div className="text-xs text-muted-foreground">
+                  {formatDate(item.pubDate)}
+                </div>
+                {item.source && (
+                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium w-fit">
+                    {item.source}
+                  </div>
+                )}
               </div>
               <Newspaper className="h-4 w-4 text-primary flex-shrink-0" />
             </div>

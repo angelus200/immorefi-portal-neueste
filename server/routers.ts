@@ -3346,31 +3346,71 @@ const newsRouter = router({
   getNewsFeed: publicProcedure.query(async () => {
     try {
       const xml2js = (await import('xml2js')).default;
-      const response = await fetch('https://www.baugeldzentrum.de/rss.php');
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch RSS feed');
-      }
+      // RSS Feed URLs von Bundesministerien
+      const feedUrls = [
+        {
+          url: 'https://www.bmwsb.bund.de/DE/tools-services/rssfeed/_functions/rssnewsfeed.xml?nn=43970',
+          source: 'BMWSB'
+        },
+        {
+          url: 'https://www.bundesfinanzministerium.de/SiteGlobals/Functions/RSSFeed/DE/Aktuelles/RSSAktuelles.xml',
+          source: 'BMF'
+        },
+        {
+          url: 'https://www.bmwk.de/SiteGlobals/Functions/RSSFeed/DE/RSSNewsfeed/RSSNewsfeed_Presse.xml',
+          source: 'BMWK'
+        }
+      ];
 
-      const xml = await response.text();
+      const allNewsItems: any[] = [];
       const parser = new xml2js.Parser({ explicitArray: false });
 
-      const result = await parser.parseStringPromise(xml);
-      const items = result.rss?.channel?.item || [];
+      // Fetch alle RSS Feeds parallel
+      await Promise.allSettled(
+        feedUrls.map(async ({ url, source }) => {
+          try {
+            const response = await fetch(url);
+            if (!response.ok) {
+              console.warn(`Failed to fetch RSS feed from ${source}: ${response.statusText}`);
+              return;
+            }
 
-      // Normalize items to array if single item
-      const newsItems = Array.isArray(items) ? items : [items];
+            const xml = await response.text();
+            const result = await parser.parseStringPromise(xml);
+            const items = result.rss?.channel?.item || result.feed?.entry || [];
 
-      // Return last 10 news items with cleaned data
-      return newsItems.slice(0, 10).map((item: any) => ({
-        title: item.title || '',
-        description: item.description || '',
-        link: item.link || '',
-        pubDate: item.pubDate || '',
-        guid: item.guid?._text || item.guid || item.link || '',
-      }));
+            // Normalize items to array if single item
+            const newsItems = Array.isArray(items) ? items : [items];
+
+            // Map and add source
+            newsItems.forEach((item: any) => {
+              allNewsItems.push({
+                title: item.title || '',
+                description: item.description || item.summary || '',
+                link: item.link?.['$']?.href || item.link || '',
+                pubDate: item.pubDate || item.published || item.updated || '',
+                guid: item.guid?._text || item.guid || item.id || item.link || '',
+                source: source,
+              });
+            });
+          } catch (error) {
+            console.error(`Error fetching RSS feed from ${source}:`, error);
+          }
+        })
+      );
+
+      // Sortiere nach Datum (neueste zuerst)
+      allNewsItems.sort((a, b) => {
+        const dateA = new Date(a.pubDate).getTime();
+        const dateB = new Date(b.pubDate).getTime();
+        return dateB - dateA;
+      });
+
+      // Return last 10 news items
+      return allNewsItems.slice(0, 10);
     } catch (error) {
-      console.error('Error fetching RSS feed:', error);
+      console.error('Error fetching RSS feeds:', error);
       return [];
     }
   }),
