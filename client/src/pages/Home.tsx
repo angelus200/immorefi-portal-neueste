@@ -48,6 +48,13 @@ const marketData = [
   { year: '2024', value: 12.5 }
 ];
 
+// Country flags mapping
+const countryFlags: Record<string, string> = {
+  'DE': '🇩🇪',
+  'AT': '🇦🇹',
+  'CH': '🇨🇭'
+};
+
 // NewsGrid component
 function NewsGrid() {
   const { data: news = [], isLoading } = trpc.news.getNewsFeed.useQuery();
@@ -95,7 +102,10 @@ function NewsGrid() {
                   {formatDate(item.pubDate)}
                 </div>
                 {item.source && (
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium w-fit">
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium w-fit">
+                    {item.country && countryFlags[item.country] && (
+                      <span className="text-sm">{countryFlags[item.country]}</span>
+                    )}
                     {item.source}
                   </div>
                 )}

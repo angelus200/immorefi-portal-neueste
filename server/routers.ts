@@ -3351,15 +3351,18 @@ const newsRouter = router({
       const feedUrls = [
         {
           url: 'https://www.bmwsb.bund.de/DE/tools-services/rssfeed/_functions/rssnewsfeed.xml?nn=43970',
-          source: 'BMWSB'
+          source: 'BMWSB',
+          country: 'DE'
         },
         {
           url: 'https://www.bundesfinanzministerium.de/SiteGlobals/Functions/RSSFeed/DE/Aktuelles/RSSAktuelles.xml',
-          source: 'BMF'
+          source: 'BMF',
+          country: 'DE'
         },
         {
           url: 'https://www.bmwk.de/SiteGlobals/Functions/RSSFeed/DE/RSSNewsfeed/RSSNewsfeed_Presse.xml',
-          source: 'BMWK'
+          source: 'BMWK',
+          country: 'DE'
         }
       ];
 
@@ -3368,7 +3371,7 @@ const newsRouter = router({
 
       // Fetch alle RSS Feeds parallel
       await Promise.allSettled(
-        feedUrls.map(async ({ url, source }) => {
+        feedUrls.map(async ({ url, source, country }) => {
           try {
             const response = await fetch(url);
             if (!response.ok) {
@@ -3383,7 +3386,7 @@ const newsRouter = router({
             // Normalize items to array if single item
             const newsItems = Array.isArray(items) ? items : [items];
 
-            // Map and add source
+            // Map and add source + country
             newsItems.forEach((item: any) => {
               allNewsItems.push({
                 title: item.title || '',
@@ -3392,6 +3395,7 @@ const newsRouter = router({
                 pubDate: item.pubDate || item.published || item.updated || '',
                 guid: item.guid?._text || item.guid || item.id || item.link || '',
                 source: source,
+                country: country,
               });
             });
           } catch (error) {
