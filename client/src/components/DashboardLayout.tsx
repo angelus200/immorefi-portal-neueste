@@ -39,6 +39,7 @@ import {
   Calculator,
   BookOpen,
   MessageCircle,
+  Mail,
   UserPlus,
   Contact,
   Kanban,
@@ -99,6 +100,7 @@ const adminMenuSections: MenuSection[] = [
       { icon: FolderOpen, label: "Dokumente", path: "/documents" },
       { icon: FileCheck, label: "Verträge", path: "/admin/contracts" },
       { icon: MessageCircle, label: "Nachrichten", path: "/admin/messages" },
+      { icon: Mail, label: "Newsletter", path: "/admin/newsletter" },
     ],
   },
   {

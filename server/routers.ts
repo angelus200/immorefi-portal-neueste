@@ -3421,6 +3421,40 @@ const newsletterRouter = router({
   listActive: adminProcedure.query(async () => {
     return db.getActiveNewsletterSubscribers();
   }),
+
+  // Admin: Delete subscriber
+  delete: adminProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input, ctx }) => {
+      const subscriber = await db.getNewsletterSubscriberByEmail(input.email);
+      if (!subscriber) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Abonnent nicht gefunden',
+        });
+      }
+
+      // Hard delete from DB
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new Error("Database not available");
+
+      const { newsletterSubscribers } = await import('../drizzle/schema');
+      const { eq } = await import('drizzle-orm');
+
+      await dbInstance.delete(newsletterSubscribers)
+        .where(eq(newsletterSubscribers.email, input.email));
+
+      // Audit log
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'delete',
+        entityType: 'newsletter_subscriber',
+        entityId: subscriber.id,
+        oldValues: { email: input.email },
+      });
+
+      return { success: true, message: 'Abonnent gelöscht' };
+    }),
 });
 
 // ============================================

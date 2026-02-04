@@ -30,6 +30,7 @@ import AdminOrders from "./pages/admin/Orders";
 import AdminOnboardingData from "./pages/admin/OnboardingData";
 import AdminInvoices from "./pages/admin/Invoices";
 import AdminMessages from "./pages/admin/Messages";
+import AdminNewsletter from "./pages/admin/Newsletter";
 import AdminHandbuch from "./pages/AdminHandbuch";
 import Shop from "./pages/Shop";
 import ShopSuccess from "./pages/ShopSuccess";
@@ -110,6 +111,7 @@ function Router() {
       <Route path="/admin/onboarding" component={AdminOnboardingData} />
       <Route path="/admin/invoices" component={AdminInvoices} />
       <Route path="/admin/messages" component={AdminMessages} />
+      <Route path="/admin/newsletter" component={AdminNewsletter} />
       <Route path="/admin/handbuch" component={AdminHandbuch} />
       
       {/* Fallback */}
