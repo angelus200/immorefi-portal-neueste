@@ -29,7 +29,8 @@ import {
   bookings, InsertBooking, Booking,
   contractTemplates, InsertContractTemplate, ContractTemplate,
   partnerLogos, InsertPartnerLogo, PartnerLogo,
-  videos, InsertVideo, Video
+  videos, InsertVideo, Video,
+  newsletterSubscribers, InsertNewsletterSubscriber, NewsletterSubscriber
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1731,4 +1732,45 @@ export async function reorderVideos(updates: { id: number; sortOrder: number }[]
       .set({ sortOrder: update.sortOrder })
       .where(eq(videos.id, update.id));
   }
+}
+
+// ============================================
+// NEWSLETTER SUBSCRIBERS
+// ============================================
+
+export async function getNewsletterSubscriberByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(newsletterSubscribers).where(eq(newsletterSubscribers.email, email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createNewsletterSubscriber(subscriber: InsertNewsletterSubscriber) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(newsletterSubscribers).values(subscriber);
+  return result[0].insertId;
+}
+
+export async function updateNewsletterSubscriber(email: string, data: Partial<InsertNewsletterSubscriber>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(newsletterSubscribers).set(data).where(eq(newsletterSubscribers.email, email));
+}
+
+export async function getAllNewsletterSubscribers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(newsletterSubscribers).orderBy(desc(newsletterSubscribers.subscribedAt));
+}
+
+export async function getActiveNewsletterSubscribers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(newsletterSubscribers)
+    .where(and(
+      eq(newsletterSubscribers.confirmed, true),
+      eq(newsletterSubscribers.unsubscribedAt, null as any)
+    ))
+    .orderBy(desc(newsletterSubscribers.subscribedAt));
 }

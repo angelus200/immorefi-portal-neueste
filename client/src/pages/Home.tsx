@@ -132,6 +132,87 @@ function NewsGrid() {
   );
 }
 
+// Newsletter Form Component
+function NewsletterForm() {
+  const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const utils = trpc.useUtils();
+
+  const subscribeMutation = trpc.newsletter.subscribe.useMutation({
+    onSuccess: (data) => {
+      setIsSubmitted(true);
+      toast.success(data.message);
+      setEmail('');
+      setFirstName('');
+      // Reset success message after 5 seconds
+      setTimeout(() => setIsSubmitted(false), 5000);
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Fehler bei der Anmeldung');
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+
+    subscribeMutation.mutate({
+      email: email.trim(),
+      firstName: firstName.trim() || undefined,
+    });
+  };
+
+  if (isSubmitted) {
+    return (
+      <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400 py-4">
+        <CheckCircle2 className="h-5 w-5" />
+        <span className="font-medium">Erfolgreich angemeldet!</span>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="max-w-xl mx-auto">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Input
+          type="text"
+          placeholder="Vorname (optional)"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          disabled={subscribeMutation.isPending}
+          className="flex-1 h-12 text-base"
+        />
+        <Input
+          type="email"
+          placeholder="Ihre E-Mail-Adresse"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={subscribeMutation.isPending}
+          required
+          className="flex-1 h-12 text-base"
+        />
+        <Button
+          type="submit"
+          disabled={!email.trim() || subscribeMutation.isPending}
+          size="lg"
+          className="bg-cyan-600 hover:bg-cyan-700 h-12 px-8"
+        >
+          {subscribeMutation.isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Lädt...
+            </>
+          ) : (
+            'Anmelden'
+          )}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
@@ -1368,6 +1449,30 @@ export default function Home() {
               Jetzt Vertriebspartner werden
               <ArrowRight className="h-5 w-5" />
             </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter Section */}
+      <section className="py-16 lg:py-20 bg-gradient-to-br from-cyan-50 via-white to-cyan-50 dark:from-cyan-950/20 dark:via-background dark:to-cyan-950/20">
+        <div className="container">
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 bg-cyan-600/10 text-cyan-700 dark:text-cyan-400 px-4 py-2 rounded-full text-sm font-medium mb-6">
+              <Mail className="h-4 w-4" />
+              Newsletter
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Markt-Updates <span className="text-primary">erhalten</span>
+            </h2>
+            <p className="text-lg text-muted-foreground mb-8">
+              Aktuelle Entwicklungen in der Kapitalmarktfinanzierung – direkt in Ihr Postfach.
+            </p>
+
+            <NewsletterForm />
+
+            <p className="text-xs text-muted-foreground mt-4">
+              Kein Spam. Abmeldung jederzeit möglich.
+            </p>
           </div>
         </div>
       </section>

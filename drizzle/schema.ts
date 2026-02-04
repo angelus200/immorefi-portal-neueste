@@ -852,3 +852,21 @@ export const videos = mysqlTable("videos", {
 
 export type Video = typeof videos.$inferSelect;
 export type InsertVideo = typeof videos.$inferInsert;
+
+// ============================================
+// NEWSLETTER SUBSCRIBERS
+// ============================================
+
+export const newsletterSubscribers = mysqlTable("newsletter_subscribers", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  firstName: varchar("firstName", { length: 100 }),
+  subscribedAt: timestamp("subscribedAt").defaultNow().notNull(),
+  confirmed: boolean("confirmed").default(false).notNull(),
+  ghlContactId: varchar("ghlContactId", { length: 100 }),
+  unsubscribedAt: timestamp("unsubscribedAt"),
+  source: varchar("source", { length: 50 }).default("landing_page").notNull(),
+});
+
+export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
+export type InsertNewsletterSubscriber = typeof newsletterSubscribers.$inferInsert;

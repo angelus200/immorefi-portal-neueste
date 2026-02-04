@@ -3339,6 +3339,91 @@ const partnerLogoRouter = router({
 });
 
 // ============================================
+// NEWSLETTER ROUTER
+// ============================================
+
+const newsletterRouter = router({
+  subscribe: publicProcedure
+    .input(z.object({
+      email: z.string().email(),
+      firstName: z.string().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        // 1. Prüfe ob bereits angemeldet
+        const existing = await db.getNewsletterSubscriberByEmail(input.email);
+
+        if (existing) {
+          if (existing.unsubscribedAt) {
+            // Reaktivierung - unsubscribedAt auf null setzen
+            await db.updateNewsletterSubscriber(input.email, {
+              unsubscribedAt: null as any,
+              subscribedAt: new Date() as any,
+            });
+            return { success: true, message: 'Newsletter wieder aktiviert' };
+          }
+          return { success: true, message: 'Bereits angemeldet' };
+        }
+
+        // 2. In DB speichern
+        const subscriberId = await db.createNewsletterSubscriber({
+          email: input.email,
+          firstName: input.firstName,
+          source: 'landing_page',
+        });
+
+        // 3. In GoHighLevel als Contact anlegen mit Tag "newsletter"
+        try {
+          const { GoHighLevelService } = await import('./services/gohighlevel');
+          const ghlService = new GoHighLevelService();
+
+          const ghlContact = await ghlService.createContact({
+            email: input.email,
+            firstName: input.firstName,
+            tags: ['newsletter', 'landing-page'],
+          });
+
+          // GHL Contact ID speichern
+          if (ghlContact?.id) {
+            await db.updateNewsletterSubscriber(input.email, {
+              ghlContactId: ghlContact.id,
+            });
+          }
+        } catch (error) {
+          console.error('GHL sync failed:', error);
+          // Nicht abbrechen - DB-Eintrag ist wichtiger
+        }
+
+        // 4. Audit Log erstellen
+        await db.createAuditLog({
+          action: 'create',
+          entityType: 'newsletter_subscriber',
+          entityId: subscriberId,
+          newValues: { email: input.email, source: 'landing_page' },
+        });
+
+        return { success: true, message: 'Erfolgreich angemeldet' };
+      } catch (error: any) {
+        console.error('Newsletter subscription error:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Fehler bei der Anmeldung',
+        });
+      }
+    }),
+
+  // Admin: Get all subscribers
+  list: adminProcedure.query(async () => {
+    return db.getAllNewsletterSubscribers();
+  }),
+
+  // Admin: Get active subscribers only
+  listActive: adminProcedure.query(async () => {
+    return db.getActiveNewsletterSubscribers();
+  }),
+});
+
+// ============================================
 // RSS NEWS FEED ROUTER
 // ============================================
 
@@ -3464,6 +3549,7 @@ export const appRouter = router({
   partnerLogo: partnerLogoRouter,
   video: videoRouter,
   news: newsRouter,
+  newsletter: newsletterRouter,
 });
 
 export type AppRouter = typeof appRouter;
