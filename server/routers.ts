@@ -3443,12 +3443,8 @@ const newsRouter = router({
           url: 'https://www.bundesfinanzministerium.de/SiteGlobals/Functions/RSSFeed/DE/Aktuelles/RSSAktuelles.xml',
           source: 'BMF',
           country: 'DE'
-        },
-        {
-          url: 'https://www.bmwk.de/SiteGlobals/Functions/RSSFeed/DE/RSSNewsfeed/RSSNewsfeed_Presse.xml',
-          source: 'BMWK',
-          country: 'DE'
         }
+        // BMWK Feed entfernt - URL gibt 404 Not Found
       ];
 
       const allNewsItems: any[] = [];
