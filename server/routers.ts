@@ -6,6 +6,7 @@ import * as db from "./db";
 import { storagePut, storageGet } from "./storage";
 import { nanoid } from "nanoid";
 import { notifyOwner } from "./_core/notification";
+import { Resend } from "resend";
 
 // ============================================
 // TENANT ROUTER
@@ -3454,6 +3455,86 @@ const newsletterRouter = router({
       });
 
       return { success: true, message: 'Abonnent gelöscht' };
+    }),
+
+  // Admin: Send newsletter to active subscribers
+  send: adminProcedure
+    .input(z.object({
+      subject: z.string().min(1, 'Betreff erforderlich'),
+      htmlContent: z.string().min(1, 'Inhalt erforderlich'),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      // Initialize Resend
+      const resend = new Resend(process.env.RESEND_API_KEY);
+
+      // Get active subscribers
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new Error("Database not available");
+
+      const { newsletterSubscribers } = await import('../drizzle/schema');
+      const { isNull } = await import('drizzle-orm');
+
+      const subscribers = await dbInstance.select()
+        .from(newsletterSubscribers)
+        .where(isNull(newsletterSubscribers.unsubscribedAt));
+
+      if (subscribers.length === 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Keine aktiven Abonnenten vorhanden',
+        });
+      }
+
+      // Prepare emails
+      const emails = subscribers.map(sub => ({
+        from: 'ImmoRefi Portal <onboarding@resend.dev>',
+        to: sub.email,
+        subject: input.subject,
+        html: input.htmlContent,
+      }));
+
+      // Send in batches (max 100 per request)
+      let sentCount = 0;
+      const errors: string[] = [];
+
+      for (let i = 0; i < emails.length; i += 100) {
+        const batch = emails.slice(i, i + 100);
+        try {
+          await resend.batch.send(batch);
+          sentCount += batch.length;
+        } catch (error: any) {
+          console.error('Batch send error:', error);
+          errors.push(`Batch ${Math.floor(i / 100) + 1}: ${error.message}`);
+        }
+      }
+
+      // Audit log
+      await db.createAuditLog({
+        userId: ctx.user.id,
+        action: 'send',
+        entityType: 'newsletter',
+        entityId: 0,
+        newValues: {
+          subject: input.subject,
+          recipientCount: sentCount,
+          errors: errors.length > 0 ? errors : undefined,
+        },
+      });
+
+      if (errors.length > 0) {
+        return {
+          success: true,
+          sentCount,
+          errors,
+          message: `${sentCount} von ${subscribers.length} E-Mails versendet (${errors.length} Fehler)`,
+        };
+      }
+
+      return {
+        success: true,
+        sentCount,
+        message: `Newsletter erfolgreich an ${sentCount} Abonnenten versendet`,
+      };
     }),
 });
 
