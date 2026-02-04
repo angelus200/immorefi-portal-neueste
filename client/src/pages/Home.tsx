@@ -1033,6 +1033,169 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Praxisbeispiele Section */}
+      <section className="py-20 lg:py-32 bg-gradient-to-b from-transparent to-muted/30">
+        <div className="container">
+          {/* Header */}
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Praxisbeispiele aus unserer <span className="text-primary">Arbeit</span>
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Anonymisierte Fälle – echte Ergebnisse
+            </p>
+          </div>
+
+          {/* Case Studies Grid */}
+          <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto mb-8">
+            {/* Case 1 */}
+            <Card className="overflow-hidden border-2 hover:shadow-xl transition-shadow">
+              <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950/20 dark:to-cyan-900/10 p-6 border-b-2 border-cyan-200 dark:border-cyan-800">
+                <div className="inline-flex items-center gap-2 bg-cyan-600 text-white px-3 py-1 rounded-full text-xs font-semibold mb-4">
+                  <Building2 className="h-3 w-3" />
+                  Projektentwicklung
+                </div>
+                <h3 className="text-2xl font-bold mb-6 text-foreground">Baustopp abgewendet</h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-sm mb-2 text-muted-foreground">Ausgangslage:</h4>
+                    <ul className="space-y-2 text-sm">
+                      <li className="flex items-start gap-2">
+                        <span className="text-cyan-600 font-bold">•</span>
+                        <span>Projektvolumen: <strong className="text-cyan-600">18,4 Mio. €</strong></span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-cyan-600 font-bold">•</span>
+                        <span>Problem: Bank reduziert Kreditlinie um <strong className="text-red-600">25%</strong></span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-cyan-600 font-bold">•</span>
+                        <span>Risiko: Baustopp nach 4 Monaten drohend</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-sm mb-2 text-muted-foreground">Analyse-Ergebnis:</h4>
+                    <ul className="space-y-2 text-sm">
+                      <li className="flex items-start gap-2">
+                        <span className="text-cyan-600 font-bold">•</span>
+                        <span>Strukturelle Kapitallücke: <strong className="text-cyan-600">2,1 Mio. €</strong></span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-cyan-600 font-bold">•</span>
+                        <span>Bankfinanzierung allein nicht tragfähig</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <CardContent className="p-6 bg-background">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-sm mb-2 text-primary">Unsere Lösung:</h4>
+                    <p className="text-sm font-medium">Private-Debt-Tranche + SPV-Struktur</p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-sm mb-3 text-primary">Ergebnis für den Kunden:</h4>
+                    <ul className="space-y-2">
+                      {[
+                        'Klare Entscheidungsgrundlage',
+                        'Falsche Anschlussfinanzierung vermieden',
+                        'Projekt fortgesetzt'
+                      ].map((item, index) => (
+                        <li key={index} className="flex items-center gap-2 text-sm">
+                          <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Case 2 */}
+            <Card className="overflow-hidden border-2 hover:shadow-xl transition-shadow">
+              <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950/20 dark:to-cyan-900/10 p-6 border-b-2 border-cyan-200 dark:border-cyan-800">
+                <div className="inline-flex items-center gap-2 bg-cyan-600 text-white px-3 py-1 rounded-full text-xs font-semibold mb-4">
+                  <TrendingUp className="h-3 w-3" />
+                  Gewerblicher Bauträger
+                </div>
+                <h3 className="text-2xl font-bold mb-6 text-foreground">Kapitalmarktfähigkeit hergestellt</h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-sm mb-2 text-muted-foreground">Ausgangslage:</h4>
+                    <ul className="space-y-2 text-sm">
+                      <li className="flex items-start gap-2">
+                        <span className="text-cyan-600 font-bold">•</span>
+                        <span>Projektvolumen: <strong className="text-cyan-600">42 Mio. €</strong></span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-cyan-600 font-bold">•</span>
+                        <span>Problem: Eigenkapital ineffizient gebunden</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-cyan-600 font-bold">•</span>
+                        <span>Ziel: Kapitalmarktfähigkeit herstellen</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-sm mb-2 text-muted-foreground">Analyse-Ergebnis:</h4>
+                    <ul className="space-y-2 text-sm">
+                      <li className="flex items-start gap-2">
+                        <span className="text-cyan-600 font-bold">•</span>
+                        <span>Bestehende Holding ungeeignet</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-cyan-600 font-bold">•</span>
+                        <span>Covenants blockieren Fremdkapital</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <CardContent className="p-6 bg-background">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-sm mb-2 text-primary">Unsere Lösung:</h4>
+                    <p className="text-sm font-medium">Holding-Umbau + CLN-fähige Struktur</p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-sm mb-3 text-primary">Ergebnis für den Kunden:</h4>
+                    <ul className="space-y-2">
+                      {[
+                        'Bessere Verhandlungsposition',
+                        'Skalierbare Struktur für Folgeprojekte',
+                        'Eigenkapital freigesetzt'
+                      ].map((item, index) => (
+                        <li key={index} className="flex items-center gap-2 text-sm">
+                          <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Disclaimer */}
+          <p className="text-xs text-center text-muted-foreground max-w-2xl mx-auto">
+            Alle Angaben anonymisiert. Strukturierungsergebnisse hängen vom Einzelfall ab.
+          </p>
+        </div>
+      </section>
+
       {/* Erstberatung Section */}
       <section id="kontakt" className="py-20 lg:py-32">
         <div className="container">
