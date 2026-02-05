@@ -261,7 +261,6 @@ export default function Home() {
   };
 
   // Logo queries
-  const { data: pressLogos = [] } = trpc.partnerLogo.list.useQuery({ category: "presse" });
   const { data: membershipLogos = [] } = trpc.partnerLogo.list.useQuery({ category: "mitgliedschaft" });
   const { data: awardLogos = [] } = trpc.partnerLogo.list.useQuery({ category: "auszeichnung" });
 
@@ -437,55 +436,6 @@ export default function Home() {
 
       {/* Video Carousel Section */}
       <VideoCarousel />
-
-      {/* Trust Badges - Dynamic from DB */}
-      <section className="py-12 border-y bg-muted/30">
-        <div className="container">
-          <p className="text-center text-sm text-muted-foreground mb-8">Bekannt aus</p>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
-            {/* Press logos from database */}
-            {pressLogos.map((logo) => (
-              <a
-                key={logo.id}
-                href={logo.linkUrl || undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:opacity-80 transition-opacity"
-              >
-                <img
-                  src={logo.imageUrl}
-                  alt={logo.name}
-                  className="h-8 object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              </a>
-            ))}
-
-            {/* Fallback SVG logos if DB empty */}
-            {pressLogos.length === 0 && (
-              <>
-                <a href="https://unternehmen.focus.de/amazon-markenaufbau.html" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
-                  <svg viewBox="0 0 140 40" className="h-8" role="img" aria-label="FOCUS">
-                    <rect fill="#E4002B" width="140" height="40" rx="2"/>
-                    <text x="70" y="26" fill="white" fontSize="18" fontWeight="bold" textAnchor="middle" fontFamily="sans-serif">FOCUS</text>
-                  </svg>
-                </a>
-                <a href="https://www.forbes.at/artikel/internationale-firmengruendung-optimiert" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
-                  <svg viewBox="0 0 140 40" className="h-8" role="img" aria-label="Forbes">
-                    <rect fill="#000000" width="140" height="40" rx="2"/>
-                    <text x="70" y="28" fill="white" fontSize="20" fontWeight="normal" textAnchor="middle" fontFamily="serif">Forbes</text>
-                  </svg>
-                </a>
-              </>
-            )}
-
-            <div className="text-xl font-bold text-muted-foreground opacity-60">Handelsblatt</div>
-            <div className="text-xl font-bold text-muted-foreground opacity-60">Manager Magazin</div>
-          </div>
-        </div>
-      </section>
 
       {/* Auszeichnungen & Mitgliedschaften - Dynamic from DB */}
       <section className="py-16 bg-gray-50 dark:bg-slate-950">
