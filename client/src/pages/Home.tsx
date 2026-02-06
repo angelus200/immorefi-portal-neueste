@@ -484,6 +484,51 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Partner-Logos Section */}
+      <section className="py-12 bg-gray-50 dark:bg-slate-900/50">
+        <div className="container">
+          <p className="text-center text-sm font-semibold text-muted-foreground mb-8">Unsere Partner im Private Debt Markt</p>
+          <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-12">
+            <a
+              href="https://www.privatedebtinvestor.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition-all duration-300 grayscale hover:grayscale-0 opacity-70 hover:opacity-100"
+            >
+              <img
+                src="/images/private-debt-investor-logo.svg"
+                alt="Private Debt Investor"
+                className="h-12 md:h-16 w-auto object-contain max-w-[150px]"
+              />
+            </a>
+            <a
+              href="https://www.fin-news.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition-all duration-300 grayscale hover:grayscale-0 opacity-70 hover:opacity-100"
+            >
+              <img
+                src="/images/finnews-logo.png"
+                alt="FinNews"
+                className="h-12 md:h-16 w-auto object-contain max-w-[150px]"
+              />
+            </a>
+            <a
+              href="https://www.cfainstitute.org/insights/articles/private-debt-market-trends"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition-all duration-300 grayscale hover:grayscale-0 opacity-70 hover:opacity-100"
+            >
+              <img
+                src="/images/cfa-institute-logo.png"
+                alt="CFA Institute"
+                className="h-12 md:h-16 w-auto object-contain max-w-[150px]"
+              />
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Auszeichnungen & Mitgliedschaften - Dynamic from DB */}
       <section className="py-16 bg-gray-50 dark:bg-slate-950">
         <div className="container mx-auto px-4">
