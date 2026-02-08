@@ -3670,6 +3670,29 @@ export const appRouter = router({
   news: newsRouter,
   newsletter: newsletterRouter,
   affiliate: affiliateRouter,
+
+  // RSS Feed Proxy (CORS workaround)
+  rssFeed: publicProcedure.query(async () => {
+    try {
+      const response = await fetch('https://www.haufe.de/xml/rss_134606.xml');
+      const xml = await response.text();
+
+      // Simple XML parsing - extract title and link from <item> tags
+      const items: { title: string; link: string }[] = [];
+      const itemRegex = /<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<\/item>/g;
+      let match;
+      while ((match = itemRegex.exec(xml)) !== null && items.length < 10) {
+        items.push({
+          title: match[1].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>'),
+          link: match[2]
+        });
+      }
+      return { items };
+    } catch (error) {
+      console.error('[RSS] Feed fetch error:', error);
+      return { items: [] };
+    }
+  }),
 });
 
 export type AppRouter = typeof appRouter;

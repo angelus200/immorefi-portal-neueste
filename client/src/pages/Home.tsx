@@ -214,6 +214,38 @@ function NewsletterForm() {
   );
 }
 
+// RSS News Ticker Component
+function NewsTicker() {
+  const { data } = trpc.rssFeed.useQuery(undefined, {
+    staleTime: 1000 * 60 * 30, // Cache 30 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  if (!data?.items?.length) return null;
+
+  return (
+    <div className="bg-gray-900 text-white py-2 overflow-hidden">
+      <div className="flex animate-marquee whitespace-nowrap">
+        {[...data.items, ...data.items].map((item, i) => (
+          <a
+            key={i}
+            href={item.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center mx-8 text-sm hover:text-cyan-400 transition-colors"
+          >
+            <span className="text-cyan-400 mr-2">●</span>
+            {item.title}
+          </a>
+        ))}
+        <span className="inline-flex items-center mx-8 text-xs text-gray-400">
+          Quelle: Haufe Immobilien
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
@@ -314,9 +346,11 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <>
+      <NewsTicker />
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/">
             <img src="/images/logos/non-dom-group-logo.webp" alt="Non Dom Group" className="h-10" />
@@ -1668,8 +1702,9 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* Public Voice Bot - Landing Page only */}
-      <elevenlabs-convai agent-id="agent_2301kgyk2rg0e97a4hnnc5c35gwn"></elevenlabs-convai>
-    </div>
+        {/* Public Voice Bot - Landing Page only */}
+        <elevenlabs-convai agent-id="agent_2301kgyk2rg0e97a4hnnc5c35gwn"></elevenlabs-convai>
+      </div>
+    </>
   );
 }
