@@ -2188,7 +2188,8 @@ const orderRouter = router({
         customer_email: ctx.user.email || undefined,
         allow_promotion_codes: true,
         metadata: {
-          user_id: ctx.user.id.toString(),
+          user_id: ctx.user.id.toString(), // DB ID (kept for compatibility)
+          clerk_user_id: ctx.user.openId, // Clerk ID for affiliate tracking
           customer_email: ctx.user.email || '',
           customer_name: ctx.user.name || '',
           product_id: input.productId,

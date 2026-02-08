@@ -190,7 +190,7 @@ export const affiliateRouter = router({
     const existing = await db
       .select()
       .from(affiliateProfiles)
-      .where(eq(affiliateProfiles.clerkUserId, ctx.user.id))
+      .where(eq(affiliateProfiles.clerkUserId, ctx.user.openId))
       .limit(1);
 
     if (existing.length > 0) {
@@ -202,7 +202,7 @@ export const affiliateRouter = router({
 
     // Create profile
     const result = await db.insert(affiliateProfiles).values({
-      clerkUserId: ctx.user.id,
+      clerkUserId: ctx.user.openId,
       affiliateCode,
       status: 'active',
       payoutMethod: 'bank_transfer',
@@ -225,7 +225,7 @@ export const affiliateRouter = router({
     const profile = await db
       .select()
       .from(affiliateProfiles)
-      .where(eq(affiliateProfiles.clerkUserId, ctx.user.id))
+      .where(eq(affiliateProfiles.clerkUserId, ctx.user.openId))
       .limit(1);
 
     if (profile.length === 0) {
@@ -292,7 +292,7 @@ export const affiliateRouter = router({
       const profile = await db
         .select()
         .from(affiliateProfiles)
-        .where(eq(affiliateProfiles.clerkUserId, ctx.user.id))
+        .where(eq(affiliateProfiles.clerkUserId, ctx.user.openId))
         .limit(1);
 
       if (profile.length === 0) {
@@ -349,7 +349,7 @@ export const affiliateRouter = router({
       const profile = await db
         .select()
         .from(affiliateProfiles)
-        .where(eq(affiliateProfiles.clerkUserId, ctx.user.id))
+        .where(eq(affiliateProfiles.clerkUserId, ctx.user.openId))
         .limit(1);
 
       if (profile.length === 0) {
@@ -363,7 +363,7 @@ export const affiliateRouter = router({
           payoutMethod: input.payoutMethod,
           payoutDetails: input.payoutDetails, // Should be encrypted!
         })
-        .where(eq(affiliateProfiles.clerkUserId, ctx.user.id));
+        .where(eq(affiliateProfiles.clerkUserId, ctx.user.openId));
 
       return { success: true };
     }),
@@ -379,7 +379,7 @@ export const affiliateRouter = router({
     const profile = await db
       .select()
       .from(affiliateProfiles)
-      .where(eq(affiliateProfiles.clerkUserId, ctx.user.id))
+      .where(eq(affiliateProfiles.clerkUserId, ctx.user.openId))
       .limit(1);
 
     if (profile.length === 0) {

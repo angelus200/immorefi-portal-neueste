@@ -127,7 +127,7 @@ async function startServer() {
                 if (!referral) {
                   referral = await createReferral({
                     affiliateId: affiliate.id,
-                    referredUserId: session.metadata?.user_id || null,
+                    referredUserId: session.metadata?.clerk_user_id || null, // Clerk ID
                     cookieToken: null, // Not available in webhook
                     status: 'converted',
                     convertedAt: new Date(),
