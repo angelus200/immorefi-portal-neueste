@@ -463,23 +463,6 @@ export default function Home() {
               </a>
             ))}
 
-            {/* Fallback SVG logos if DB empty */}
-            {pressLogos.length === 0 && (
-              <>
-                <a href="https://unternehmen.focus.de/amazon-markenaufbau.html" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
-                  <svg viewBox="0 0 140 40" className="h-8" role="img" aria-label="FOCUS">
-                    <rect fill="#E4002B" width="140" height="40" rx="2"/>
-                    <text x="70" y="26" fill="white" fontSize="18" fontWeight="bold" textAnchor="middle" fontFamily="sans-serif">FOCUS</text>
-                  </svg>
-                </a>
-                <a href="https://www.forbes.at/artikel/internationale-firmengruendung-optimiert" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
-                  <svg viewBox="0 0 140 40" className="h-8" role="img" aria-label="Forbes">
-                    <rect fill="#000000" width="140" height="40" rx="2"/>
-                    <text x="70" y="28" fill="white" fontSize="20" fontWeight="normal" textAnchor="middle" fontFamily="serif">Forbes</text>
-                  </svg>
-                </a>
-              </>
-            )}
           </div>
         </div>
       </section>

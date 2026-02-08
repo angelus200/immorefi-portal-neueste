@@ -1716,6 +1716,8 @@ const contractRouter = router({
       description: z.string().optional(),
       fileKey: z.string(),
       fileName: z.string(),
+      fileContent: z.string().optional(), // Base64-encoded file content (for Railway ephemeral storage fix)
+      fileMimeType: z.string().optional(), // MIME type (e.g., application/pdf)
       version: z.string().optional(),
       governingLaw: z.string().optional(),
       arbitrationClause: z.string().optional(),

@@ -1350,7 +1350,7 @@ export function FinanceCalculator() {
               onClick={handleAnalyseClick}
               disabled={checkoutMutation.isPending}
             >
-              {checkoutMutation.isPending ? 'Lädt...' : 'Analyse anfordern'}
+              {checkoutMutation.isPending ? 'Lädt...' : 'Analyse kaufen'}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
