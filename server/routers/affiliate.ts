@@ -216,10 +216,16 @@ export const affiliateRouter = router({
   /**
    * Get affiliate dashboard stats
    * Returns: clicks, conversions, earnings, commissions
+   * PUBLIC - Shows info page for non-logged users
    */
-  getDashboard: protectedProcedure.query(async ({ ctx }) => {
+  getDashboard: publicProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
+
+    // Not logged in - show info page
+    if (!ctx.user) {
+      return { isAffiliate: false, needsLogin: true };
+    }
 
     // Get affiliate profile
     const profile = await db

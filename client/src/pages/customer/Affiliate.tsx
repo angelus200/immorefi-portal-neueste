@@ -12,6 +12,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
 import { useAuth } from '@/_core/hooks/useAuth';
+import { useUser, SignInButton } from '@clerk/clerk-react';
 import {
   Loader2,
   Copy,
@@ -27,14 +28,13 @@ import {
 
 export default function Affiliate() {
   const { user, loading: authLoading } = useAuth();
+  const { isSignedIn } = useUser();
   const [copiedLink, setCopiedLink] = useState(false);
   const [payoutMethod, setPayoutMethod] = useState<'bank_transfer' | 'paypal'>('bank_transfer');
   const [payoutDetails, setPayoutDetails] = useState('');
 
-  // Get dashboard data
-  const { data: dashboard, isLoading, refetch } = trpc.affiliate.getDashboard.useQuery(undefined, {
-    enabled: !!user,
-  });
+  // Get dashboard data (works without login - shows info page)
+  const { data: dashboard, isLoading, refetch } = trpc.affiliate.getDashboard.useQuery();
 
   // Activate affiliate mutation
   const activateMutation = trpc.affiliate.activate.useMutation({
@@ -158,21 +158,29 @@ export default function Affiliate() {
               </div>
             </div>
 
-            <Button
-              size="lg"
-              className="w-full"
-              onClick={() => activateMutation.mutate()}
-              disabled={activateMutation.isPending}
-            >
-              {activateMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Wird aktiviert...
-                </>
-              ) : (
-                'Jetzt Affiliate werden'
-              )}
-            </Button>
+            {isSignedIn ? (
+              <Button
+                size="lg"
+                className="w-full"
+                onClick={() => activateMutation.mutate()}
+                disabled={activateMutation.isPending}
+              >
+                {activateMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Wird aktiviert...
+                  </>
+                ) : (
+                  'Jetzt Affiliate werden'
+                )}
+              </Button>
+            ) : (
+              <SignInButton mode="modal">
+                <Button size="lg" className="w-full">
+                  Anmelden um Affiliate zu werden
+                </Button>
+              </SignInButton>
+            )}
           </CardContent>
         </Card>
       </div>
