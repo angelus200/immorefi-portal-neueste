@@ -1,4 +1,5 @@
 import { systemRouter } from "./_core/systemRouter";
+import { affiliateRouter } from "./routers/affiliate";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -3663,6 +3664,7 @@ export const appRouter = router({
   video: videoRouter,
   news: newsRouter,
   newsletter: newsletterRouter,
+  affiliate: affiliateRouter,
 });
 
 export type AppRouter = typeof appRouter;
