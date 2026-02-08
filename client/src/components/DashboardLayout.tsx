@@ -444,6 +444,11 @@ function DashboardLayoutContent({
         </header>
         <main className="flex-1 overflow-auto p-4 lg:p-6">{children}</main>
       </SidebarInset>
+
+      {/* Admin Voice Bot - Admin users only */}
+      {isAdmin && (
+        <elevenlabs-convai agent-id="agent_5301kgymeptwenpvr2z9jg6qypx6"></elevenlabs-convai>
+      )}
     </>
   );
 }

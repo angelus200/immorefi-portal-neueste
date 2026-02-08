@@ -1647,6 +1647,9 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Public Voice Bot - Landing Page only */}
+      <elevenlabs-convai agent-id="agent_2301kgyk2rg0e97a4hnnc5c35gwn"></elevenlabs-convai>
     </div>
   );
 }
