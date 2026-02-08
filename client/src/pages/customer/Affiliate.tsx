@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
+import { useAuth } from '@/_core/hooks/useAuth';
 import {
   Loader2,
   Copy,
@@ -25,12 +26,15 @@ import {
 } from 'lucide-react';
 
 export default function Affiliate() {
+  const { user, loading: authLoading } = useAuth();
   const [copiedLink, setCopiedLink] = useState(false);
   const [payoutMethod, setPayoutMethod] = useState<'bank_transfer' | 'paypal'>('bank_transfer');
   const [payoutDetails, setPayoutDetails] = useState('');
 
   // Get dashboard data
-  const { data: dashboard, isLoading, refetch } = trpc.affiliate.getDashboard.useQuery();
+  const { data: dashboard, isLoading, refetch } = trpc.affiliate.getDashboard.useQuery(undefined, {
+    enabled: !!user,
+  });
 
   // Activate affiliate mutation
   const activateMutation = trpc.affiliate.activate.useMutation({
@@ -93,7 +97,7 @@ export default function Affiliate() {
     requestPayoutMutation.mutate();
   };
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
