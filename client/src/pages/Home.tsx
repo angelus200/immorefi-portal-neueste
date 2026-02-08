@@ -1502,6 +1502,62 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Affiliate Program Section */}
+      <section className="py-16 lg:py-24 bg-gradient-to-r from-primary/5 to-primary/10">
+        <div className="container">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
+              <Users className="h-4 w-4" />
+              Partner werden
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Affiliate Programm – <span className="text-primary">5% Provision verdienen</span>
+            </h2>
+            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Empfehlen Sie ImmoRefi weiter und verdienen Sie 5% Provision auf jeden erfolgreichen Abschluss.
+              Registrieren Sie sich kostenlos und starten Sie sofort.
+            </p>
+
+            {/* Commission Overview */}
+            <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-8">
+              <Card className="border-2 border-primary/20 bg-white dark:bg-card">
+                <CardContent className="pt-6 text-center">
+                  <div className="text-3xl font-bold text-primary mb-2">€149,50</div>
+                  <p className="text-sm text-muted-foreground">pro Analyse-Verkauf</p>
+                  <p className="text-xs text-muted-foreground mt-1">(5% von €2.990)</p>
+                </CardContent>
+              </Card>
+              <Card className="border-2 border-primary/20 bg-white dark:bg-card">
+                <CardContent className="pt-6 text-center">
+                  <div className="text-3xl font-bold text-primary mb-2">€42,50</div>
+                  <p className="text-sm text-muted-foreground">pro Erstberatung</p>
+                  <p className="text-xs text-muted-foreground mt-1">(5% von €850)</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Button
+              size="lg"
+              className="bg-primary hover:bg-primary/90 px-8"
+              onClick={() => {
+                if (isAuthenticated) {
+                  setLocation('/dashboard/affiliate');
+                } else {
+                  setLocation('/sign-in?redirect_url=%2Fdashboard%2Faffiliate');
+                }
+              }}
+            >
+              Jetzt Affiliate werden
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+
+            <p className="text-xs text-muted-foreground mt-4">
+              Kostenlos • Keine Mindestlaufzeit • Transparente Abrechnung
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="py-12 border-t">
         <div className="container">

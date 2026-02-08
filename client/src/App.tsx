@@ -49,6 +49,9 @@ import ROECalculator from "./pages/tools/ROECalculator";
 import Glossary from "./pages/tools/Glossary";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import Affiliate from "./pages/customer/Affiliate";
+import AdminAffiliates from "./pages/admin/Affiliates";
+import { useAffiliateTracking } from "./hooks/useAffiliateTracking";
 
 function Router() {
   return (
@@ -88,7 +91,8 @@ function Router() {
       <Route path="/orders" component={Orders} />
       <Route path="/invoices" component={Invoices} />
       <Route path="/settings" component={Settings} />
-      
+      <Route path="/dashboard/affiliate" component={Affiliate} />
+
       {/* Booking Routes */}
       <Route path="/booking" component={Booking} />
 
@@ -113,7 +117,8 @@ function Router() {
       <Route path="/admin/messages" component={AdminMessages} />
       <Route path="/admin/newsletter" component={AdminNewsletter} />
       <Route path="/admin/handbuch" component={AdminHandbuch} />
-      
+      <Route path="/admin/affiliates" component={AdminAffiliates} />
+
       {/* Fallback */}
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
@@ -122,6 +127,9 @@ function Router() {
 }
 
 function App() {
+  // Track affiliate referrals
+  useAffiliateTracking();
+
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">

@@ -44,7 +44,8 @@ import {
   Contact,
   Kanban,
   Calendar as CalendarIcon,
-  Video
+  Video,
+  TrendingUp
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -60,6 +61,7 @@ const clientMenuItems = [
   { icon: FileText, label: "Rechnungen", path: "/invoices" },
   { icon: FolderOpen, label: "Dokumente", path: "/documents" },
   { icon: MessageCircle, label: "Nachrichten", path: "/admin/messages" },
+  { icon: TrendingUp, label: "Affiliate Programm", path: "/dashboard/affiliate" },
   { icon: Settings, label: "Einstellungen", path: "/settings" },
 ];
 
@@ -101,6 +103,7 @@ const adminMenuSections: MenuSection[] = [
       { icon: FileCheck, label: "Verträge", path: "/admin/contracts" },
       { icon: MessageCircle, label: "Nachrichten", path: "/admin/messages" },
       { icon: Mail, label: "Newsletter", path: "/admin/newsletter" },
+      { icon: Users, label: "Affiliates", path: "/admin/affiliates" },
     ],
   },
   {
