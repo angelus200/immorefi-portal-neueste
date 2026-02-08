@@ -105,7 +105,71 @@ async function startServer() {
           });
           
           console.log(`[Webhook] Order completed for session: ${session.id}`);
-          
+
+          // Track affiliate commission if referral code exists
+          try {
+            const affiliateCode = session.metadata?.affiliate_code;
+            if (affiliateCode && affiliateCode.trim() !== '') {
+              const {
+                getAffiliateByCode,
+                createReferral,
+                createCommission,
+                getReferralByStripeSession
+              } = await import('../routers/affiliate');
+
+              // Find affiliate profile
+              const affiliate = await getAffiliateByCode(affiliateCode);
+              if (affiliate && affiliate.status === 'active') {
+                // Check if referral already exists for this session
+                let referral = await getReferralByStripeSession(session.id);
+
+                // Create or get referral
+                if (!referral) {
+                  referral = await createReferral({
+                    affiliateId: affiliate.id,
+                    referredUserId: session.metadata?.user_id || null,
+                    cookieToken: null, // Not available in webhook
+                    status: 'converted',
+                    convertedAt: new Date(),
+                    stripeSessionId: session.id,
+                  });
+                }
+
+                // Determine product type and commission
+                const productId = session.metadata?.product_id || 'UNKNOWN';
+                const orderAmount = session.amount_total ? session.amount_total / 100 : 0;
+                const commissionRate = 5.0; // 5%
+                const commissionAmount = (orderAmount * commissionRate) / 100;
+
+                let productType: 'analyse' | 'consultation' = 'analyse';
+                if (productId === 'ANALYSE' || productId === 'ANALYSIS') {
+                  productType = 'analyse';
+                } else if (productId === 'CONSULTATION' || productId === 'ERSTBERATUNG') {
+                  productType = 'consultation';
+                }
+
+                // Create commission record
+                await createCommission({
+                  affiliateId: affiliate.id,
+                  referralId: referral.id,
+                  stripeSessionId: session.id,
+                  productType,
+                  orderAmount,
+                  commissionRate,
+                  commissionAmount,
+                  status: 'pending', // Admin must approve
+                });
+
+                console.log(`[Webhook] Affiliate commission created: €${commissionAmount.toFixed(2)} for ${affiliateCode}`);
+              } else {
+                console.log(`[Webhook] Affiliate ${affiliateCode} not found or inactive`);
+              }
+            }
+          } catch (affiliateError) {
+            console.error('[Webhook] Error processing affiliate commission:', affiliateError);
+            // Don't fail the webhook if affiliate processing fails
+          }
+
           // Generate invoice for the payment
           try {
             const order = await getOrderByStripeSessionId(session.id);

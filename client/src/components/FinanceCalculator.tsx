@@ -24,6 +24,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { getAffiliateCode } from "@/hooks/useAffiliateTracking";
 
 // Utility function to format currency
 const formatCurrency = (value: number): string => {
@@ -1146,7 +1147,11 @@ export function FinanceCalculator() {
       return;
     }
     // Trigger Stripe checkout for ANALYSIS product
-    checkoutMutation.mutate({ productId: 'ANALYSIS' });
+    const affiliateCode = getAffiliateCode();
+    checkoutMutation.mutate({
+      productId: 'ANALYSIS',
+      affiliateCode: affiliateCode || undefined,
+    });
   };
 
   return (

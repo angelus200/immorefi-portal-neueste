@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import DashboardLayout from '@/components/DashboardLayout';
 import {
   Select,
   SelectContent,
@@ -38,6 +39,14 @@ import {
 } from 'lucide-react';
 
 export default function Affiliates() {
+  return (
+    <DashboardLayout>
+      <AffiliatesContent />
+    </DashboardLayout>
+  );
+}
+
+function AffiliatesContent() {
   const [statusFilter, setStatusFilter] = useState<'active' | 'paused' | 'banned' | undefined>(
     undefined
   );

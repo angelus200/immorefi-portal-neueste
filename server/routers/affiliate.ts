@@ -60,6 +60,119 @@ async function generateUniqueAffiliateCode(): Promise<string> {
   return code;
 }
 
+/**
+ * Get affiliate profile by code
+ */
+export async function getAffiliateByCode(code: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db
+    .select()
+    .from(affiliateProfiles)
+    .where(eq(affiliateProfiles.affiliateCode, code))
+    .limit(1);
+  return result[0] || null;
+}
+
+/**
+ * Create a new referral record
+ */
+export async function createReferral(data: {
+  affiliateId: number;
+  referredUserId: string | null;
+  cookieToken: string | null;
+  status: 'clicked' | 'converted' | 'cancelled';
+  convertedAt?: Date;
+  stripeSessionId?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+
+  const referralData: InsertAffiliateReferral = {
+    affiliateId: data.affiliateId,
+    referredUserId: data.referredUserId || undefined,
+    cookieToken: data.cookieToken || undefined,
+    status: data.status,
+    convertedAt: data.convertedAt,
+    landedAt: new Date(),
+  };
+
+  const result = await db.insert(affiliateReferrals).values(referralData);
+  const insertedId = Number(result[0].insertId);
+
+  const inserted = await db
+    .select()
+    .from(affiliateReferrals)
+    .where(eq(affiliateReferrals.id, insertedId))
+    .limit(1);
+
+  return inserted[0];
+}
+
+/**
+ * Get referral by Stripe session ID (from metadata)
+ */
+export async function getReferralByStripeSession(sessionId: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  // Since we don't store stripeSessionId in referrals, check commissions first
+  const commissionResult = await db
+    .select({ referralId: affiliateCommissions.referralId })
+    .from(affiliateCommissions)
+    .where(eq(affiliateCommissions.stripeSessionId, sessionId))
+    .limit(1);
+
+  if (commissionResult.length > 0) {
+    const referral = await db
+      .select()
+      .from(affiliateReferrals)
+      .where(eq(affiliateReferrals.id, commissionResult[0].referralId))
+      .limit(1);
+    return referral[0] || null;
+  }
+
+  return null;
+}
+
+/**
+ * Create a new commission record
+ */
+export async function createCommission(data: {
+  affiliateId: number;
+  referralId: number;
+  stripeSessionId: string;
+  productType: 'analyse' | 'consultation';
+  orderAmount: number;
+  commissionRate: number;
+  commissionAmount: number;
+  status: 'pending' | 'approved' | 'paid' | 'cancelled';
+}) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+
+  const commissionData: InsertAffiliateCommission = {
+    affiliateId: data.affiliateId,
+    referralId: data.referralId,
+    stripeSessionId: data.stripeSessionId,
+    productType: data.productType,
+    orderAmount: data.orderAmount.toString(),
+    commissionRate: data.commissionRate.toString(),
+    commissionAmount: data.commissionAmount.toString(),
+    status: data.status,
+  };
+
+  await db.insert(affiliateCommissions).values(commissionData);
+
+  // Update affiliate totalEarned
+  await db
+    .update(affiliateProfiles)
+    .set({
+      totalEarned: sql`${affiliateProfiles.totalEarned} + ${data.commissionAmount.toString()}`,
+    })
+    .where(eq(affiliateProfiles.id, data.affiliateId));
+}
+
 // ============================================
 // AFFILIATE ROUTER
 // ============================================

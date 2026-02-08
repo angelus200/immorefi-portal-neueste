@@ -17,6 +17,7 @@ import {
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { getAffiliateCode } from "@/hooks/useAffiliateTracking";
 
 export default function Team() {
   const { user } = useAuth();
@@ -39,7 +40,11 @@ export default function Team() {
       window.location.href = `/sign-in?redirect_url=${encodeURIComponent('/team')}`;
       return;
     }
-    createCheckout.mutate({ productId: 'ANALYSIS' });
+    const affiliateCode = getAffiliateCode();
+    createCheckout.mutate({
+      productId: 'ANALYSIS',
+      affiliateCode: affiliateCode || undefined,
+    });
   };
 
   return (

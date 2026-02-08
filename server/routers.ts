@@ -2142,6 +2142,7 @@ const orderRouter = router({
   createCheckout: protectedProcedure
     .input(z.object({
       productId: z.string(),
+      affiliateCode: z.string().optional(), // From cookie tracking
     }))
     .mutation(async ({ input, ctx }) => {
       const { stripe, PRODUCTS } = await import('./stripe');
@@ -2191,6 +2192,7 @@ const orderRouter = router({
           customer_email: ctx.user.email || '',
           customer_name: ctx.user.name || '',
           product_id: input.productId,
+          affiliate_code: input.affiliateCode || '', // For commission tracking
         },
       });
       
@@ -2218,6 +2220,7 @@ const orderRouter = router({
     .input(z.object({
       productId: z.string(),
       email: z.string().email().optional(),
+      affiliateCode: z.string().optional(), // From cookie tracking
     }))
     .mutation(async ({ input, ctx }) => {
       const { stripe, PRODUCTS } = await import('./stripe');
@@ -2258,6 +2261,7 @@ const orderRouter = router({
         metadata: {
           guest: 'true',
           product_id: input.productId,
+          affiliate_code: input.affiliateCode || '', // For commission tracking
         },
       });
       

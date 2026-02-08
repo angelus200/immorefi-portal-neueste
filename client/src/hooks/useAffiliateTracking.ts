@@ -36,6 +36,14 @@ function getCookie(name: string): string | null {
 }
 
 /**
+ * Get affiliate code from cookie (if user came via referral link)
+ * Use this when creating checkout sessions to track commissions
+ */
+export function getAffiliateCode(): string | null {
+  return getCookie(AFFILIATE_COOKIE_NAME);
+}
+
+/**
  * Generate unique tracking token for this visitor
  */
 function generateTrackingToken(): string {

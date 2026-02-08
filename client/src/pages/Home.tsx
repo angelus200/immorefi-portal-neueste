@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { getAffiliateCode } from "@/hooks/useAffiliateTracking";
 import {
   Building2,
   TrendingUp,
@@ -284,7 +285,11 @@ export default function Home() {
       window.location.href = `/sign-in?redirect_url=${encodeURIComponent('/')}`;
       return;
     }
-    createCheckout.mutate({ productId: 'ANALYSIS' });
+    const affiliateCode = getAffiliateCode();
+    createCheckout.mutate({
+      productId: 'ANALYSIS',
+      affiliateCode: affiliateCode || undefined,
+    });
   };
 
   // Guest checkout for Handbuch direct purchase
@@ -301,7 +306,11 @@ export default function Home() {
   });
 
   const handleDirectPurchaseHandbuch = () => {
-    guestCheckout.mutate({ productId: 'HANDBUCH' });
+    const affiliateCode = getAffiliateCode();
+    guestCheckout.mutate({
+      productId: 'HANDBUCH',
+      affiliateCode: affiliateCode || undefined,
+    });
   };
 
   return (
