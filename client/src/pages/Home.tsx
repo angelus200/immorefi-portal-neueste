@@ -449,6 +449,26 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Erklärvideo Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-4">So funktioniert ImmoRefi</h2>
+          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
+            In 2 Minuten erklärt: Wie Sie über den Kapitalmarkt Ihre Immobilienprojekte finanzieren
+          </p>
+          <div className="max-w-3xl mx-auto rounded-xl overflow-hidden shadow-lg">
+            <iframe
+              src="https://play.vidyard.com/X5zZWG7NyKg9LzkGPDZn46"
+              width="100%"
+              style={{ aspectRatio: '16/9', border: 'none' }}
+              allow="autoplay; fullscreen"
+              allowFullScreen
+              title="Wie Funktioniert das Immorefi Programm der Non Dom Group"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Video Carousel Section */}
       <VideoCarousel />
 
