@@ -335,6 +335,11 @@ export default function Home() {
             <a href="#faq" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
               FAQ
             </a>
+            <Link href="/dashboard/affiliate">
+              <span className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+                Affiliate
+              </span>
+            </Link>
           </nav>
           
           <div className="flex items-center gap-3">
