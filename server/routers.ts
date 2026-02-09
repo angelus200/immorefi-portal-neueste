@@ -1670,6 +1670,15 @@ const adminRouter = router({
       role: z.enum(["superadmin", "tenant_admin", "staff", "client"]),
     }))
     .mutation(async ({ input, ctx }) => {
+      // Sicherheit: Verhindere Selbst-Degradierung
+      // Ein Superadmin darf sich nicht selbst zu einer niedrigeren Rolle degradieren
+      if (ctx.user.id === input.userId && ctx.user.role === 'superadmin' && input.role !== 'superadmin') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Ein Superadmin kann sich nicht selbst degradieren',
+        });
+      }
+
       await db.updateUserRole(input.userId, input.role);
       await db.createAuditLog({
         tenantId: null,
