@@ -464,18 +464,19 @@ function UsersContent() {
                           </Button>
                         )}
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
                           onClick={() => handleEditUser(user)}
                           title="Bearbeiten"
+                          className="hover:bg-primary/10"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
                           onClick={() => handleDeleteUser(user.id)}
-                          className="text-destructive hover:text-destructive"
+                          className="text-destructive hover:bg-destructive/10 border-destructive/20"
                           title="Löschen"
                         >
                           <Trash2 className="h-4 w-4" />
