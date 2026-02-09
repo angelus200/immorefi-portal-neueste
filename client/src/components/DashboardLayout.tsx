@@ -110,6 +110,7 @@ const adminMenuSections: MenuSection[] = [
     title: "System",
     items: [
       { icon: Users, label: "Benutzer", path: "/admin/users" },
+      { icon: BarChart3, label: "Analytics", path: "/admin/analytics" },
       { icon: BarChart3, label: "Audit-Log", path: "/admin/audit" },
       { icon: FileText, label: "Vertragsvorlagen", path: "/admin/contract-templates" },
       { icon: FileText, label: "Logos", path: "/admin/logos" },

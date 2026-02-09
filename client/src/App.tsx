@@ -51,7 +51,9 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Affiliate from "./pages/customer/Affiliate";
 import AdminAffiliates from "./pages/admin/Affiliates";
+import AdminAnalytics from "./pages/admin/Analytics";
 import { useAffiliateTracking } from "./hooks/useAffiliateTracking";
+import { usePageTracking } from "./hooks/usePageTracking";
 
 function Router() {
   return (
@@ -105,6 +107,7 @@ function Router() {
       <Route path="/admin/my-calendar" component={MyCalendar} />
       <Route path="/admin/bookings" component={AdminBookings} />
       <Route path="/admin/users" component={AdminUsers} />
+      <Route path="/admin/analytics" component={AdminAnalytics} />
       <Route path="/admin/audit" component={AdminAudit} />
       <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/admin/contracts" component={AdminContracts} />
@@ -129,6 +132,9 @@ function Router() {
 function App() {
   // Track affiliate referrals
   useAffiliateTracking();
+
+  // Track page views for analytics
+  usePageTracking();
 
   return (
     <ErrorBoundary>
