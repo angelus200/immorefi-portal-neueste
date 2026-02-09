@@ -1566,7 +1566,7 @@ const userRouter = router({
       role: z.enum(['client', 'staff', 'tenant_admin', 'superadmin']).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const { id, ...updates } = input;
+      const { id, role, ...updates } = input;
 
       // Check if user exists
       const existingUser = await db.getUserById(id);
@@ -1574,8 +1574,18 @@ const userRouter = router({
         throw new Error('Benutzer nicht gefunden');
       }
 
-      // Update user
-      await db.updateUser(id, updates as any);
+      // Sicherheit: Verhindere Selbst-Degradierung bei Rollenänderung
+      // Ein Superadmin darf sich nicht selbst zu einer niedrigeren Rolle degradieren
+      if (role && ctx.user.id === id && ctx.user.role === 'superadmin' && role !== 'superadmin') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Ein Superadmin kann sich nicht selbst degradieren',
+        });
+      }
+
+      // Update user (with role if provided)
+      const allUpdates = role ? { ...updates, role } : updates;
+      await db.updateUser(id, allUpdates as any);
 
       // Create audit log
       await db.createAuditLog({
@@ -1584,7 +1594,7 @@ const userRouter = router({
         entityType: 'user',
         entityId: id,
         oldValues: existingUser,
-        newValues: updates,
+        newValues: allUpdates,
       });
 
       return { success: true };
