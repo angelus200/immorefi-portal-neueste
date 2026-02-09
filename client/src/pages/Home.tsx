@@ -455,7 +455,7 @@ export default function Home() {
               <div className="relative rounded-3xl shadow-2xl overflow-hidden">
                 {/* Professional Real Estate Image */}
                 <img
-                  src="/images/hero-immobilien.jpg"
+                  src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&h=800&fit=crop&q=80"
                   alt="Professionelles Immobilien-Stadtmodell"
                   className="w-full h-[500px] object-cover"
                 />
