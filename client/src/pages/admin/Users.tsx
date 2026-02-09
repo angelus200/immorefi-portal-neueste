@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
-import { Search, UserPlus, Shield, Users as UsersIcon, MessageCircle, Edit, Trash2, Filter, ExternalLink, Clock, ShoppingBag } from "lucide-react";
+import { Search, UserPlus, Shield, Users as UsersIcon, MessageCircle, Edit, Trash2, Filter, ExternalLink, Clock, ShoppingBag, MoreVertical } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useLocation } from "wouter";
 import {
@@ -45,6 +45,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -451,37 +458,37 @@ function UsersContent() {
                       {new Date(user.createdAt).toLocaleDateString('de-DE')}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {user.role === 'client' && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleSendMessage(user.id, user.name || 'Kunde')}
-                            disabled={startConversationMutation.isPending}
-                            title="Nachricht senden"
-                          >
-                            <MessageCircle className="h-4 w-4" />
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                            <span className="sr-only">Aktionen</span>
                           </Button>
-                        )}
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleEditUser(user)}
-                          title="Bearbeiten"
-                          className="hover:bg-primary/10"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleDeleteUser(user.id)}
-                          className="text-destructive hover:bg-destructive/10 border-destructive/20"
-                          title="Löschen"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Bearbeiten
+                          </DropdownMenuItem>
+                          {user.role === 'client' && (
+                            <DropdownMenuItem
+                              onClick={() => handleSendMessage(user.id, user.name || 'Kunde')}
+                              disabled={startConversationMutation.isPending}
+                            >
+                              <MessageCircle className="mr-2 h-4 w-4" />
+                              Nachricht senden
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteUser(user.id)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Löschen
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
