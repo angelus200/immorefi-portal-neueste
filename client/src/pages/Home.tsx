@@ -1702,8 +1702,10 @@ export default function Home() {
         </div>
       </footer>
 
-        {/* Public Voice Bot - Landing Page only */}
-        <elevenlabs-convai agent-id="agent_2301kgyk2rg0e97a4hnnc5c35gwn"></elevenlabs-convai>
+        {/* Public Voice Bot - Landing Page only, for non-admin users */}
+        {(!isAuthenticated || (user && user.role === 'client')) && (
+          <elevenlabs-convai agent-id="agent_2301kgyk2rg0e97a4hnnc5c35gwn"></elevenlabs-convai>
+        )}
       </div>
     </>
   );
