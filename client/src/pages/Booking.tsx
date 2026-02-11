@@ -11,6 +11,21 @@ function BookingContent() {
   const { data: staffCalendars = [], isLoading: calendarsLoading } = trpc.staffCalendar.list.useQuery();
   const { data: myBookings = [], isLoading: bookingsLoading } = trpc.booking.myBookings.useQuery();
 
+  // Check if user has purchased ANALYSE or ERSTBERATUNG
+  const { data: hasAnalyse, isLoading: analyseLoading } = trpc.order.hasPurchased.useQuery(
+    { productId: 'ANALYSE' },
+    { enabled: !!user }
+  );
+  const { data: hasErstberatung, isLoading: erstberatungLoading } = trpc.order.hasPurchased.useQuery(
+    { productId: 'ERSTBERATUNG' },
+    { enabled: !!user }
+  );
+
+  // Staff and admins always have access, or users who purchased
+  const isStaffOrAdmin = user?.role === 'superadmin' || user?.role === 'tenant_admin' || user?.role === 'staff';
+  const hasAccess = isStaffOrAdmin || hasAnalyse || hasErstberatung;
+  const accessLoading = analyseLoading || erstberatungLoading;
+
   const formatDateTime = (date: Date | string) => {
     return new Intl.DateTimeFormat('de-CH', {
       weekday: 'long',
@@ -61,6 +76,81 @@ function BookingContent() {
           <h2 className="text-2xl font-semibold mb-4">Bitte melden Sie sich an</h2>
           <p className="text-gray-600 mb-6">Sie müssen angemeldet sein, um Termine zu buchen.</p>
         </div>
+      </div>
+    );
+  }
+
+  // Show paywall if user doesn't have access (not staff/admin and hasn't purchased)
+  if (!accessLoading && !hasAccess) {
+    return (
+      <div className="container mx-auto p-6 max-w-4xl">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">Termin buchen</h1>
+          <p className="text-muted-foreground mt-2">
+            Buchen Sie einen Termin mit einem unserer Berater
+          </p>
+        </div>
+
+        <Card className="border-2 border-primary/20">
+          <CardHeader className="text-center pb-4">
+            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <Calendar className="h-8 w-8 text-primary" />
+            </div>
+            <CardTitle className="text-2xl">Zugang erforderlich</CardTitle>
+            <CardDescription className="text-base mt-2">
+              Terminbuchungen sind nur nach Kauf einer Analyse oder Erstberatung möglich
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <Card className="border-2 hover:border-primary/50 transition-colors">
+                <CardHeader>
+                  <CardTitle className="text-xl">Analyse kaufen</CardTitle>
+                  <div className="text-3xl font-bold text-primary mt-2">€ 2.990</div>
+                  <CardDescription>zzgl. MwSt.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Fundierte Analyse Ihrer Finanzierungsstruktur mit anschließendem Beratungstermin
+                  </p>
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    onClick={() => window.location.href = '/shop'}
+                  >
+                    Zur Analyse
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 hover:border-primary/50 transition-colors">
+                <CardHeader>
+                  <CardTitle className="text-xl">Erstberatung buchen</CardTitle>
+                  <div className="text-3xl font-bold text-primary mt-2">€ 850</div>
+                  <CardDescription>zzgl. MwSt.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    60 Minuten persönliche Erstberatung mit direkter Terminbuchung
+                  </p>
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    onClick={() => window.location.href = '/shop'}
+                  >
+                    Zur Erstberatung
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="text-center pt-4">
+              <p className="text-sm text-muted-foreground">
+                Nach dem Kauf können Sie sofort einen Termin mit einem unserer Berater buchen
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
