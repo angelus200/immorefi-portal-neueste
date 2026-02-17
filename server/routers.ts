@@ -1566,7 +1566,7 @@ const userRouter = router({
       role: z.enum(['client', 'staff', 'tenant_admin', 'superadmin']).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const { id, role, ...updates } = input;
+      const { id, status, source, role, ...updates } = input;
 
       // Check if user exists
       const existingUser = await db.getUserById(id);
@@ -1583,9 +1583,21 @@ const userRouter = router({
         });
       }
 
-      // Update user (with role if provided)
-      const allUpdates = role ? { ...updates, role } : updates;
-      await db.updateUser(id, allUpdates as any);
+      // Map field names to match DB column names (Drizzle Enum naming issue)
+      // Frontend sends: status/source → DB expects: userStatus/userSource
+      const dbUpdates: any = { ...updates };
+      if (status !== undefined) {
+        dbUpdates.userStatus = status;
+      }
+      if (source !== undefined) {
+        dbUpdates.userSource = source;
+      }
+      if (role !== undefined) {
+        dbUpdates.role = role;
+      }
+
+      // Update user
+      await db.updateUser(id, dbUpdates);
 
       // Create audit log
       await db.createAuditLog({
