@@ -166,10 +166,12 @@ const leadRouter = router({
       notes: z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
+      // Map field names to match DB column names (Drizzle Enum naming issue)
+      // JS: status → DB: leadStatus
       const leadId = await db.createLead({
         ...input,
         source: input.source || 'manual',
-        status: 'new' as const,
+        leadStatus: 'new' as const, // DB-Spalte: leadStatus (nicht status)
       });
 
       await db.createAuditLog({
@@ -220,9 +222,10 @@ const leadRouter = router({
       tenantId: z.number().default(1),
     }))
     .mutation(async ({ input }) => {
+      // Map field names to match DB column names (Drizzle Enum naming issue)
       const leadId = await db.createLead({
         ...input,
-        status: 'new' as const,
+        leadStatus: 'new' as const, // DB-Spalte: leadStatus (nicht status)
       });
 
       // FIX 1: Auto-sync to GoHighLevel (Portal → GHL)
@@ -268,9 +271,16 @@ const leadRouter = router({
       notes: z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const { id, tenantId, ...data } = input;
+      const { id, tenantId, status, ...data } = input;
       const oldLead = await db.getLeadById(id, tenantId);
-      await db.updateLead(id, tenantId, data);
+
+      // Map field names to match DB column names (Drizzle Enum naming issue)
+      const dbData: any = { ...data };
+      if (status !== undefined) {
+        dbData.leadStatus = status; // DB-Spalte: leadStatus (nicht status)
+      }
+
+      await db.updateLead(id, tenantId, dbData);
       await db.createAuditLog({
         tenantId,
         userId: ctx.user.id,
@@ -406,7 +416,7 @@ const leadRouter = router({
           phone: ghlContact.phone,
           company: ghlContact.companyName,
           source: 'ghl',
-          status: 'new',
+          leadStatus: 'new', // DB-Spalte: leadStatus (nicht status)
           lastSyncedAt: new Date(),
         });
         return { success: true, leadId };

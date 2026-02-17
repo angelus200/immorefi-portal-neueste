@@ -93,7 +93,7 @@ export type InsertMembership = typeof memberships.$inferInsert;
 // ============================================
 
 export const leadStatusEnum = mysqlEnum("leadStatus", ["new", "contacted", "qualified", "converted", "lost"]);
-export const leadSourceEnum = mysqlEnum("leadSource", ["website", "referral", "ghl", "manual"]);
+export const leadSourceEnum = mysqlEnum("source", ["website", "referral", "ghl", "manual"]); // DB-Spalte: "source" (nicht "leadSource"!)
 
 export const leads = mysqlTable("leads", {
   id: int("id").autoincrement().primaryKey(),
@@ -107,7 +107,7 @@ export const leads = mysqlTable("leads", {
   company: varchar("company", { length: 255 }),
   // Lead details
   status: leadStatusEnum.default("new").notNull(),
-  source: leadSourceEnum.default("manual").notNull(),
+  source: leadSourceEnum.default("manual"), // nullable in DB (varchar legacy)
   capitalNeed: varchar("capitalNeed", { length: 100 }), // Kapitalbedarf
   timeHorizon: varchar("timeHorizon", { length: 100 }), // Zeithorizont
   description: text("description"), // Beschreibung
