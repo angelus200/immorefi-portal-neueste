@@ -405,6 +405,28 @@ export default function Home() {
         </div>
       </header>
 
+      {/* Hero Text Block */}
+      <section className="py-16 bg-white">
+        <div className="container text-center">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            Die Bank sagt <span className="text-gray-900">Nein.</span>{" "}
+            Wir sagen <span className="text-primary">Ja.</span>
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+            Immobilienfinanzierung ohne Bank – für Projektentwickler und Bauträger ab 5 Mio. €
+          </p>
+          <Button
+            size="lg"
+            onClick={handlePurchaseAnalysis}
+            disabled={createCheckout.isPending}
+            className="bg-primary hover:bg-primary/90"
+          >
+            {createCheckout.isPending ? "Lädt..." : "Jetzt Finanzierung prüfen"}
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
+        </div>
+      </section>
+
       {/* Video Section */}
       <VideoSection />
 
