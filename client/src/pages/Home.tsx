@@ -390,6 +390,11 @@ export default function Home() {
                 <Link href="/sign-in">
                   <Button variant="outline">Login</Button>
                 </Link>
+                <Link href="/sign-up">
+                  <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                    Registrieren
+                  </Button>
+                </Link>
                 <Button onClick={handlePurchaseAnalysis} disabled={createCheckout.isPending}>
                   {createCheckout.isPending ? "Lädt..." : "Analyse kaufen"}
                   <ArrowRight className="ml-2 h-4 w-4" />
