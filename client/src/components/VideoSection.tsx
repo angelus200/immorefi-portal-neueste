@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { featuredVideos } from '@/config/videos';
+import { videos } from '@/config/videos';
 import { Play } from 'lucide-react';
 
 /**
@@ -14,11 +14,11 @@ import { Play } from 'lucide-react';
 export function VideoSection() {
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
 
-  if (featuredVideos.length === 0) {
+  if (videos.length === 0) {
     return null;
   }
 
-  const activeVideo = featuredVideos[activeVideoIndex];
+  const activeVideo = videos[activeVideoIndex];
 
   return (
     <section className="py-16 lg:py-20 bg-gradient-to-b from-background to-gray-50 dark:to-gray-950/50">
@@ -62,13 +62,13 @@ export function VideoSection() {
         </div>
 
         {/* Thumbnail Gallery */}
-        {featuredVideos.length > 1 && (
+        {videos.length > 1 && (
           <div className="max-w-5xl mx-auto">
             <div className="relative">
               {/* Horizontal Scroll Container */}
               <div className="overflow-x-auto scrollbar-hide">
                 <div className="flex gap-4 pb-4 min-w-min px-1">
-                  {featuredVideos.map((video, index) => (
+                  {videos.map((video, index) => (
                     <button
                       key={video.id}
                       onClick={() => setActiveVideoIndex(index)}
@@ -85,17 +85,24 @@ export function VideoSection() {
                     >
                       {/* Thumbnail - 16:9 Aspect Ratio */}
                       <div className="relative w-full bg-gray-100 dark:bg-gray-900" style={{ paddingBottom: '56.25%' }}>
-                        {/* Vidyard Thumbnail Placeholder */}
-                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
-                          <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center group-hover:bg-primary/30 transition-colors">
+                        {/* Vidyard Thumbnail Image */}
+                        <img
+                          src={video.thumbnail}
+                          alt={video.title}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+
+                        {/* Play Button Overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                          <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center group-hover:bg-white transition-colors">
                             <Play className="h-6 w-6 text-primary fill-primary" />
                           </div>
                         </div>
 
                         {/* Active Indicator Overlay */}
                         {index === activeVideoIndex && (
-                          <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                            <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold">
+                          <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                            <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
                               Wird abgespielt
                             </div>
                           </div>
@@ -117,7 +124,7 @@ export function VideoSection() {
               </div>
 
               {/* Scroll Hint - Only on Desktop */}
-              {featuredVideos.length > 4 && (
+              {videos.length > 4 && (
                 <div className="hidden md:block absolute right-0 top-0 bottom-4 w-16 bg-gradient-to-l from-background to-transparent pointer-events-none" />
               )}
             </div>
@@ -125,7 +132,7 @@ export function VideoSection() {
             {/* Video Counter */}
             <div className="text-center mt-4">
               <p className="text-sm text-muted-foreground">
-                Video {activeVideoIndex + 1} von {featuredVideos.length}
+                Video {activeVideoIndex + 1} von {videos.length}
               </p>
             </div>
           </div>
