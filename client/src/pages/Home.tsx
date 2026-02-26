@@ -34,6 +34,7 @@ import {
 import { Link, useLocation } from "wouter";
 import { FinanceCalculator } from "@/components/FinanceCalculator";
 import { VideoCarousel } from "@/components/VideoCarousel";
+import { VideoSection } from "@/components/VideoSection";
 import { Calculator } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
@@ -398,6 +399,9 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {/* Video Section */}
+      <VideoSection />
 
       {/* Hero Section */}
       <section className="relative py-20 lg:py-32 overflow-hidden">
