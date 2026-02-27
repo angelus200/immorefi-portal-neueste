@@ -43,6 +43,7 @@ import Press from "./pages/Press";
 import { CookieBanner } from "./components/CookieBanner";
 import { ChatWidget } from "./components/ChatWidget";
 import { WelcomeModal } from "./components/WelcomeModal";
+import { TickerBand } from "./components/TickerBand";
 import InterestCalculator from "./pages/tools/InterestCalculator";
 import RefinanceCalculator from "./pages/tools/RefinanceCalculator";
 import ROECalculator from "./pages/tools/ROECalculator";
@@ -140,6 +141,7 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
+          <TickerBand />
           <Toaster />
           <Router />
           <CookieBanner />
