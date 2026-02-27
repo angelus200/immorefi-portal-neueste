@@ -35,6 +35,7 @@ import { Link, useLocation } from "wouter";
 import { FinanceCalculator } from "@/components/FinanceCalculator";
 import { VideoCarousel } from "@/components/VideoCarousel";
 import { VideoSection } from "@/components/VideoSection";
+import { ConsultationBanner } from "@/components/ConsultationBanner";
 import { Calculator } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
@@ -426,6 +427,9 @@ export default function Home() {
           </Button>
         </div>
       </section>
+
+      {/* Consultation Banner */}
+      <ConsultationBanner />
 
       {/* Video Section */}
       <VideoSection />
