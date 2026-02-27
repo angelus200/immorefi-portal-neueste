@@ -40,31 +40,37 @@ export function ConsultationBanner() {
   };
 
   return (
-    <section className="py-4 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-950/20 dark:to-blue-950/20 border-y border-cyan-200 dark:border-cyan-800">
+    <section className="py-6 bg-gradient-to-r from-cyan-500 to-blue-600 shadow-lg">
       <div className="container">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Left: Price & Duration */}
           <div className="text-center md:text-left">
-            <p className="text-sm text-gray-700 dark:text-gray-300">
-              Persönliche Erstberatung –{' '}
-              <span className="font-bold text-primary text-base">€ 850</span>{' '}
-              <span className="text-gray-600 dark:text-gray-400">zzgl. MwSt.</span>{' '}
-              <span className="text-gray-500 dark:text-gray-500">| 60 Minuten</span>
-            </p>
+            <div className="flex items-center gap-3 flex-wrap justify-center md:justify-start">
+              {/* "Jetzt verfügbar" Badge */}
+              <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/20 text-white text-xs font-semibold backdrop-blur-sm">
+                Jetzt verfügbar
+              </span>
+              <p className="text-sm text-white">
+                Persönliche Erstberatung –{' '}
+                <span className="font-bold text-2xl underline decoration-2 underline-offset-4">€ 850</span>{' '}
+                <span className="text-white/90">zzgl. MwSt.</span>{' '}
+                <span className="text-white/80">| 60 Minuten</span>
+              </p>
+            </div>
           </div>
 
           {/* Center: Benefits */}
-          <div className="flex items-center gap-4 text-xs text-gray-700 dark:text-gray-300">
+          <div className="flex items-center gap-4 text-xs text-white">
             <div className="flex items-center gap-1">
-              <CheckCircle className="h-4 w-4 text-primary" />
+              <CheckCircle className="h-4 w-4 text-white" />
               <span>1:1 Gespräch</span>
             </div>
             <div className="flex items-center gap-1">
-              <CheckCircle className="h-4 w-4 text-primary" />
+              <CheckCircle className="h-4 w-4 text-white" />
               <span>Finanzierungsanalyse</span>
             </div>
             <div className="flex items-center gap-1">
-              <CheckCircle className="h-4 w-4 text-primary" />
+              <CheckCircle className="h-4 w-4 text-white" />
               <span>Sofort buchbar</span>
             </div>
           </div>
@@ -73,7 +79,7 @@ export function ConsultationBanner() {
           <Button
             onClick={handleBooking}
             disabled={createCheckout.isPending}
-            className="bg-primary hover:bg-primary/90 whitespace-nowrap"
+            className="bg-white text-cyan-600 hover:bg-cyan-50 whitespace-nowrap font-semibold shadow-md"
           >
             {createCheckout.isPending ? (
               <>
