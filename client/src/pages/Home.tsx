@@ -372,6 +372,11 @@ export default function Home() {
             <a href="#faq" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
               FAQ
             </a>
+            <Link href="/investor">
+              <span className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+                Investoren
+              </span>
+            </Link>
             <Link href="/dashboard/affiliate">
               <span className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors cursor-pointer">
                 Affiliate

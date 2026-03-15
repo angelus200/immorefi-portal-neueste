@@ -55,6 +55,7 @@ import ClubDealStatus from "./pages/customer/ClubDealStatus";
 import AdminClubDeals from "./pages/admin/ClubDeals";
 import AdminAffiliates from "./pages/admin/Affiliates";
 import AdminAnalytics from "./pages/admin/Analytics";
+import InvestorLanding from "./pages/investor/InvestorLanding";
 import InvestorOnboarding from "./pages/investor/InvestorOnboarding";
 import InvestorDashboard from "./pages/investor/InvestorDashboard";
 import InvestorProject from "./pages/investor/InvestorProject";
@@ -104,6 +105,7 @@ function Router() {
       <Route path="/dashboard/club-deal" component={ClubDealStatus} />
 
       {/* Investor Routes */}
+      <Route path="/investor" component={InvestorLanding} />
       <Route path="/investor/onboarding" component={InvestorOnboarding} />
       <Route path="/investor/dashboard" component={InvestorDashboard} />
       <Route path="/investor/project/:id" component={InvestorProject} />

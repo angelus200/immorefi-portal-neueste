@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Building2, ClipboardCheck, Loader2 } from "lucide-react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 
 // ─── Schritt-Definition ───────────────────────────────────────────────────────
 
@@ -91,23 +91,42 @@ export default function InvestorOnboarding() {
     );
   }
 
-  // Nicht eingeloggt
+  // Nicht eingeloggt → öffentlicher Header + Hinweis
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle>Anmeldung erforderlich</CardTitle>
-            <CardDescription>
-              Bitte melden Sie sich an, um sich als Investor zu registrieren.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full" onClick={() => window.location.href = "/sign-in"}>
-              Anmelden
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen">
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container flex h-16 items-center justify-between">
+            <Link href="/">
+              <img src="/images/logos/non-dom-group-logo.webp" alt="Non Dom Group" className="h-10" />
+            </Link>
+            <div className="flex items-center gap-3">
+              <Link href="/sign-in">
+                <Button variant="outline">Login</Button>
+              </Link>
+              <Link href="/sign-up">
+                <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                  Registrieren
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </header>
+        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] bg-muted/30">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <CardTitle>Anmeldung erforderlich</CardTitle>
+              <CardDescription>
+                Bitte melden Sie sich an, um sich als Investor zu registrieren.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/sign-in">
+                <Button className="w-full">Anmelden</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
