@@ -55,6 +55,10 @@ import ClubDealStatus from "./pages/customer/ClubDealStatus";
 import AdminClubDeals from "./pages/admin/ClubDeals";
 import AdminAffiliates from "./pages/admin/Affiliates";
 import AdminAnalytics from "./pages/admin/Analytics";
+import InvestorOnboarding from "./pages/investor/InvestorOnboarding";
+import InvestorDashboard from "./pages/investor/InvestorDashboard";
+import InvestorProject from "./pages/investor/InvestorProject";
+import InvestorSubscriptions from "./pages/investor/InvestorSubscriptions";
 import { useAffiliateTracking } from "./hooks/useAffiliateTracking";
 import { usePageTracking } from "./hooks/usePageTracking";
 
@@ -98,6 +102,12 @@ function Router() {
       <Route path="/settings" component={Settings} />
       <Route path="/dashboard/affiliate" component={Affiliate} />
       <Route path="/dashboard/club-deal" component={ClubDealStatus} />
+
+      {/* Investor Routes */}
+      <Route path="/investor/onboarding" component={InvestorOnboarding} />
+      <Route path="/investor/dashboard" component={InvestorDashboard} />
+      <Route path="/investor/project/:id" component={InvestorProject} />
+      <Route path="/investor/subscriptions" component={InvestorSubscriptions} />
 
       {/* Booking Routes */}
       <Route path="/booking" component={Booking} />

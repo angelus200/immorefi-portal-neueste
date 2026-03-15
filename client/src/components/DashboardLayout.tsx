@@ -52,6 +52,7 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
+import { trpc } from "@/lib/trpc";
 
 // Client menu items - Simple and clean
 const clientMenuItems = [
@@ -209,6 +210,10 @@ function DashboardLayoutContent({
   // Check if user is admin
   const isAdmin = user?.role === "superadmin" || user?.role === "tenant_admin" || user?.role === "staff";
 
+  // Investor-Status (nur für Nicht-Admins, spart einen API-Call)
+  const { data: investorStatus } = trpc.clubDeal.checkStatus.useQuery(undefined, { enabled: !!user && !isAdmin });
+  const isInvestor = investorStatus?.isInvestor ?? false;
+
   // Get active menu item label for header
   const getActiveMenuLabel = () => {
     // Check client menu
@@ -223,6 +228,9 @@ function DashboardLayoutContent({
       }
     }
 
+    if (location === "/investor/dashboard") return "Projekte";
+    if (location === "/investor/subscriptions") return "Meine Zeichnungen";
+    if (location.startsWith("/investor/project/")) return "Projekt-Details";
     return "Dashboard";
   };
 
@@ -293,27 +301,59 @@ function DashboardLayoutContent({
 
           <SidebarContent className="gap-0">
             {!isAdmin ? (
-              // Client Menu - Simple and clean
-              <SidebarMenu className="px-2 py-1">
-                {clientMenuItems.map(item => {
-                  const isActive = location === item.path;
-                  return (
-                    <SidebarMenuItem key={item.path}>
-                      <SidebarMenuButton
-                        isActive={isActive}
-                        onClick={() => setLocation(item.path)}
-                        tooltip={item.label}
-                        className="h-10 transition-all font-normal"
-                      >
-                        <item.icon
-                          className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
-                        />
-                        <span>{item.label}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
+              // Client Menu + optionaler Investoren-Abschnitt
+              <>
+                <SidebarMenu className="px-2 py-1">
+                  {clientMenuItems.map(item => {
+                    const isActive = location === item.path;
+                    return (
+                      <SidebarMenuItem key={item.path}>
+                        <SidebarMenuButton
+                          isActive={isActive}
+                          onClick={() => setLocation(item.path)}
+                          tooltip={item.label}
+                          className="h-10 transition-all font-normal"
+                        >
+                          <item.icon
+                            className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
+                          />
+                          <span>{item.label}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+                {isInvestor && (
+                  <>
+                    <div className="px-4 py-3 mt-2">
+                      {!isCollapsed
+                        ? <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Investments</div>
+                        : <Separator className="my-1" />}
+                    </div>
+                    <SidebarMenu className="px-2 py-1">
+                      {[
+                        { icon: Building2,     label: "Projekte",          path: "/investor/dashboard" },
+                        { icon: ClipboardList, label: "Meine Zeichnungen", path: "/investor/subscriptions" },
+                      ].map(item => {
+                        const isActive = location === item.path;
+                        return (
+                          <SidebarMenuItem key={item.path}>
+                            <SidebarMenuButton
+                              isActive={isActive}
+                              onClick={() => setLocation(item.path)}
+                              tooltip={item.label}
+                              className="h-10 transition-all font-normal"
+                            >
+                              <item.icon className={`h-4 w-4 ${isActive ? "text-primary" : ""}`} />
+                              <span>{item.label}</span>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </SidebarMenu>
+                  </>
+                )}
+              </>
             ) : (
               // Admin Menu - Organized by sections
               <>
