@@ -51,6 +51,8 @@ import Glossary from "./pages/tools/Glossary";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Affiliate from "./pages/customer/Affiliate";
+import ClubDealStatus from "./pages/customer/ClubDealStatus";
+import AdminClubDeals from "./pages/admin/ClubDeals";
 import AdminAffiliates from "./pages/admin/Affiliates";
 import AdminAnalytics from "./pages/admin/Analytics";
 import { useAffiliateTracking } from "./hooks/useAffiliateTracking";
@@ -95,6 +97,7 @@ function Router() {
       <Route path="/invoices" component={Invoices} />
       <Route path="/settings" component={Settings} />
       <Route path="/dashboard/affiliate" component={Affiliate} />
+      <Route path="/dashboard/club-deal" component={ClubDealStatus} />
 
       {/* Booking Routes */}
       <Route path="/booking" component={Booking} />
@@ -122,6 +125,7 @@ function Router() {
       <Route path="/admin/newsletter" component={AdminNewsletter} />
       <Route path="/admin/handbuch" component={AdminHandbuch} />
       <Route path="/admin/affiliates" component={AdminAffiliates} />
+      <Route path="/admin/club-deals" component={AdminClubDeals} />
 
       {/* Fallback */}
       <Route path="/404" component={NotFound} />
