@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { Link } from 'wouter';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -109,7 +110,37 @@ export default function Affiliate() {
   // Not an affiliate yet — nicht-eingeloggte User sehen die öffentliche Marketing-Seite ohne Sidebar
   if (!dashboard?.isAffiliate) {
     const marketingContent = (
-      <div className="container max-w-4xl py-12">
+      <div>
+        {/* Öffentlicher Header — identisch zur Landing Page */}
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container flex h-16 items-center justify-between">
+            <Link href="/">
+              <img src="/images/logos/non-dom-group-logo.webp" alt="Non Dom Group" className="h-10" />
+            </Link>
+            <nav className="hidden md:flex items-center gap-6">
+              <Link href="/#leistungen">
+                <span className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors cursor-pointer">Leistungen</span>
+              </Link>
+              <Link href="/#prozess">
+                <span className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors cursor-pointer">Prozess</span>
+              </Link>
+              <Link href="/#faq">
+                <span className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors cursor-pointer">FAQ</span>
+              </Link>
+            </nav>
+            <div className="flex items-center gap-3">
+              <Link href="/sign-in">
+                <Button variant="outline">Login</Button>
+              </Link>
+              <Link href="/sign-up">
+                <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                  Registrieren
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </header>
+        <div className="container max-w-4xl py-12">
         <Card className="border-2 border-primary/20">
           <CardHeader className="text-center">
             <CardTitle className="text-3xl">Affiliate Programm</CardTitle>
@@ -184,6 +215,7 @@ export default function Affiliate() {
             )}
           </CardContent>
         </Card>
+        </div>
       </div>
     );
     return user ? <DashboardLayout>{marketingContent}</DashboardLayout> : marketingContent;
