@@ -100,18 +100,15 @@ export default function Affiliate() {
 
   if (authLoading || isLoading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
-  // Not an affiliate yet
+  // Not an affiliate yet — nicht-eingeloggte User sehen die öffentliche Marketing-Seite ohne Sidebar
   if (!dashboard?.isAffiliate) {
-    return (
-      <DashboardLayout>
+    const marketingContent = (
       <div className="container max-w-4xl py-12">
         <Card className="border-2 border-primary/20">
           <CardHeader className="text-center">
@@ -188,8 +185,8 @@ export default function Affiliate() {
           </CardContent>
         </Card>
       </div>
-      </DashboardLayout>
     );
+    return user ? <DashboardLayout>{marketingContent}</DashboardLayout> : marketingContent;
   }
 
   // Affiliate Dashboard
