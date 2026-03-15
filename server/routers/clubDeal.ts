@@ -11,8 +11,10 @@ import { getDb } from "../db";
 import {
   clubDealProjects,
   clubDealSubscriptions,
+  clubDealInvestors,
   type InsertClubDealProject,
   type InsertClubDealSubscription,
+  type InsertClubDealInvestor,
 } from "../../drizzle/clubDealSchema";
 
 // ─── Zod Schemas ─────────────────────────────────────────────────────────────
@@ -467,6 +469,398 @@ export const clubDealRouter = router({
           cancelled: allProjects.filter(p => p.status === "cancelled").length,
         },
       };
+    }),
+
+  // ═══════════════════════════════════════════════════════
+  // INVESTOREN-PROCEDURES (Phase 5+6)
+  // ═══════════════════════════════════════════════════════
+
+  /**
+   * Prüft ob der eingeloggte User ein Investor-Profil hat
+   * Wird auch vom DashboardLayout aufgerufen um das Investor-Menü anzuzeigen
+   */
+  checkStatus: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return { isInvestor: false, investor: null };
+
+      const [investor] = await db
+        .select()
+        .from(clubDealInvestors)
+        .where(eq(clubDealInvestors.userId, ctx.user.id))
+        .limit(1);
+
+      return {
+        isInvestor: !!investor && investor.status === "active",
+        investor: investor ?? null,
+      };
+    }),
+
+  /**
+   * Investor-Onboarding — Erstellt Investor-Profil
+   * selfDeclaration MUSS true sein (Pflicht-Check)
+   */
+  onboard: protectedProcedure
+    .input(z.object({
+      companyName: z.string().optional(),
+      investorType: z.enum(["private_professional", "institutional", "family_office", "fund", "other"]),
+      investmentExperience: z.enum(["under_2_years", "2_to_5_years", "5_to_10_years", "over_10_years"]),
+      selfDeclaration: z.literal(true),
+      preferredVolume: z.number().int().min(0).optional(),
+      preferredTypes: z.array(z.string()).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Datenbankverbindung nicht verfügbar");
+
+      // Doppeltes Onboarding verhindern
+      const [existing] = await db
+        .select()
+        .from(clubDealInvestors)
+        .where(eq(clubDealInvestors.userId, ctx.user.id))
+        .limit(1);
+
+      if (existing) {
+        return { success: true, investor: existing };
+      }
+
+      const newInvestor: InsertClubDealInvestor = {
+        userId: ctx.user.id,
+        companyName: input.companyName,
+        investorType: input.investorType,
+        investmentExperience: input.investmentExperience,
+        selfDeclaration: true,
+        preferredVolume: input.preferredVolume,
+        preferredTypes: input.preferredTypes,
+        status: "active",
+      };
+
+      const result = await db.insert(clubDealInvestors).values(newInvestor);
+      const insertId = (result as any)[0]?.insertId ?? (result as any).insertId;
+
+      const [investor] = await db
+        .select()
+        .from(clubDealInvestors)
+        .where(eq(clubDealInvestors.id, insertId))
+        .limit(1);
+
+      return { success: true, investor };
+    }),
+
+  /**
+   * Alle aktiven Projekte für Investoren
+   * Sensible Anbieter-Daten (providerId) werden NICHT zurückgegeben
+   */
+  getActiveProjects: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Datenbankverbindung nicht verfügbar");
+
+      // Investor-Check
+      const [investor] = await db
+        .select()
+        .from(clubDealInvestors)
+        .where(eq(clubDealInvestors.userId, ctx.user.id))
+        .limit(1);
+      if (!investor || investor.status !== "active") {
+        throw new Error("Kein aktives Investor-Profil");
+      }
+
+      const projects = await db
+        .select()
+        .from(clubDealProjects)
+        .where(eq(clubDealProjects.status, "active"))
+        .orderBy(desc(clubDealProjects.publishedAt));
+
+      // providerId aus den zurückgegebenen Daten entfernen
+      return projects.map(({ providerId, stripePaymentId, ...safe }) => safe);
+    }),
+
+  /**
+   * Einzelnes Projekt für Investor (inkl. Dokumente + eigene Zeichnung)
+   */
+  getProject: protectedProcedure
+    .input(z.object({ projectId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Datenbankverbindung nicht verfügbar");
+
+      // Investor-Check
+      const [investor] = await db
+        .select()
+        .from(clubDealInvestors)
+        .where(eq(clubDealInvestors.userId, ctx.user.id))
+        .limit(1);
+      if (!investor || investor.status !== "active") {
+        throw new Error("Kein aktives Investor-Profil");
+      }
+
+      const [project] = await db
+        .select()
+        .from(clubDealProjects)
+        .where(eq(clubDealProjects.id, input.projectId))
+        .limit(1);
+
+      if (!project) throw new Error("Projekt nicht gefunden");
+      if (project.status !== "active" && project.status !== "fully_funded") {
+        throw new Error("Dieses Projekt ist nicht verfügbar");
+      }
+
+      // Eigene Zeichnung für dieses Projekt
+      const [mySubscription] = await db
+        .select()
+        .from(clubDealSubscriptions)
+        .where(
+          and(
+            eq(clubDealSubscriptions.projectId, input.projectId),
+            eq(clubDealSubscriptions.investorId, ctx.user.id),
+          )
+        )
+        .limit(1);
+
+      const { providerId, stripePaymentId, ...safeProject } = project;
+      return { project: safeProject, mySubscription: mySubscription ?? null };
+    }),
+
+  /**
+   * Zeichnung abgeben — alle Validierungen serverseitig
+   */
+  subscribe: protectedProcedure
+    .input(z.object({
+      projectId: z.number(),
+      amount: z.number().int().min(10000000, "Mindestzeichnung €100.000"),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Datenbankverbindung nicht verfügbar");
+
+      // 1. Investor-Check
+      const [investor] = await db
+        .select()
+        .from(clubDealInvestors)
+        .where(eq(clubDealInvestors.userId, ctx.user.id))
+        .limit(1);
+      if (!investor || investor.status !== "active") {
+        throw new Error("Kein aktives Investor-Profil");
+      }
+
+      // 2. Projekt-Check
+      const [project] = await db
+        .select()
+        .from(clubDealProjects)
+        .where(eq(clubDealProjects.id, input.projectId))
+        .limit(1);
+      if (!project) throw new Error("Projekt nicht gefunden");
+      if (project.status !== "active") throw new Error("Projekt ist nicht mehr aktiv");
+
+      // 3. Mindestbetrag bereits via Zod validiert
+
+      // 4. Volumen-Check
+      if (project.currentVolume + input.amount > project.targetVolume) {
+        throw new Error("Zeichnungsbetrag überschreitet das verbleibende Zielvolumen");
+      }
+
+      // 5. Doppelzeichnung verhindern
+      const [existingSub] = await db
+        .select()
+        .from(clubDealSubscriptions)
+        .where(
+          and(
+            eq(clubDealSubscriptions.projectId, input.projectId),
+            eq(clubDealSubscriptions.investorId, ctx.user.id),
+          )
+        )
+        .limit(1);
+      if (existingSub) throw new Error("Sie haben für dieses Projekt bereits gezeichnet");
+
+      // 6. Kapazitätsprüfung → pending oder waitlisted
+      const isFull = project.currentInvestors >= project.maxInvestors;
+      let subStatus: "pending" | "waitlisted" = isFull ? "waitlisted" : "pending";
+
+      // Wartelisten-Position berechnen
+      let position: number | undefined;
+      if (isFull) {
+        const waitlistEntries = await db
+          .select()
+          .from(clubDealSubscriptions)
+          .where(
+            and(
+              eq(clubDealSubscriptions.projectId, input.projectId),
+              eq(clubDealSubscriptions.status, "waitlisted"),
+            )
+          );
+        position = waitlistEntries.length + 1;
+      }
+
+      const result = await db.insert(clubDealSubscriptions).values({
+        projectId: input.projectId,
+        investorId: ctx.user.id,
+        amount: input.amount,
+        status: subStatus,
+        position: position ?? null,
+      });
+      const insertId = (result as any)[0]?.insertId ?? (result as any).insertId;
+
+      // Projekt-Zähler aktualisieren (nur bei pending)
+      if (!isFull) {
+        const newVolume = project.currentVolume + input.amount;
+        const newInvestors = project.currentInvestors + 1;
+
+        // 7. Vollfinanzierung prüfen
+        const newStatus = newVolume >= project.targetVolume ? "fully_funded" : "active";
+
+        await db
+          .update(clubDealProjects)
+          .set({ currentVolume: newVolume, currentInvestors: newInvestors, status: newStatus })
+          .where(eq(clubDealProjects.id, input.projectId));
+      }
+
+      const [subscription] = await db
+        .select()
+        .from(clubDealSubscriptions)
+        .where(eq(clubDealSubscriptions.id, insertId))
+        .limit(1);
+
+      return { success: true, subscription, waitlisted: isFull };
+    }),
+
+  /**
+   * Alle eigenen Zeichnungen (mit Projekt-Info)
+   */
+  getMySubscriptions: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Datenbankverbindung nicht verfügbar");
+
+      const subs = await db
+        .select()
+        .from(clubDealSubscriptions)
+        .where(eq(clubDealSubscriptions.investorId, ctx.user.id))
+        .orderBy(desc(clubDealSubscriptions.subscribedAt));
+
+      if (subs.length === 0) return [];
+
+      // Projekt-Infos dazu laden
+      const projectIds = Array.from(new Set(subs.map(s => s.projectId)));
+      const projects = await db
+        .select()
+        .from(clubDealProjects)
+        .where(
+          projectIds.length === 1
+            ? eq(clubDealProjects.id, projectIds[0])
+            : and(...projectIds.map(id => eq(clubDealProjects.id, id)))
+        );
+
+      const projectMap = Object.fromEntries(projects.map(p => [p.id, p]));
+
+      return subs.map(sub => ({
+        ...sub,
+        project: projectMap[sub.projectId]
+          ? {
+              title: projectMap[sub.projectId].title,
+              status: projectMap[sub.projectId].status,
+              projectType: projectMap[sub.projectId].projectType,
+            }
+          : null,
+      }));
+    }),
+
+  /**
+   * Zeichnung stornieren — nur eigene, nur pending/waitlisted
+   */
+  cancelSubscription: protectedProcedure
+    .input(z.object({ subscriptionId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Datenbankverbindung nicht verfügbar");
+
+      const [sub] = await db
+        .select()
+        .from(clubDealSubscriptions)
+        .where(
+          and(
+            eq(clubDealSubscriptions.id, input.subscriptionId),
+            eq(clubDealSubscriptions.investorId, ctx.user.id),
+          )
+        )
+        .limit(1);
+
+      if (!sub) throw new Error("Zeichnung nicht gefunden");
+      if (sub.status !== "pending" && sub.status !== "waitlisted") {
+        throw new Error("Bestätigte oder abgeschlossene Zeichnungen können nicht storniert werden");
+      }
+
+      await db
+        .update(clubDealSubscriptions)
+        .set({ status: "cancelled" })
+        .where(eq(clubDealSubscriptions.id, input.subscriptionId));
+
+      // Bei pending: Projekt-Zähler zurücksetzen
+      if (sub.status === "pending") {
+        const [project] = await db
+          .select()
+          .from(clubDealProjects)
+          .where(eq(clubDealProjects.id, sub.projectId))
+          .limit(1);
+
+        if (project) {
+          const newVolume = Math.max(0, project.currentVolume - sub.amount);
+          const newInvestors = Math.max(0, project.currentInvestors - 1);
+
+          // Prüfen ob ein Wartelisten-Nachrücker aufrücken soll
+          const [nextWaitlisted] = await db
+            .select()
+            .from(clubDealSubscriptions)
+            .where(
+              and(
+                eq(clubDealSubscriptions.projectId, sub.projectId),
+                eq(clubDealSubscriptions.status, "waitlisted"),
+              )
+            )
+            .orderBy(clubDealSubscriptions.position)
+            .limit(1);
+
+          if (nextWaitlisted) {
+            // Nachrücker auf pending setzen
+            await db
+              .update(clubDealSubscriptions)
+              .set({ status: "pending", position: null })
+              .where(eq(clubDealSubscriptions.id, nextWaitlisted.id));
+
+            // Wartelisten-Positionen neu nummerieren
+            const remainingWaitlist = await db
+              .select()
+              .from(clubDealSubscriptions)
+              .where(
+                and(
+                  eq(clubDealSubscriptions.projectId, sub.projectId),
+                  eq(clubDealSubscriptions.status, "waitlisted"),
+                )
+              )
+              .orderBy(clubDealSubscriptions.position);
+
+            for (let i = 0; i < remainingWaitlist.length; i++) {
+              await db
+                .update(clubDealSubscriptions)
+                .set({ position: i + 1 })
+                .where(eq(clubDealSubscriptions.id, remainingWaitlist[i].id));
+            }
+
+            // Investoren-Zähler bleibt gleich (Nachrücker übernimmt den Slot)
+            await db
+              .update(clubDealProjects)
+              .set({ currentVolume: newVolume + nextWaitlisted.amount })
+              .where(eq(clubDealProjects.id, sub.projectId));
+          } else {
+            await db
+              .update(clubDealProjects)
+              .set({ currentVolume: newVolume, currentInvestors: newInvestors })
+              .where(eq(clubDealProjects.id, sub.projectId));
+          }
+        }
+      }
+
+      return { success: true };
     }),
 });
 
