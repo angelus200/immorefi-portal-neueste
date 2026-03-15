@@ -184,4 +184,34 @@ Die Pipeline zeigt alle laufenden Projekte als Kanban-Board:
 
 ---
 
+---
+
+## Club Deal System
+
+Das Club Deal System ermöglicht Projektentwicklern, Kapital von professionellen Investoren einzuwerben (Private Placement, max. 18 Investoren, ab €100.000).
+
+### Als Admin
+
+Unter **`/admin/club-deals`** können Sie:
+- Neue Projekte anlegen und bearbeiten
+- Dokumente hochladen (Pitchdeck, Due Diligence, etc.)
+- Projekte freischalten (`active` setzen)
+- Zeichnungen bestätigen oder ablehnen
+
+**Status-Workflow eines Projekts:**
+`Entwurf → Prüfung → Aktiv → Vollständig finanziert → Abgeschlossen`
+
+### Als Investor (Endkunde)
+
+1. Unter `/investor` die Landing Page aufrufen
+2. Selbstauskunft unter `/investor/onboarding` ausfüllen (dauert 2 Minuten)
+3. Nach Admin-Freischaltung: Zugang zu allen aktiven Projekten unter `/investor/dashboard`
+4. Zeichnung abgeben, Warteliste, Stornierung — alles unter `/investor/subscriptions`
+
+### Technische Details
+
+Vollständige Entwickler-Dokumentation: **`docs/CLUB_DEAL_SYSTEM.md`**
+
+---
+
 **Viel Erfolg mit dem ImmoRefi Portal!** 🚀
