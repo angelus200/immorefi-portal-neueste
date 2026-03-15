@@ -36,6 +36,7 @@ import { FinanceCalculator } from "@/components/FinanceCalculator";
 import { VideoCarousel } from "@/components/VideoCarousel";
 import { VideoSection } from "@/components/VideoSection";
 import { ConsultationBanner } from "@/components/ConsultationBanner";
+import { ClubDealSection } from "@/components/ClubDealSection";
 import { Calculator } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
@@ -1485,6 +1486,8 @@ export default function Home() {
       </section>
 
       {/* FAQ Section */}
+      <ClubDealSection />
+
       <section id="faq" className="py-20 lg:py-32 bg-muted/30">
         <div className="container max-w-4xl">
           <div className="text-center mb-16">

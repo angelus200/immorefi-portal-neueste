@@ -6,7 +6,7 @@
 
 import { router, protectedProcedure, adminProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { eq, desc, and, sql, sum } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { getDb } from "../db";
 import {
   clubDealProjects,
@@ -160,6 +160,139 @@ export const clubDealRouter = router({
   // ═══════════════════════════════════════════════════════
   // ADMIN-PROCEDURES
   // ═══════════════════════════════════════════════════════
+
+  /**
+   * Projekt manuell anlegen (Admin — unabhängig von Stripe)
+   */
+  adminCreateProject: adminProcedure
+    .input(z.object({
+      providerId: z.number().int().min(0).default(0), // 0 = kein Anbieter zugewiesen
+      title: z.string().min(1).max(255),
+      description: z.string().optional(),
+      location: z.string().optional(),
+      projectType: projectTypeSchema,
+      investmentType: investmentTypeSchema,
+      targetVolume: z.number().int().min(0),
+      minInvestment: z.number().int().min(0).default(10000000),
+      maxInvestors: z.number().int().min(1).max(100).default(18),
+      expectedReturn: z.number().min(0).max(100),
+      duration: z.number().int().min(1).max(240),
+      status: projectStatusSchema.default("draft"),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Datenbankverbindung nicht verfügbar");
+
+      const newProject: InsertClubDealProject = {
+        providerId: input.providerId,
+        title: input.title,
+        description: input.description,
+        location: input.location,
+        projectType: input.projectType,
+        investmentType: input.investmentType,
+        targetVolume: input.targetVolume,
+        currentVolume: 0,
+        minInvestment: input.minInvestment,
+        maxInvestors: input.maxInvestors,
+        currentInvestors: 0,
+        expectedReturn: String(input.expectedReturn),
+        duration: input.duration,
+        status: input.status,
+        packagePrice: 1149000,
+        revenueShare: "2.00",
+      };
+
+      const result = await db.insert(clubDealProjects).values(newProject);
+      const insertId = (result as any)[0]?.insertId ?? (result as any).insertId;
+
+      const [project] = await db
+        .select()
+        .from(clubDealProjects)
+        .where(eq(clubDealProjects.id, insertId))
+        .limit(1);
+
+      return project;
+    }),
+
+  /**
+   * Projekt bearbeiten — alle Felder inkl. Dokumente (Admin)
+   */
+  adminUpdateProject: adminProcedure
+    .input(z.object({
+      projectId: z.number(),
+      title: z.string().min(1).max(255).optional(),
+      description: z.string().optional(),
+      location: z.string().optional(),
+      projectType: projectTypeSchema.optional(),
+      investmentType: investmentTypeSchema.optional(),
+      targetVolume: z.number().int().min(0).optional(),
+      minInvestment: z.number().int().min(0).optional(),
+      maxInvestors: z.number().int().min(1).max(100).optional(),
+      expectedReturn: z.number().min(0).max(100).optional(),
+      duration: z.number().int().min(1).max(240).optional(),
+      status: projectStatusSchema.optional(),
+      providerId: z.number().int().optional(),
+      documents: z.array(z.object({
+        type: z.enum(["pitchdeck", "businessplan", "due_diligence", "rating"]),
+        url: z.string(),
+      })).optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Datenbankverbindung nicht verfügbar");
+
+      const { projectId, expectedReturn, ...rest } = input;
+
+      const updateData: Partial<InsertClubDealProject> = { ...rest };
+      if (expectedReturn !== undefined) {
+        updateData.expectedReturn = String(expectedReturn);
+      }
+      if (input.status === "active" && !updateData.publishedAt) {
+        // publishedAt nur setzen wenn noch nicht gesetzt
+        const [existing] = await db
+          .select()
+          .from(clubDealProjects)
+          .where(eq(clubDealProjects.id, projectId))
+          .limit(1);
+        if (existing && !existing.publishedAt) {
+          updateData.publishedAt = new Date();
+        }
+      }
+
+      await db
+        .update(clubDealProjects)
+        .set(updateData)
+        .where(eq(clubDealProjects.id, projectId));
+
+      const [updated] = await db
+        .select()
+        .from(clubDealProjects)
+        .where(eq(clubDealProjects.id, projectId))
+        .limit(1);
+
+      return updated;
+    }),
+
+  /**
+   * Projekt löschen (Admin)
+   */
+  adminDeleteProject: adminProcedure
+    .input(z.object({ projectId: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Datenbankverbindung nicht verfügbar");
+
+      // Zeichnungen zuerst löschen (FK-Constraint)
+      await db
+        .delete(clubDealSubscriptions)
+        .where(eq(clubDealSubscriptions.projectId, input.projectId));
+
+      await db
+        .delete(clubDealProjects)
+        .where(eq(clubDealProjects.id, input.projectId));
+
+      return { success: true };
+    }),
 
   /**
    * Alle Club Deal Projekte (Admin)
