@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -99,15 +100,18 @@ export default function Affiliate() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
     );
   }
 
   // Not an affiliate yet
   if (!dashboard?.isAffiliate) {
     return (
+      <DashboardLayout>
       <div className="container max-w-4xl py-12">
         <Card className="border-2 border-primary/20">
           <CardHeader className="text-center">
@@ -184,6 +188,7 @@ export default function Affiliate() {
           </CardContent>
         </Card>
       </div>
+      </DashboardLayout>
     );
   }
 
@@ -218,6 +223,7 @@ export default function Affiliate() {
   };
 
   return (
+    <DashboardLayout>
     <div className="container max-w-6xl py-8 space-y-6">
       {/* Header */}
       <div>
@@ -442,5 +448,6 @@ export default function Affiliate() {
         </CardContent>
       </Card>
     </div>
+    </DashboardLayout>
   );
 }
