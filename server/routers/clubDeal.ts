@@ -336,3 +336,32 @@ export const clubDealRouter = router({
       };
     }),
 });
+
+// ─── Webhook-Hilfsfunktion ────────────────────────────────────────────────────
+// Wird vom Stripe-Webhook in _core/index.ts aufgerufen nach CLUB_DEAL_PAKET-Zahlung
+
+export async function createDraftProjectAfterPayment(
+  userId: number,
+  stripePaymentId: string,
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db.insert(clubDealProjects).values({
+    providerId: userId,
+    title: "Neues Club Deal Projekt",
+    projectType: "residential",      // Platzhalter — Anbieter füllt im Dashboard aus
+    investmentType: "nachrangdarlehen",
+    targetVolume: 100000000,         // €1M Platzhalter
+    currentVolume: 0,
+    minInvestment: 10000000,
+    maxInvestors: 18,
+    currentInvestors: 0,
+    expectedReturn: "0.00",
+    duration: 24,
+    status: "draft",
+    stripePaymentId,
+    packagePrice: 1149000,
+    revenueShare: "2.00",
+  });
+}

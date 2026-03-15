@@ -81,6 +81,14 @@ export default function Shop() {
     // Download the PDF directly
     window.open('/downloads/handbuch-immobilienprojektentwickler.pdf', '_blank');
   };
+
+  const handlePurchaseClubDeal = () => {
+    if (!user) {
+      window.location.href = `/sign-in?redirect_url=${encodeURIComponent('/shop')}`;
+      return;
+    }
+    createCheckout.mutate({ productId: 'CLUB_DEAL_PAKET' });
+  };
   
   const analysisFeatures = [
     {
@@ -382,7 +390,87 @@ export default function Shop() {
             </CardFooter>
           </Card>
         </div>
-        
+
+        {/* Club Deal Paket */}
+        <div className="max-w-3xl mx-auto mb-16">
+          <Card className="border-2 border-blue-500/30 shadow-lg relative overflow-hidden">
+            <div className="absolute top-4 right-4">
+              <Badge className="bg-blue-600 hover:bg-blue-700">
+                <Users className="w-3 h-3 mr-1" />
+                Für Projektentwickler
+              </Badge>
+            </div>
+
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <Building2 className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Club Deal Paket</CardTitle>
+                  <CardDescription>Bis zu 633 qualifizierte DACH-Investoren</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold">€11.490</span>
+                <span className="text-muted-foreground text-sm">zzgl. MwSt. + 2% Umsatzbeteiligung</span>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-3">
+                {[
+                  "Projektfinanzierungsanalyse",
+                  "Entwicklung Investoren-Angebot",
+                  "Professionelles Pitchdeck",
+                  "Businessplan & Due Diligence",
+                  "Rating-Dokumentation",
+                  "Ansprache von bis zu 633 Investoren",
+                  "Min. Investition: €100.000 je Investor",
+                  "Max. 18 Investoren pro Projekt",
+                ].map((feature, i) => (
+                  <div key={i} className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <span>{feature}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3 text-sm text-muted-foreground">
+                <strong className="text-foreground">Zielvolumen:</strong> €1.000.000 – €3.000.000 |{" "}
+                <strong className="text-foreground">Laufzeit:</strong> Nachrangdarlehen, Anleihe, Genussrecht u.a.
+              </div>
+            </CardContent>
+
+            <CardFooter className="flex flex-col gap-3">
+              <Button
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                size="lg"
+                onClick={handlePurchaseClubDeal}
+                disabled={createCheckout.isPending}
+              >
+                {createCheckout.isPending ? "Wird verarbeitet..." : (
+                  <>
+                    Jetzt Club Deal starten
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
+              </Button>
+              <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Shield className="w-3 h-3" />
+                  <span>Sichere Zahlung</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  <span>Projektstart nach Zahlung</span>
+                </div>
+              </div>
+            </CardFooter>
+          </Card>
+        </div>
+
         {/* Analysis Details Section */}
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-center mb-8">

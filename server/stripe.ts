@@ -36,6 +36,14 @@ export const PRODUCTS = {
     currency: 'eur',
     successUrl: 'https://calendly.com/t-gross-lce/besprechung',
   },
+  CLUB_DEAL_PAKET: {
+    id: 'club_deal_paket',
+    name: 'Club Deal Paket',
+    description: 'Projektfinanzierungsanalyse, Entwicklung Investoren-Angebot, Marketingpaket (Pitchdeck, Businessplan, Due Diligence, Rating), Ansprache von bis zu 633 qualifizierten DACH-Investoren.',
+    price: 1149000, // €11.490,00 in cents
+    currency: 'eur',
+    successUrl: '/dashboard/club-deal',
+  },
 } as const;
 
 export type ProductId = keyof typeof PRODUCTS;

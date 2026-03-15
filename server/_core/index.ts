@@ -260,9 +260,24 @@ async function startServer() {
             console.error('[Webhook] Error creating invoice:', invoiceError);
             // Don't fail the webhook if invoice creation fails
           }
+
+          // Club Deal Paket — Draft-Projekt nach Zahlung anlegen
+          try {
+            if (session.metadata?.product_id === 'CLUB_DEAL_PAKET' && session.metadata?.user_id) {
+              const { createDraftProjectAfterPayment } = await import('../routers/clubDeal');
+              await createDraftProjectAfterPayment(
+                parseInt(session.metadata.user_id),
+                session.payment_intent as string,
+              );
+              console.log(`[Webhook] Club Deal draft project created for user ${session.metadata.user_id}`);
+            }
+          } catch (clubDealError) {
+            console.error('[Webhook] Error creating Club Deal project:', clubDealError);
+            // Don't fail the webhook if Club Deal project creation fails
+          }
         }
       }
-      
+
       // Handle payment_intent.payment_failed
       if (event.type === 'payment_intent.payment_failed') {
         const paymentIntent = event.data.object;
