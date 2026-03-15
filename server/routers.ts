@@ -1,6 +1,7 @@
 import { systemRouter } from "./_core/systemRouter";
 import { affiliateRouter } from "./routers/affiliate";
 import { analyticsRouter } from "./routers/analytics";
+import { clubDealRouter } from "./routers/clubDeal";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -3713,6 +3714,7 @@ export const appRouter = router({
   newsletter: newsletterRouter,
   affiliate: affiliateRouter,
   analytics: analyticsRouter,
+  clubDeal: clubDealRouter,
 
   // RSS Feed Proxy (CORS workaround)
   rssFeed: publicProcedure.query(async () => {
