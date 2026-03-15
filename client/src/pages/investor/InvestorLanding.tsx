@@ -230,10 +230,17 @@ function LandingContent() {
             ))}
           </div>
 
-          <p className="text-xs text-muted-foreground pt-2">
+          <p className="text-xs text-muted-foreground pt-2 max-w-2xl mx-auto">
             Nur für professionelle und qualifizierte Investoren. Ein vollständiger Kapitalverlust ist möglich.
-            Diese Seite stellt keine Anlageberatung dar.
+            Diese Seite stellt keine Anlageberatung dar. ImmoRefi ist eine SaaS-Plattform — die
+            Investitionsabwicklung erfolgt peer-to-peer direkt zwischen Anbieter und Investor oder über einen
+            regulierten Treuhänder. ImmoRefi ist nicht Vertragspartei der Investition.
           </p>
+          <Link href="/risikohinweise">
+            <span className="text-xs underline text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+              Vollständige Risikohinweise lesen
+            </span>
+          </Link>
         </div>
       </section>
     </div>

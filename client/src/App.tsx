@@ -21,6 +21,7 @@ import Tasks from "./pages/Tasks";
 import Impressum from "./pages/Impressum";
 import Datenschutz from "./pages/Datenschutz";
 import AGB from "./pages/AGB";
+import Risikohinweise from "./pages/Risikohinweise";
 import Contracts from "./pages/Contracts";
 import AdminContracts from "./pages/admin/Contracts";
 import AdminContractTemplates from "./pages/admin/ContractTemplates";
@@ -84,6 +85,7 @@ function Router() {
       <Route path="/impressum" component={Impressum} />
       <Route path="/datenschutz" component={Datenschutz} />
       <Route path="/agb" component={AGB} />
+      <Route path="/risikohinweise" component={Risikohinweise} />
       <Route path="/about" component={About} />
       <Route path="/team" component={Team} />
       <Route path="/press" component={Press} />
